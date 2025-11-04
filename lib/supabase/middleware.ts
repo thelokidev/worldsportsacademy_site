@@ -2,14 +2,17 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+  // If required envs are not available, skip auth middleware to avoid 500s.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !anon) {
+    return NextResponse.next({ request })
+  }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  let supabaseResponse = NextResponse.next({ request })
+
+  try {
+    const supabase = createServerClient(url, anon, {
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -17,19 +20,20 @@ export async function updateSession(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value)
-            supabaseResponse = NextResponse.next({
-              request,
-            })
+            supabaseResponse = NextResponse.next({ request })
             supabaseResponse.cookies.set(name, value, options)
           })
         },
       },
-    }
-  )
+    })
 
-  // This will refresh session if expired - required for Server Components
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: { user } } = await supabase.auth.getUser()
+    // Refresh session for RSC. Ignore failures.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { data: { user } } = await supabase.auth.getUser()
 
-  return supabaseResponse
+    return supabaseResponse
+  } catch {
+    // Fail-open: never block the request due to middleware errors
+    return NextResponse.next({ request })
+  }
 }
