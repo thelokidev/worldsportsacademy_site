@@ -9,7 +9,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
-  let supabaseResponse = NextResponse.next({ request })
+  const response = NextResponse.next({ request })
 
   try {
     const supabase = createServerClient(url, anon, {
@@ -20,8 +20,7 @@ export async function updateSession(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value)
-            supabaseResponse = NextResponse.next({ request })
-            supabaseResponse.cookies.set(name, value, options)
+            response.cookies.set(name, value, options)
           })
         },
       },
@@ -31,7 +30,7 @@ export async function updateSession(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data: { user } } = await supabase.auth.getUser()
 
-    return supabaseResponse
+    return response
   } catch {
     // Fail-open: never block the request due to middleware errors
     return NextResponse.next({ request })
