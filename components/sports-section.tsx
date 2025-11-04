@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 interface Sport {
   id: string;
@@ -104,7 +105,8 @@ export function SportsSection() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left column: tall card */}
           <div>
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer h-[440px]">
+            <Link href="/bookings">
+              <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer h-[440px]">
               <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{ backgroundImage: `url('${sports[0].image}')` }}
@@ -129,13 +131,15 @@ export function SportsSection() {
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+            </Link>
           </div>
 
           {/* Middle column: two stacked cards */}
           <div className="flex flex-col gap-6">
             {[sports[1], sports[2]].map((sport) => (
-              <div key={sport.id} className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer h-[210px]">
+              <Link key={sport.id} href="/bookings">
+                <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer h-[210px]">
                 <div
                   className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                   style={{ backgroundImage: `url('${sport.image}')` }}
@@ -160,13 +164,15 @@ export function SportsSection() {
                     </div>
                   </div>
                 </div>
-              </div>
+                </div>
+              </Link>
             ))}
           </div>
 
           {/* Right column: tall card */}
           <div>
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer h-[440px]">
+            <Link href="/bookings">
+              <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer h-[440px]">
               <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{ backgroundImage: `url('${sports[3].image}')` }}
@@ -191,7 +197,8 @@ export function SportsSection() {
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

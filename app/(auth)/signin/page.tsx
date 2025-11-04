@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 export default function SignInPage() {
   return (
-    <div className="container flex items-center justify-center min-h-screen py-8">
-      <Card className="w-full max-w-md">
+    <div className="w-full max-w-md px-4">
+      <Card className="shadow-lg">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold text-black">Sign in</CardTitle>
+          <CardDescription className="text-gray-600">
             Enter your email and password to sign in to your account
           </CardDescription>
         </CardHeader>
@@ -16,9 +16,9 @@ export default function SignInPage() {
           <SignInForm />
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-gray-600">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-primary hover:underline">
+            <Link href="/signup" className="text-[#50C878] hover:text-[#50C878]/90 hover:underline font-medium">
               Sign up
             </Link>
           </div>

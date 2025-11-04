@@ -108,7 +108,7 @@ export function SignUpForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+        <Button type="submit" className="w-full bg-[#50C878] hover:bg-[#50C878]/90 text-white" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? 'Creating account...' : 'Sign Up'}
         </Button>
       </form>

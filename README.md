@@ -20,12 +20,33 @@ npm install
 ### 2) Environment variables
 Create `.env.local` in `myapp/` with:
 ```bash
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your-project-ref-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 # Optional: server-side only
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NODE_ENV=development
+
+# Cal.com API v2 Configuration
+# Option 1: API Key authentication (for regular API usage)
+# Get from: Cal.com Settings > Security
+# Test mode keys: cal_*, Live mode keys: cal_live_*
+CALCOM_API_KEY=your-cal-com-api-key
+
+# Option 2: OAuth Client Credentials (for platform customers)
+# Get from: Cal.com Platform Dashboard > OAuth Clients
+# Required for: Managed users, team management, OAuth client webhooks
+# CALCOM_OAUTH_CLIENT_ID=your-oauth-client-id
+# CALCOM_OAUTH_CLIENT_SECRET=your-oauth-client-secret
+
+# Cal.com API base URL (defaults to v2)
+# CALCOM_API_URL=https://api.cal.com/v2
+
+# Webhook secret for verifying webhook signatures
+# CALCOM_WEBHOOK_SECRET=your-webhook-secret
 ```
+
+**Note:** You need either `CALCOM_API_KEY` OR both `CALCOM_OAUTH_CLIENT_ID` and `CALCOM_OAUTH_CLIENT_SECRET`. OAuth is for platform customers managing managed users.
 
 ### 3) Development
 ```bash
