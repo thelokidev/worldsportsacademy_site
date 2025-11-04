@@ -16,7 +16,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { useFormStatus } from 'react-dom'
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -29,16 +28,6 @@ const formSchema = z.object({
 })
 
 type FormData = z.infer<typeof formSchema>
-
-function SubmitButton() {
-  const { pending } = useFormStatus()
-  
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? 'Creating account...' : 'Sign Up'}
-    </Button>
-  )
-}
 
 export function SignUpForm() {
   const router = useRouter()
@@ -55,30 +44,18 @@ export function SignUpForm() {
   })
 
   async function onSubmit(data: FormData) {
-    const result = await signUp({
-      email: data.email,
-      password: data.password,
-      fullName: data.fullName,
-    })
-    
+    const result = await signUp({ email: data.email, password: data.password, fullName: data.fullName })
     if (result?.error) {
-      toast({
-        title: 'Error',
-        description: result.error,
-        variant: 'destructive',
-      })
-    } else if (result?.success) {
-      toast({
-        title: 'Success',
-        description: 'Account created successfully! Please check your email to verify your account.',
-      })
-      router.push('/signin')
+      toast({ title: 'Error', description: result.error, variant: 'destructive' })
+      return
     }
+    toast({ title: 'Success', description: 'Account created successfully! Please check your email to verify your account.' })
+    router.push('/signin')
   }
 
   return (
     <Form {...form}>
-      <form action={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="fullName"
@@ -86,10 +63,7 @@ export function SignUpForm() {
             <FormItem>
               <FormLabel>Full Name (optional)</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="John Doe"
-                  {...field}
-                />
+                <Input placeholder="John Doe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -102,11 +76,7 @@ export function SignUpForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  {...field}
-                />
+                <Input type="email" placeholder="you@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -119,11 +89,7 @@ export function SignUpForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  {...field}
-                />
+                <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -136,17 +102,15 @@ export function SignUpForm() {
             <FormItem>
               <FormLabel>Confirm Password</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  {...field}
-                />
+                <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <SubmitButton />
+        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? 'Creating account...' : 'Sign Up'}
+        </Button>
       </form>
     </Form>
   )

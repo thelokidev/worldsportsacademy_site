@@ -52,13 +52,14 @@ export async function signIn(data: SignInData) {
   return { success: true }
 }
 
-export async function signOut() {
+export async function signOut(): Promise<void> {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.signOut()
 
   if (error) {
-    return { error: error.message }
+    console.error('[signOut] error:', error.message)
+    // We still proceed to redirect to ensure UX flow continues
   }
 
   revalidatePath('/', 'layout')
