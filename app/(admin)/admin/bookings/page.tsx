@@ -11,15 +11,17 @@ import { BookingFilters } from '@/components/features/admin/booking-filters'
 export default async function AdminBookingsPage({
   searchParams,
 }: {
-  searchParams: { page?: string; status?: string; sportId?: string }
+  searchParams: Promise<{ page?: string; status?: string; sportId?: string }>
 }) {
-  const page = parseInt(searchParams.page || '1')
+  const params = await searchParams
+  const page = parseInt(params.page || '1')
   const { bookings, total, totalPages } = await getAllBookingsForAdmin(page, 20, {
-    status: searchParams.status || undefined,
-    sportId: searchParams.sportId || undefined,
+    status: params.status || undefined,
+    sportId: params.sportId || undefined,
   })
 
-  const sports = await getSports()
+  const sportsData = await getSports()
+  const sports = sportsData as unknown as Array<{ id: string; name: string; display_name: string }>
 
   const confirmedCount = bookings.filter((b: any) => b.status === 'confirmed').length
   const pendingCount = bookings.filter((b: any) => b.status === 'pending').length
@@ -87,8 +89,8 @@ export default async function AdminBookingsPage({
           {/* Filters */}
           <BookingFilters 
             sports={sports}
-            currentStatus={searchParams.status}
-            currentSportId={searchParams.sportId}
+            currentStatus={params.status}
+            currentSportId={params.sportId}
           />
 
           {/* Bookings List */}
@@ -149,7 +151,7 @@ export default async function AdminBookingsPage({
                       asChild={page > 1}
                     >
                       {page > 1 ? (
-                        <Link href={`/admin/bookings?page=${page - 1}${searchParams.status ? `&status=${searchParams.status}` : ''}${searchParams.sportId ? `&sportId=${searchParams.sportId}` : ''}`}>
+                        <Link href={`/admin/bookings?page=${page - 1}${params.status ? `&status=${params.status}` : ''}${params.sportId ? `&sportId=${params.sportId}` : ''}`}>
                           <ChevronLeft className="h-4 w-4 mr-1" />
                           Previous
                         </Link>
@@ -167,7 +169,7 @@ export default async function AdminBookingsPage({
                       asChild={page < totalPages}
                     >
                       {page < totalPages ? (
-                        <Link href={`/admin/bookings?page=${page + 1}${searchParams.status ? `&status=${searchParams.status}` : ''}${searchParams.sportId ? `&sportId=${searchParams.sportId}` : ''}`}>
+                        <Link href={`/admin/bookings?page=${page + 1}${params.status ? `&status=${params.status}` : ''}${params.sportId ? `&sportId=${params.sportId}` : ''}`}>
                           Next
                           <ChevronRight className="h-4 w-4 ml-1" />
                         </Link>

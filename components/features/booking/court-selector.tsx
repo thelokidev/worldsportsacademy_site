@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { getCourtsBySport } from '@/server/queries/bookings'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 

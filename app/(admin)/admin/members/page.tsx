@@ -5,9 +5,10 @@ import { MemberManagementTable } from '@/components/features/admin/member-manage
 export default async function AdminMembersPage({
   searchParams,
 }: {
-  searchParams: { page?: string }
+  searchParams: Promise<{ page?: string }>
 }) {
-  const page = parseInt(searchParams.page || '1')
+  const params = await searchParams
+  const page = parseInt(params.page || '1')
   const { members, total, totalPages } = await getAllMembers(page, 50)
 
   const adminCount = members.filter(m => m.role === 'admin').length

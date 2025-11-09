@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Menu, X, User, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, Sparkles } from "lucide-react"
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"

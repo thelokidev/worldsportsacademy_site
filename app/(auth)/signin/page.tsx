@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle2, AlertCircle } from 'lucide-react'
 
-export default function SignInPage({
+export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: { verified?: string; error?: string }
+  searchParams: Promise<{ verified?: string; error?: string }>
 }) {
+  const params = await searchParams
   return (
     <div className="w-full max-w-md px-4">
       <Card className="shadow-lg">
@@ -19,7 +20,7 @@ export default function SignInPage({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {searchParams?.verified === 'true' && (
+          {params?.verified === 'true' && (
             <Alert className="border-[#50C878] bg-[#50C878]/10">
               <CheckCircle2 className="h-4 w-4 text-[#50C878]" />
               <AlertDescription className="text-[#2D5B4A]">
@@ -27,7 +28,7 @@ export default function SignInPage({
               </AlertDescription>
             </Alert>
           )}
-          {searchParams?.error === 'verification_failed' && (
+          {params?.error === 'verification_failed' && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>

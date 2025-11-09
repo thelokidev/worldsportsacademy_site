@@ -70,12 +70,13 @@ async function CheckoutSuccessContent({ sessionId }: { sessionId: string }) {
   }
 }
 
-export default function CheckoutSuccessPage({
+export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: { session_id?: string }
+  searchParams: Promise<{ session_id?: string }>
 }) {
-  const sessionId = searchParams.session_id
+  const params = await searchParams
+  const sessionId = params.session_id
 
   if (!sessionId) {
     return (

@@ -43,9 +43,10 @@ async function getSportBySlug(slug: string) {
 export default async function SportPage({
   params,
 }: {
-  params: { sportSlug: string }
+  params: Promise<{ sportSlug: string }>
 }) {
-  const sport = await getSportBySlug(params.sportSlug)
+  const { sportSlug } = await params
+  const sport = await getSportBySlug(sportSlug)
 
   if (!sport) {
     notFound()

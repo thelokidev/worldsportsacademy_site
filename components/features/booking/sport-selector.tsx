@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { getSports } from '@/server/queries/bookings'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Loader2 } from 'lucide-react'
 
 interface Sport {

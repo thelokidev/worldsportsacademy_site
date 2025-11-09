@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useTransition } from 'react'
+import { useState, useEffect, useMemo, useTransition } from 'react'
 import { getSports } from '@/server/queries/bookings'
 import { getCourtsBySport } from '@/server/queries/bookings'
 import { Button } from '@/components/ui/button'
@@ -8,8 +8,6 @@ import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Du
 import { format, addDays, parseISO, addMinutes } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { subscribeToCourtAvailability, unsubscribeFromChannel } from '@/lib/supabase/realtime'
-import Image from 'next/image'
 import { Calendar } from '@/components/ui/calendar'
 
 export function RedesignedBooking() {
