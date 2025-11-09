@@ -53,20 +53,37 @@ export function SportSelector({ onSelect }: SportSelectorProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {sports.map((sport) => (
-        <Card
-          key={sport.id}
-          className="cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => onSelect(sport)}
-        >
-          <CardContent className="p-6">
-            <h3 className="text-xl font-semibold mb-2">{sport.display_name}</h3>
-            {sport.description && (
-              <p className="text-sm text-muted-foreground">{sport.description}</p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+      {sports.map((sport) => {
+        const isComingSoon = sport.status === 'coming_soon'
+        const isInactive = sport.status === 'inactive'
+        
+        return (
+          <Card
+            key={sport.id}
+            className={`transition-shadow ${
+              isComingSoon || isInactive
+                ? 'opacity-60 cursor-not-allowed'
+                : 'cursor-pointer hover:shadow-lg'
+            }`}
+            onClick={() => !isComingSoon && !isInactive && onSelect(sport)}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-semibold">{sport.display_name}</h3>
+                {isComingSoon && (
+                  <Badge variant="secondary">Coming Soon</Badge>
+                )}
+                {isInactive && (
+                  <Badge variant="outline">Unavailable</Badge>
+                )}
+              </div>
+              {sport.description && (
+                <p className="text-sm text-muted-foreground">{sport.description}</p>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })}
     </div>
   )
 }

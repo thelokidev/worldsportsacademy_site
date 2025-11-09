@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Sport {
   id: string;
@@ -16,28 +16,28 @@ const sports: Sport[] = [
   {
     id: "table-tennis",
     name: "Table Tennis",
-    image: "https://images.unsplash.com/photo-1606158770111-c69c0d0f0c0b?q=80&w=2070&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1622163642998-5f44b8f1c3c0?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3",
     days: "Mon to Fri",
     time: "3:00PM - 6:00 PM",
   },
   {
     id: "squash",
     name: "Squash",
-    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?q=80&w=2070&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3",
     days: "Tue to Sun",
     time: "4:00PM - 7:00 PM",
   },
   {
-    id: "checkers",
-    name: "Checkers",
-    image: "https://images.unsplash.com/photo-1585504198199-20277593b94f?q=80&w=2070&auto=format&fit=crop",
-    days: "Wed and Fri",
-    time: "2:00PM - 4:00 PM",
+    id: "gym",
+    name: "Gym",
+    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3",
+    days: "Daily",
+    time: "6:00AM - 11:00 PM",
   },
   {
     id: "chess",
     name: "Chess",
-    image: "https://images.unsplash.com/photo-1528819622765-d6bcf132ac08?q=80&w=2070&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3",
     days: "Tue and Thu",
     time: "1:00PM - 3:00 PM",
   },
@@ -45,25 +45,11 @@ const sports: Sport[] = [
 
 export function SportsSection() {
   return (
-    <section className="py-16 px-4 relative overflow-hidden bg-white">
-      {/* Decorative yellow threads */}
-      <div className="pointer-events-none absolute top-6 right-0 w-72 h-72 md:w-80 md:h-80 opacity-80 -z-0">
-        <svg viewBox="0 0 300 300" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 120 C90 40 170 200 250 120" stroke="#CFEA6C" strokeWidth="12" strokeLinecap="round" />
-          <path d="M40 150 C120 70 200 230 280 150" stroke="#CFEA6C" strokeWidth="6" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div className="pointer-events-none absolute -bottom-6 -left-4 w-[420px] h-[220px] opacity-80 -z-0">
-        <svg viewBox="0 0 420 220" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 160 C120 100 200 220 310 160 C360 130 390 130 410 140" stroke="#CFEA6C" strokeWidth="10" strokeLinecap="round" />
-          <path d="M-20 120 C100 40 220 180 340 120" stroke="#CFEA6C" strokeWidth="6" strokeLinecap="round" />
-        </svg>
-      </div>
-
+    <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-white">
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Header Section */}
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 mb-12">
-          <div className="flex-1 max-w-2xl">
+        <div className="mb-12">
+          <div className="max-w-2xl">
             {/* Label */}
             <div className="flex items-center gap-3 mb-4">
               <span className="text-sm font-semibold text-black uppercase tracking-wider">
@@ -82,23 +68,6 @@ export function SportsSection() {
               Fermentum hendrerit donec libero lacinia non et in adipiscing gravida eu risus praesent sit orci in sed id nibh facilisis
             </p>
           </div>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 lg:flex-shrink-0">
-            <Button
-              className="bg-[#50C878] hover:bg-[#50C878]/90 text-white text-base font-normal rounded-md px-8 py-3 h-auto shadow-sm whitespace-nowrap"
-              size="lg"
-            >
-              Enroll now
-            </Button>
-            <Button
-              variant="outline"
-              className="bg-white border border-gray-300 text-black hover:bg-gray-50 text-base font-normal rounded-md px-8 py-3 h-auto shadow-sm whitespace-nowrap"
-              size="lg"
-            >
-              Browse all sports
-            </Button>
-          </div>
         </div>
 
         {/* Sports Cards Grid - 1 + 2 + 1 columns */}
@@ -107,12 +76,15 @@ export function SportsSection() {
           <div>
             <Link href="/bookings">
               <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer h-[440px]">
-              <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                style={{ backgroundImage: `url('${sports[0].image}')` }}
-              >
-                <div className="absolute inset-0 bg-black/30" />
-              </div>
+              <Image
+                src={sports[0].image}
+                alt={sports[0].name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 33vw"
+                priority
+              />
+              <div className="absolute inset-0 bg-black/30" />
               <div className="absolute top-6 left-6 z-10">
                 <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight">{sports[0].name}</h3>
               </div>
@@ -140,12 +112,14 @@ export function SportsSection() {
             {[sports[1], sports[2]].map((sport) => (
               <Link key={sport.id} href="/bookings">
                 <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer h-[210px]">
-                <div
-                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                  style={{ backgroundImage: `url('${sport.image}')` }}
-                >
-                  <div className="absolute inset-0 bg-black/30" />
-                </div>
+                <Image
+                  src={sport.image}
+                  alt={sport.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 33vw"
+                />
+                <div className="absolute inset-0 bg-black/30" />
                 <div className="absolute top-4 left-4 z-10">
                   <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight">{sport.name}</h3>
                 </div>
@@ -173,12 +147,15 @@ export function SportsSection() {
           <div>
             <Link href="/bookings">
               <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer h-[440px]">
-              <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                style={{ backgroundImage: `url('${sports[3].image}')` }}
-              >
-                <div className="absolute inset-0 bg-black/30" />
-              </div>
+              <Image
+                src={sports[3].image}
+                alt={sports[3].name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 33vw"
+                priority
+              />
+              <div className="absolute inset-0 bg-black/30" />
               <div className="absolute top-6 left-6 z-10">
                 <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight">{sports[3].name}</h3>
               </div>

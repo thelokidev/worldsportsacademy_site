@@ -1,117 +1,71 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Minus, Mail, MapPin, ArrowRight } from "lucide-react";
+import { Mail, MapPin, ArrowRight } from "lucide-react";
 import Image from "next/image";
 
-type Campus = {
-  id: string;
-  city: string;
-  blurb: string;
-  email: string;
-  address: string;
-  image: string;
-};
-
-const CAMPUSES: Campus[] = [
-  {
-    id: "nyc",
-    city: "New York, NY",
-    blurb:
-      "Fermentum hendrerit donec libero lacinia non et in adipiscing gravida eu risus praesent sit orci in sed id lectus augue elementum tortor dui tellus",
-    email: "newyork@worldsportsacademy.com",
-    address: "123 Main Street, New York, NY 10001",
-    image:
-      "https://images.unsplash.com/photo-1581952979066-0f8f6f52ff89?q=80&w=2000&auto=format&fit=crop",
-  },
-  {
-    id: "sf",
-    city: "San Francisco, CA",
-    blurb:
-      "Cras porttitor, sapien in efficitur tempor, quam lectus ultrices orci, vitae dictum sem velit a lorem.",
-    email: "sanfran@worldsportsacademy.com",
-    address: "456 Market St, San Francisco, CA 94105",
-    image:
-      "https://images.unsplash.com/photo-1534361960057-19889db9621e?q=80&w=2000&auto=format&fit=crop",
-  },
-  {
-    id: "la",
-    city: "Los Angeles, CA",
-    blurb:
-      "Aenean finibus, dui at sodales auctor, dolor nibh posuere eros, ut facilisis augue eros sed odio.",
-    email: "losangeles@worldsportsacademy.com",
-    address: "789 Sunset Blvd, Los Angeles, CA 90028",
-    image:
-      "https://images.unsplash.com/photo-1576435728678-68c8f3e5b9f4?q=80&w=2000&auto=format&fit=crop",
-  },
-];
-
 export function LocationsSection() {
-  const [activeId, setActiveId] = useState<string>(CAMPUSES[0].id);
-  const active = CAMPUSES.find((c) => c.id === activeId)!;
-
   return (
-    <section className="px-4 py-20">
+    <section className="px-4 sm:px-6 lg:px-8 py-12 md:py-20">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="h-0.5 w-10 bg-yellow-400 inline-block" />
-            <span className="text-xs tracking-wider text-[#2D5B4A] font-semibold uppercase">Locations</span>
+            <span className="text-xs tracking-wider text-[#2D5B4A] font-semibold uppercase">Location</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#2D5B4A]">Visit our locations</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-[#2D5B4A]">Visit our location</h2>
         </div>
 
         {/* Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-          {/* Left: Accordion */}
+          {/* Left: Location Details */}
           <div>
-            {CAMPUSES.map((c) => {
-              const isActive = c.id === activeId;
-              return (
-                <div key={c.id} className="border-b border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => setActiveId(c.id)}
-                    className="w-full flex items-center justify-between py-6"
-                  >
-                    <span className={`text-xl md:text-2xl font-semibold ${isActive ? "text-[#2D5B4A]" : "text-[#2D5B4A]"}`}>{c.city}</span>
-                    <span className="w-8 h-8 rounded-full bg-[#E6F5EC] text-[#2D5B4A] flex items-center justify-center">
-                      {isActive ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                    </span>
-                  </button>
-
-                  {isActive && (
-                    <div className="pb-6 pt-1">
-                      <p className="text-gray-600 text-sm leading-relaxed mb-4 max-w-md">{c.blurb}</p>
-                      <div className="flex flex-col gap-3">
-                        <a href={`mailto:${c.email}`} className="inline-flex items-center gap-2 text-[#2D5B4A] hover:opacity-80">
-                          <Mail className="w-4 h-4" />
-                          <span className="text-sm">{c.email}</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </a>
-                        <a
-                          href="#"
-                          className="inline-flex items-center gap-2 text-[#2D5B4A] hover:opacity-80"
-                        >
-                          <MapPin className="w-4 h-4" />
-                          <span className="text-sm">{c.address}</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            <div className="mb-6">
+              <h3 className="text-2xl md:text-3xl font-bold text-[#2D5B4A] mb-4">
+                Burlington, Ontario
+              </h3>
+              <p className="text-gray-600 text-base leading-relaxed mb-6 max-w-md">
+                Our state-of-the-art facility in Burlington, Ontario offers world-class sports facilities including squash courts, table tennis tables, chess areas, and a high-performance gym. Visit us to experience premium athletic training and competition spaces.
+              </p>
+              <div className="flex flex-col gap-4">
+                <a
+                  href="mailto:info@worldsportsacademy.com"
+                  className="inline-flex items-center gap-3 text-[#2D5B4A] hover:opacity-80 transition-opacity group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#E6F5EC] flex items-center justify-center">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500 block">Email</span>
+                    <span className="text-base font-medium">info@worldsportsacademy.com</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                </a>
+                <a
+                  href="https://maps.google.com/?q=1233+Dillon+Rd,+Burlington,+ON+L7M+1K6,+Canada"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 text-[#2D5B4A] hover:opacity-80 transition-opacity group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#E6F5EC] flex items-center justify-center">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500 block">Address</span>
+                    <span className="text-base font-medium">1233 Dillon Rd, Burlington, ON L7M 1K6, Canada</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Right: Image */}
           <div>
-            <div className="relative rounded-2xl overflow-hidden h-[360px] md:h-[420px]">
+            <div className="relative rounded-2xl overflow-hidden h-[360px] md:h-[420px] shadow-lg">
               <Image
-                src={active.image}
-                alt={active.city}
+                src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
+                alt="World Sports Academy - Burlington, Ontario"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"

@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="pt-8 pb-16 px-4 mt-[72px]">
+    <section className="pt-8 pb-12 md:pb-16 px-4 sm:px-6 lg:px-8 mt-[72px]">
       <div className="mx-auto max-w-7xl">
-        <div className="relative rounded-2xl overflow-hidden shadow-lg max-w-7xl mx-auto">
+        <div className="relative rounded-2xl overflow-hidden shadow-lg">
           {/* Background Image */}
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -33,17 +34,19 @@ export function Hero() {
               {/* CTA Buttons */}
               <div className="flex flex-wrap gap-4">
                 <Button
+                  asChild
                   className="bg-[#50C878] hover:bg-[#50C878]/90 text-white text-base font-normal rounded-md px-8 py-3 h-auto shadow-sm"
                   size="lg"
                 >
-                  Enroll now
+                  <Link href="/memberships">Enroll now</Link>
                 </Button>
                 <Button
+                  asChild
                   variant="outline"
                   className="bg-white border border-gray-300 text-black hover:bg-gray-50 text-base font-normal rounded-md px-8 py-3 h-auto shadow-sm"
                   size="lg"
                 >
-                  Explore programs
+                  <Link href="/programs">Explore programs</Link>
                 </Button>
               </div>
             </div>

@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createBooking } from '@/server/actions/bookings'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Calendar, MapPin, Clock } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Loader2, Calendar, MapPin, Clock, CreditCard, CheckCircle2 } from 'lucide-react'
 import { format, addMinutes, parseISO } from 'date-fns'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { formatDuration } from '@/lib/utils/duration'
 
 interface BookingSummaryProps {
-  sport: { id: string; display_name: string }
+  sport: { id: string; display_name: string; duration_minutes?: number }
   court: { id: string; name: string }
   selectedDate: Date
   selectedTime: string
@@ -24,33 +26,132 @@ export function BookingSummary({
   onBack,
 }: BookingSummaryProps) {
   const [loading, setLoading] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  const [requiresPayment, setRequiresPayment] = useState(false)
+  const [paymentInfo, setPaymentInfo] = useState<{
+    price: number
+    tax: number
+    total: number
+  } | null>(null)
   const router = useRouter()
 
+  const durationMinutes = sport.duration_minutes || 60
   const startTime = parseISO(selectedTime)
-  const endTime = addMinutes(startTime, 60) // Default 60 minutes
+  const endTime = addMinutes(startTime, durationMinutes)
+
+  useEffect(() => {
+    async function checkAuthorization() {
+      try {
+        const response = await fetch('/api/booking/check-authorization', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sportId: sport.id,
+            durationMinutes,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (data.requiresPayment) {
+          setRequiresPayment(true)
+          setPaymentInfo({
+            price: data.dropInPrice,
+            tax: data.tax,
+            total: data.total,
+          })
+        }
+      } catch (error) {
+        console.error('Authorization check error:', error)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+
+    checkAuthorization()
+  }, [sport.id, durationMinutes])
 
   async function handleConfirm() {
     setLoading(true)
     try {
+      if (requiresPayment) {
+        // Redirect to payment checkout
+        const response = await fetch('/api/booking/create-pending', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sportId: sport.id,
+            courtId: court.id,
+            startTime: selectedTime,
+            endTime: endTime.toISOString(),
+            durationMinutes,
+          }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to create pending booking')
+        }
+
+        const { bookingId } = await response.json()
+
+        // Create checkout session
+        const checkoutResponse = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId,
+            paymentType: 'drop_in',
+          }),
+        })
+
+        if (!checkoutResponse.ok) {
+          const error = await checkoutResponse.json()
+          throw new Error(error.error || 'Failed to create checkout session')
+        }
+
+        const { url } = await checkoutResponse.json()
+        if (url) {
+          window.location.href = url
+        }
+        return
+      }
+
+      // Member booking - free
       const formData = new FormData()
       formData.append('sportId', sport.id)
       formData.append('courtId', court.id)
       formData.append('startTime', selectedTime)
       formData.append('endTime', endTime.toISOString())
+      formData.append('selectedDuration', durationMinutes.toString())
+      formData.append('bookingType', 'member')
 
       const result = await createBooking(formData)
 
       if (result.success) {
+        toast.success('Booking confirmed!')
         router.push('/dashboard/bookings')
       } else {
-        alert(result.error || 'Failed to create booking')
+        toast.error(result.error || 'Failed to create booking')
       }
     } catch (error) {
       console.error('Booking error:', error)
-      alert('Failed to create booking')
+      toast.error(error instanceof Error ? error.message : 'Failed to create booking')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingAuth) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -58,6 +159,11 @@ export function BookingSummary({
       <Card>
         <CardHeader>
           <CardTitle>Booking Summary</CardTitle>
+          <CardDescription>
+            {requiresPayment
+              ? 'Payment required for this booking'
+              : 'Your membership covers this booking'}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
@@ -91,8 +197,47 @@ export function BookingSummary({
               <p className="font-semibold">
                 {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
               </p>
+              <p className="text-xs text-muted-foreground">
+                Duration: {formatDuration(durationMinutes)}
+              </p>
             </div>
           </div>
+
+          {requiresPayment && paymentInfo && (
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <CreditCard className="h-5 w-5 text-muted-foreground" />
+                <p className="font-semibold">Payment Required</p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    Drop-in Fee ({formatDuration(durationMinutes)})
+                  </span>
+                  <span>${paymentInfo.price.toFixed(2)}</span>
+                </div>
+                {paymentInfo.tax > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tax</span>
+                    <span>${paymentInfo.tax.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-semibold pt-2 border-t">
+                  <span>Total</span>
+                  <span>${paymentInfo.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!requiresPayment && (
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle2 className="h-5 w-5" />
+                <p className="text-sm font-medium">Covered by your membership</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -104,7 +249,12 @@ export function BookingSummary({
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Confirming...
+              {requiresPayment ? 'Processing...' : 'Confirming...'}
+            </>
+          ) : requiresPayment ? (
+            <>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Pay & Confirm
             </>
           ) : (
             'Confirm Booking'

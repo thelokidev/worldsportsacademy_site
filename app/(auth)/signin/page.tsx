@@ -1,8 +1,14 @@
 import Link from 'next/link'
 import { SignInForm } from '@/components/features/auth/sign-in-form'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { CheckCircle2, AlertCircle } from 'lucide-react'
 
-export default function SignInPage() {
+export default function SignInPage({
+  searchParams,
+}: {
+  searchParams: { verified?: string; error?: string }
+}) {
   return (
     <div className="w-full max-w-md px-4">
       <Card className="shadow-lg">
@@ -12,7 +18,23 @@ export default function SignInPage() {
             Enter your email and password to sign in to your account
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {searchParams?.verified === 'true' && (
+            <Alert className="border-[#50C878] bg-[#50C878]/10">
+              <CheckCircle2 className="h-4 w-4 text-[#50C878]" />
+              <AlertDescription className="text-[#2D5B4A]">
+                Email verified successfully! You can now sign in.
+              </AlertDescription>
+            </Alert>
+          )}
+          {searchParams?.error === 'verification_failed' && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Email verification failed. Please try signing up again or contact support.
+              </AlertDescription>
+            </Alert>
+          )}
           <SignInForm />
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">

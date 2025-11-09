@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, ShoppingCart, Menu, X, User } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -41,9 +41,9 @@ export function Navbar() {
   }, []);
 
   async function handleSignOut() {
-    await signOut();
-    router.refresh();
-    setUser(null);
+    await signOut()
+    router.refresh()
+    setUser(null)
   }
 
   return (
@@ -97,18 +97,6 @@ export function Navbar() {
                 Home
               </Link>
               <Link
-                href="/about"
-                className="text-black text-sm font-normal hover:text-[#50C878] transition-colors"
-              >
-                About
-              </Link>
-              <Link
-                href="/sports"
-                className="text-black text-sm font-normal hover:text-[#50C878] transition-colors"
-              >
-                Sports
-              </Link>
-              <Link
                 href="/programs"
                 className="text-black text-sm font-normal hover:text-[#50C878] transition-colors"
               >
@@ -120,21 +108,11 @@ export function Navbar() {
               >
                 Book Now
               </Link>
-              <div className="relative group">
-                <Link
-                  href="/pages"
-                  className="text-black text-sm font-normal hover:text-[#50C878] transition-colors flex items-center gap-1"
-                >
-                  Pages
-                  <ChevronDown className="w-4 h-4" />
-                </Link>
-              </div>
               <Link
-                href="/cart"
-                className="text-black text-sm font-normal hover:text-[#50C878] transition-colors flex items-center gap-1"
+                href="/memberships"
+                className="text-black text-sm font-normal hover:text-[#50C878] transition-colors"
               >
-                <ShoppingCart className="w-4 h-4" />
-                Cart (0)
+                Memberships
               </Link>
             </div>
 
@@ -162,9 +140,12 @@ export function Navbar() {
                      <DropdownMenuItem asChild>
                        <Link href="/dashboard">Dashboard</Link>
                      </DropdownMenuItem>
-                     <DropdownMenuItem asChild>
-                       <Link href="/dashboard/bookings">My Bookings</Link>
-                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/bookings">My Bookings</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/membership">My Membership</Link>
+                    </DropdownMenuItem>
                      <DropdownMenuSeparator />
                      <DropdownMenuItem onClick={handleSignOut}>
                        Sign Out
@@ -209,20 +190,6 @@ export function Navbar() {
                   Home
                 </Link>
                 <Link
-                  href="/about"
-                  className="text-black text-sm font-normal hover:text-[#50C878] transition-colors px-4 py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  About
-                </Link>
-                <Link
-                  href="/sports"
-                  className="text-black text-sm font-normal hover:text-[#50C878] transition-colors px-4 py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sports
-                </Link>
-                <Link
                   href="/programs"
                   className="text-black text-sm font-normal hover:text-[#50C878] transition-colors px-4 py-2"
                   onClick={() => setMobileMenuOpen(false)}
@@ -237,19 +204,11 @@ export function Navbar() {
                   Book Now
                 </Link>
                 <Link
-                  href="/pages"
+                  href="/memberships"
                   className="text-black text-sm font-normal hover:text-[#50C878] transition-colors px-4 py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Pages
-                </Link>
-                <Link
-                  href="/cart"
-                  className="text-black text-sm font-normal hover:text-[#50C878] transition-colors px-4 py-2 flex items-center gap-1"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Cart (0)
+                  Memberships
                 </Link>
                 <div className="px-4 pt-2 space-y-2 border-t border-gray-200 mt-2 pt-4">
                   {user ? (

@@ -18,10 +18,14 @@ export interface SignInData {
 export async function signUp(data: SignUpData) {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signUp({
+  // Get the app URL for email redirects
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+  const { data: authData, error } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
     options: {
+      emailRedirectTo: `${appUrl}/auth/callback`,
       data: {
         full_name: data.fullName,
       },
@@ -29,7 +33,21 @@ export async function signUp(data: SignUpData) {
   })
 
   if (error) {
+    console.error('Sign-up error:', error)
     return { error: error.message }
+  }
+
+  // Check if email confirmation is required
+  // If user exists but email is not confirmed, Supabase will still return success
+  // but won't send another email unless we handle it explicitly
+  if (authData.user && !authData.session) {
+    // User created but needs email confirmation
+    revalidatePath('/', 'layout')
+    return { 
+      success: true, 
+      requiresConfirmation: true,
+      message: 'Please check your email to confirm your account before signing in.'
+    }
   }
 
   revalidatePath('/', 'layout')

@@ -46,10 +46,26 @@ export function SignUpForm() {
   async function onSubmit(data: FormData) {
     const result = await signUp({ email: data.email, password: data.password, fullName: data.fullName })
     if (result?.error) {
-      toast({ title: 'Error', description: result.error, variant: 'destructive' })
+      toast({ 
+        title: 'Sign-up Error', 
+        description: result.error, 
+        variant: 'destructive',
+        duration: 5000
+      })
       return
     }
-    toast({ title: 'Success', description: 'Account created successfully! Please check your email to verify your account.' })
+    
+    // Show appropriate message based on email confirmation requirement
+    const message = result?.requiresConfirmation 
+      ? result.message || 'Please check your email to confirm your account before signing in.'
+      : 'Account created successfully! Please check your email to verify your account.'
+    
+    toast({ 
+      title: 'Account Created', 
+      description: message,
+      duration: 8000
+    })
+    
     router.push('/signin')
   }
 

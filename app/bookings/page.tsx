@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { SinglePageBooking } from '@/components/features/booking/single-page-booking'
+import { RedesignedBooking } from '@/components/features/booking/redesigned-booking'
 
 export default async function BookingsPage() {
   const supabase = await createClient()
@@ -10,5 +10,5 @@ export default async function BookingsPage() {
     redirect('/signin?redirect=/bookings')
   }
 
-  return <SinglePageBooking />
+  return <RedesignedBooking />
 }

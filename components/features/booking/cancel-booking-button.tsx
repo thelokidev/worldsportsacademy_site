@@ -5,6 +5,7 @@ import { cancelBooking } from '@/server/actions/bookings'
 import { Button } from '@/components/ui/button'
 import { Loader2, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface CancelBookingButtonProps {
   bookingId: string
@@ -22,14 +23,20 @@ export function CancelBookingButton({ bookingId }: CancelBookingButtonProps) {
     setLoading(true)
     try {
       const result = await cancelBooking(bookingId)
+      
       if (result.success) {
+        toast.success('Booking cancelled successfully')
+        // Refresh the page data
         router.refresh()
       } else {
-        alert(result.error || 'Failed to cancel booking')
+        const errorMsg = result.error || 'Failed to cancel booking'
+        toast.error(errorMsg)
+        console.error('Cancel booking error:', errorMsg)
       }
     } catch (error) {
       console.error('Cancel error:', error)
-      alert('Failed to cancel booking')
+      const errorMsg = error instanceof Error ? error.message : 'Failed to cancel booking'
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }

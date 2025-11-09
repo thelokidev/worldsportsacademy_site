@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { addMinutes, format, parseISO, startOfDay, eachHourOfInterval, setHours, getDay } from 'date-fns'
 
 export async function getAvailableSlots(
@@ -68,11 +68,9 @@ export async function getAvailableSlots(
     )
   } catch (error) {
     console.error('Error fetching availability:', error)
-    throw new Error(
-      error instanceof Error
-        ? `Failed to fetch availability: ${error.message}`
-        : 'Failed to fetch availability'
-    )
+    // Fail-open: return a safe, empty-style availability so the UI remains usable
+    const fallbackDuration = durationMinutes || 60
+    return generateSafeAvailability(startDate, endDate, fallbackDuration)
   }
 }
 
@@ -240,6 +238,41 @@ async function calculateLocalAvailability(
   return availability
 }
 
+/**
+ * Fallback generator: produces hourly slots 8AM–11PM for each day, marking past times unavailable.
+ * No Supabase access required. Used when DB/env issues occur.
+ */
+function generateSafeAvailability(
+  startDate: string,
+  endDate: string,
+  durationMinutes: number
+) {
+  const start = parseISO(startDate)
+  const end = parseISO(endDate)
+  const availability: Array<{ date: string; slots: Array<{ time: string; available: boolean }> }> = []
+  const now = new Date()
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dateKey = format(d, 'yyyy-MM-dd')
+    const dayStart = setHours(startOfDay(d), 8)
+    const dayEnd = setHours(startOfDay(d), 23)
+    const hours = eachHourOfInterval({ start: dayStart, end: dayEnd })
+    const daySlots: Array<{ time: string; available: boolean }> = []
+
+    hours.forEach((hour) => {
+      const slotStart = hour
+      const slotEnd = addMinutes(slotStart, durationMinutes)
+      const isPast = slotStart < now
+      const exceedsClose = slotEnd > dayEnd
+      daySlots.push({ time: slotStart.toISOString(), available: !isPast && !exceedsClose })
+    })
+
+    availability.push({ date: dateKey, slots: daySlots })
+  }
+
+  return availability
+}
+
 export async function createBooking(formData: FormData) {
   try {
     const supabase = await createClient()
@@ -290,6 +323,7 @@ export async function createBooking(formData: FormData) {
 
     const selectedDuration = formData.get('selectedDuration') ? parseInt(formData.get('selectedDuration') as string) : null
     const bookingNotes = formData.get('bookingNotes') as string | null
+    const bookingType = (formData.get('bookingType') as string) || 'member'
 
     // Create booking in Supabase
     const { data: booking, error } = await supabase
@@ -303,17 +337,29 @@ export async function createBooking(formData: FormData) {
         selected_duration: selectedDuration,
         booking_notes: bookingNotes || null,
         status: 'confirmed',
+        booking_type: bookingType,
+        payment_status: bookingType === 'member' ? 'paid' : 'pending',
       })
       .select()
       .single()
 
     if (error) {
+      // Handle unique violation from partial unique index for active bookings
+      if ((error as any)?.code === '23505') {
+        throw new Error('This time slot was just taken. Please choose another time.')
+      }
       throw new Error(`Failed to create booking: ${error.message}`)
     }
 
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/bookings')
     revalidatePath('/bookings')
+    // Targeted cache invalidation for availability
+    try {
+      revalidateTag(`availability:court:${courtId}`)
+    } catch (e) {
+      // no-op if tag isn't set in current environment
+    }
 
     return { success: true, booking }
   } catch (error) {
@@ -328,52 +374,80 @@ export async function createBooking(formData: FormData) {
 export async function cancelBooking(bookingId: string) {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError) {
+      console.error('Auth error:', authError)
+      throw new Error('Authentication error')
+    }
 
     if (!user) {
       throw new Error('User must be authenticated')
     }
 
     // Get booking details
-    const { data: booking } = await supabase
+    const { data: booking, error: fetchError } = await supabase
       .from('bookings')
-      .select('user_id, start_time')
+      .select('user_id, start_time, status')
       .eq('id', bookingId)
       .single()
+
+    if (fetchError) {
+      console.error('Error fetching booking:', fetchError)
+      throw new Error(`Failed to fetch booking: ${fetchError.message}`)
+    }
 
     if (!booking) {
       throw new Error('Booking not found')
     }
 
     if (booking.user_id !== user.id) {
-      throw new Error('Unauthorized')
+      throw new Error('Unauthorized: This booking belongs to another user')
     }
 
     // Don't allow cancelling past bookings
     const startTime = new Date(booking.start_time)
-    if (startTime < new Date()) {
+    const now = new Date()
+    if (startTime < now) {
       throw new Error('Cannot cancel past bookings')
     }
 
+    // Don't allow cancelling already cancelled bookings
+    if (booking.status === 'cancelled') {
+      throw new Error('Booking is already cancelled')
+    }
+
     // Update booking status in Supabase
-    const { error } = await supabase
+    const { data: updatedBooking, error: updateError } = await supabase
       .from('bookings')
       .update({ status: 'cancelled' })
       .eq('id', bookingId)
+      .select()
+      .single()
 
-    if (error) {
-      throw new Error(`Failed to cancel booking: ${error.message}`)
+    if (updateError) {
+      console.error('Update error:', updateError)
+      console.error('Error code:', (updateError as any)?.code)
+      console.error('Error details:', (updateError as any)?.details)
+      console.error('Error hint:', (updateError as any)?.hint)
+      throw new Error(`Failed to cancel booking: ${updateError.message}. Error code: ${(updateError as any)?.code}`)
+    }
+
+    if (!updatedBooking) {
+      throw new Error('Booking was not updated')
     }
 
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/bookings')
+    revalidatePath('/bookings')
 
-    return { success: true }
+    return { success: true, booking: updatedBooking }
   } catch (error) {
     console.error('Booking cancellation error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to cancel booking'
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to cancel booking',
+      error: errorMessage,
     }
   }
 }
