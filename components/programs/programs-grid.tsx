@@ -74,20 +74,24 @@ const programs = [
 
 export function ProgramsGrid() {
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-white">
-      <div className="mx-auto max-w-7xl">
+    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-gradient-to-b from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-20 left-0 w-96 h-96 bg-[#50C878]/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-0 w-96 h-96 bg-[#2D5B4A]/10 rounded-full blur-3xl" />
+      
+      <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="h-0.5 w-10 bg-yellow-400 inline-block" />
-            <span className="text-xs tracking-wider text-[#2D5B4A] font-semibold uppercase">Our Programs</span>
+            <span className="text-xs tracking-wider text-[#50C878] dark:text-[#50C878] font-semibold uppercase">Our Programs</span>
             <span className="h-0.5 w-10 bg-yellow-400 inline-block" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#2D5B4A] mb-4">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white dark:text-white mb-6 leading-tight">
             Choose Your Path to Excellence
           </h2>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Whether you're a beginner or an advanced athlete, our expert-led programs are designed to help you achieve your goals.
+          <p className="text-lg text-gray-300 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Whether you're a beginner or an advanced athlete, our expert-led programs are designed to help you achieve your goals with personalized coaching and proven training methods.
           </p>
         </div>
 
@@ -98,54 +102,55 @@ export function ProgramsGrid() {
             return (
               <div
                 key={program.id}
-                className="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300"
+                className="group bg-gray-800 dark:bg-gray-800 rounded-3xl border border-gray-700 dark:border-gray-700 overflow-hidden hover:shadow-2xl hover:border-[#50C878]/30 transition-all duration-500 hover:-translate-y-1"
               >
                 {/* Image Section */}
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative h-72 overflow-hidden">
                   <Image
                     src={program.image}
                     alt={program.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-black/90 transition-all duration-500" />
+                  
+                  {/* Animated gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/0 to-transparent group-hover:from-[#50C878]/20 transition-all duration-500" />
                   
                   {/* Icon Badge */}
-                  <div className={`absolute top-4 right-4 w-14 h-14 rounded-full bg-gradient-to-br ${program.color} flex items-center justify-center shadow-lg`}>
-                    <Icon className="w-7 h-7 text-white" />
+                  <div className={`absolute top-5 right-5 w-16 h-16 rounded-2xl bg-gradient-to-br ${program.color} flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-8 h-8 text-white" />
                   </div>
 
                   {/* Program Name Overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h3 className="text-3xl font-bold text-white mb-1">{program.name}</h3>
+                    <h3 className="text-3xl md:text-4xl font-bold text-white mb-2 group-hover:text-[#CFEA6C] transition-colors duration-300">{program.name}</h3>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2 text-white/90">
+                        <Clock className="w-4 h-4" />
+                        <span className="font-medium">{program.duration}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-white/90">
+                        <TrendingUp className="w-4 h-4" />
+                        <span className="font-medium">{program.level}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Content Section */}
-                <div className="p-6">
-                  <p className="text-gray-600 mb-6 leading-relaxed">{program.description}</p>
-
-                  {/* Meta Info */}
-                  <div className="flex items-center gap-4 mb-6 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Clock className="w-4 h-4 text-[#50C878]" />
-                      <span>{program.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <TrendingUp className="w-4 h-4 text-[#50C878]" />
-                      <span>{program.level}</span>
-                    </div>
-                  </div>
+                <div className="p-8">
+                  <p className="text-gray-300 dark:text-gray-300 leading-relaxed mb-6 text-base">{program.description}</p>
 
                   {/* Features List */}
-                  <div className="space-y-3 mb-6">
+                  <div className="space-y-3 mb-8">
                     {program.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-2">
-                        <div className="w-5 h-5 rounded-full bg-[#E6F5EC] flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Award className="w-3 h-3 text-[#50C878]" />
+                      <div key={idx} className="flex items-start gap-3 group/item">
+                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#E6F5EC] to-[#D0F0E0] flex items-center justify-center flex-shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform">
+                          <Award className="w-3.5 h-3.5 text-[#50C878]" />
                         </div>
-                        <span className="text-sm text-gray-600">{feature}</span>
+                        <span className="text-sm text-gray-300 dark:text-gray-300 font-medium leading-relaxed">{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -153,9 +158,12 @@ export function ProgramsGrid() {
                   {/* CTA Button */}
                   <Button
                     asChild
-                    className="w-full bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg h-11 font-semibold"
+                    className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white rounded-xl h-12 font-semibold shadow-lg hover:shadow-xl transition-all group/btn"
                   >
-                    <Link href="/bookings">Start Training</Link>
+                    <Link href="/bookings" className="flex items-center justify-center gap-2">
+                      Start Training
+                      <Users className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </Link>
                   </Button>
                 </div>
               </div>
@@ -165,13 +173,13 @@ export function ProgramsGrid() {
 
         {/* Bottom CTA */}
         <div className="mt-16 text-center">
-          <p className="text-gray-600 mb-6 text-lg">
+          <p className="text-gray-300 dark:text-gray-300 mb-6 text-lg">
             Not sure which program is right for you?
           </p>
           <Button
             asChild
             variant="outline"
-            className="border-2 border-[#2D5B4A] text-[#2D5B4A] hover:bg-[#2D5B4A] hover:text-white rounded-lg px-8 py-3 h-auto font-semibold"
+            className="border-2 border-[#50C878] text-[#50C878] hover:bg-[#50C878] hover:text-white rounded-lg px-8 py-3 h-auto font-semibold"
           >
             <Link href="mailto:info@worldsportsacademy.com">Contact Our Coaches</Link>
           </Button>

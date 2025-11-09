@@ -28,22 +28,22 @@ export default async function MembershipsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-16 overflow-x-hidden">
+    <div className="h-screen bg-gray-900 dark:bg-gray-900 overflow-hidden flex flex-col">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1C2A24] via-[#2D5B4A] to-[#50C878] py-12 md:py-16">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#1C2A24] via-[#2D5B4A] to-[#50C878] py-8 flex-shrink-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_rgba(255,255,255,0)_60%)] mix-blend-overlay" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="flex items-center justify-center gap-3 mb-3">
               <span className="text-sm font-semibold text-white/90 uppercase tracking-wider">
                 MEMBERSHIPS
               </span>
               <div className="h-0.5 w-12 bg-[#CFEA6C]" />
             </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
               Choose Your Membership
             </h1>
-            <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-white/90 max-w-2xl mx-auto">
               Unlock unlimited access to our world-class sports facilities. 
               All memberships include monthly auto-renewal for your convenience.
             </p>
@@ -52,14 +52,14 @@ export default async function MembershipsPage() {
       </section>
 
       {/* Membership Plans */}
-      <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-white">
-        <div className="max-w-7xl mx-auto relative z-10">
+      <section className="flex-1 overflow-y-auto py-6 px-4 sm:px-6 lg:px-8 bg-gray-900 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto">
           {plans.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">No membership plans available at this time.</p>
+              <p className="text-gray-400 dark:text-gray-400">No membership plans available at this time.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {plans.map((plan) => (
                 <MembershipCard key={plan.id} plan={plan} />
               ))}
@@ -69,13 +69,13 @@ export default async function MembershipsPage() {
       </section>
 
       {/* Drop-in CTA Section */}
-      <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-6 px-4 sm:px-6 lg:px-8 bg-gray-900 dark:bg-gray-900 flex-shrink-0 border-t border-gray-800 dark:border-gray-800">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gradient-to-br from-[#50C878]/10 to-[#2D5B4A]/10 border border-[#50C878]/20 rounded-2xl p-8 md:p-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#2D5B4A] mb-4">
+          <div className="bg-gradient-to-br from-[#50C878]/20 to-[#2D5B4A]/20 dark:from-[#50C878]/20 dark:to-[#2D5B4A]/20 border border-[#50C878]/30 dark:border-[#50C878]/30 rounded-2xl p-6 md:p-8 text-center">
+            <h2 className="text-xl md:text-2xl font-bold text-white dark:text-white mb-3">
               Not ready for a membership?
             </h2>
-            <p className="text-gray-600 mb-6 text-lg max-w-2xl mx-auto">
+            <p className="text-gray-300 dark:text-gray-300 mb-4 text-base max-w-2xl mx-auto">
               Try our drop-in rates for flexible access to our facilities. Perfect for trying out our services before committing to a membership.
             </p>
             <Button

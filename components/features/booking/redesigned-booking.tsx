@@ -308,7 +308,7 @@ export function RedesignedBooking() {
   const isComplete = selectedSport && selectedCourt && selectedDate && selectedTime
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-800 pt-20">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-[#1C2A24] via-[#2D5B4A] to-[#50C878] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -326,7 +326,7 @@ export function RedesignedBooking() {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-white border-b shadow-sm sticky top-16 z-40">
+      <div className="bg-gray-800 dark:bg-gray-800 border-b border-gray-700 dark:border-gray-700 shadow-sm sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between max-w-2xl mx-auto">
             {[
@@ -345,15 +345,15 @@ export function RedesignedBooking() {
                       step.done
                         ? 'bg-[#50C878] text-white scale-110'
                         : currentStep === step.num
-                        ? 'bg-[#2D5B4A] text-white scale-105'
-                        : 'bg-gray-200 text-gray-400'
+                        ? 'bg-[#50C878] text-white scale-105'
+                        : 'bg-gray-700 dark:bg-gray-700 text-gray-400'
                     }`}
                   >
                     {step.done ? <Check className="w-5 h-5" /> : step.num}
                   </div>
                   <span
                     className={`text-xs font-medium ${
-                      step.done || currentStep === step.num ? 'text-[#2D5B4A]' : 'text-gray-400'
+                      step.done || currentStep === step.num ? 'text-[#50C878] dark:text-[#50C878]' : 'text-gray-400 dark:text-gray-400'
                     }`}
                   >
                     {step.label}
@@ -362,7 +362,7 @@ export function RedesignedBooking() {
                 {idx < 3 && (
                   <div
                     className={`flex-1 h-1 mx-2 rounded transition-all ${
-                      step.done ? 'bg-[#50C878]' : 'bg-gray-200'
+                      step.done ? 'bg-[#50C878]' : 'bg-gray-700 dark:bg-gray-700'
                     }`}
                   />
                 )}
@@ -378,7 +378,7 @@ export function RedesignedBooking() {
           {/* Left Column - Steps */}
           <div className="lg:col-span-2 space-y-6">
             {/* Step 1: Select Sport */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-700 dark:border-gray-700 overflow-hidden">
               <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">1</span>
@@ -400,8 +400,8 @@ export function RedesignedBooking() {
                           onClick={() => handleSportSelect(sport)}
                           className={`relative group p-6 rounded-xl border-2 transition-all text-left ${
                             selectedSport?.id === sport.id
-                              ? 'border-[#50C878] bg-[#50C878]/5 shadow-md'
-                              : 'border-gray-200 hover:border-[#50C878]/50 hover:shadow-sm'
+                              ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
+                              : 'border-gray-700 dark:border-gray-700 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-700/50 dark:bg-gray-700/50'
                           }`}
                         >
                           <div className="flex items-start gap-4">
@@ -409,14 +409,14 @@ export function RedesignedBooking() {
                               className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
                                 selectedSport?.id === sport.id
                                   ? 'bg-[#50C878] text-white'
-                                  : 'bg-gray-100 text-[#2D5B4A] group-hover:bg-[#50C878]/10'
+                                  : 'bg-gray-600 dark:bg-gray-600 text-white group-hover:bg-[#50C878]/20'
                               }`}
                             >
                               <Icon className="w-6 h-6" />
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-bold text-lg text-[#2D5B4A] mb-1">{sport.display_name}</h3>
-                              <p className="text-sm text-gray-600">
+                              <h3 className="font-bold text-lg text-white dark:text-white mb-1">{sport.display_name}</h3>
+                              <p className="text-sm text-gray-300 dark:text-gray-300">
                                 {sport.duration_minutes} min session
                               </p>
                             </div>
@@ -434,7 +434,7 @@ export function RedesignedBooking() {
 
             {/* Step 2: Select Court */}
             {selectedSport && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-700 dark:border-gray-700 overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">2</span>
@@ -454,17 +454,17 @@ export function RedesignedBooking() {
                           onClick={() => handleCourtSelect(court)}
                           className={`p-6 rounded-xl border-2 transition-all text-left ${
                             selectedCourt?.id === court.id
-                              ? 'border-[#50C878] bg-[#50C878]/5 shadow-md'
-                              : 'border-gray-200 hover:border-[#50C878]/50 hover:shadow-sm'
+                              ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
+                              : 'border-gray-700 dark:border-gray-700 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-700/50 dark:bg-gray-700/50'
                           }`}
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-bold text-lg text-[#2D5B4A]">{court.name}</h3>
+                            <h3 className="font-bold text-lg text-white dark:text-white">{court.name}</h3>
                             {selectedCourt?.id === court.id && (
                               <Check className="w-6 h-6 text-[#50C878]" />
                             )}
                           </div>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-300 dark:text-gray-300">
                             {court.location || 'Available for booking'}
                           </p>
                         </button>
@@ -477,7 +477,7 @@ export function RedesignedBooking() {
 
             {/* Step 3 & 4: Select Date & Time */}
             {selectedCourt && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-700 dark:border-gray-700 overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">3</span>
@@ -488,10 +488,10 @@ export function RedesignedBooking() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Date Picker */}
                     <div>
-                      <label className="block text-sm font-semibold text-[#2D5B4A] mb-3">
+                      <label className="block text-sm font-semibold text-white dark:text-white mb-3">
                         Select Date
                       </label>
-                      <div className="text-xs text-gray-500 mb-2 bg-gray-50 px-3 py-2 rounded-md border">
+                      <div className="text-xs text-gray-300 dark:text-gray-300 mb-2 bg-gray-700 dark:bg-gray-700 px-3 py-2 rounded-md border border-gray-600 dark:border-gray-600">
                         📅 Available: Today to {format(addDays(new Date(), 14), 'MMM d, yyyy')}
                       </div>
                       <Calendar
@@ -502,13 +502,13 @@ export function RedesignedBooking() {
                           date < new Date(new Date().setHours(0, 0, 0, 0)) ||
                           date > addDays(new Date(), 14)
                         }
-                        className="rounded-lg border"
+                        className="rounded-lg border border-gray-700 dark:border-gray-700 bg-gray-800 dark:bg-gray-800"
                       />
                     </div>
 
                     {/* Time Picker */}
                     <div>
-                      <label className="block text-sm font-semibold text-[#2D5B4A] mb-3">
+                      <label className="block text-sm font-semibold text-white dark:text-white mb-3">
                         Select Time
                       </label>
                       {loadingSlots ? (
@@ -526,18 +526,18 @@ export function RedesignedBooking() {
                                 onClick={() => handleTimeSelect(slot.time)}
                                 className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
                                   selectedTime === slot.time
-                                    ? 'border-[#50C878] bg-[#50C878]/5 shadow-sm'
-                                    : 'border-gray-200 hover:border-[#50C878]/50'
+                                    ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
+                                    : 'border-gray-700 dark:border-gray-700 hover:border-[#50C878]/50 bg-gray-700/50 dark:bg-gray-700/50'
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                    <Clock className="w-5 h-5 text-[#2D5B4A]" />
+                                    <Clock className="w-5 h-5 text-[#50C878] dark:text-[#50C878]" />
                                     <div>
-                                      <div className="font-semibold text-[#2D5B4A]">
+                                      <div className="font-semibold text-white dark:text-white">
                                         {format(slotTime, 'h:mm a')} - {format(slotEndTime, 'h:mm a')}
                                       </div>
-                                      <div className="text-xs text-gray-600">
+                                      <div className="text-xs text-gray-300 dark:text-gray-300">
                                         {durationMinutes} minutes
                                       </div>
                                     </div>
@@ -551,7 +551,7 @@ export function RedesignedBooking() {
                           })}
                         </div>
                       ) : (
-                        <div className="text-center py-12 text-gray-500">
+                        <div className="text-center py-12 text-gray-400 dark:text-gray-400">
                           <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
                           <p>No available slots for this date</p>
                           <p className="text-sm mt-1">Please select another date</p>
@@ -566,54 +566,54 @@ export function RedesignedBooking() {
 
           {/* Right Column - Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden sticky top-32">
+            <div className="bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-700 dark:border-gray-700 overflow-hidden sticky top-32">
               <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
                 <h2 className="text-xl font-bold text-white">Booking Summary</h2>
               </div>
               <div className="p-6 space-y-6">
                 {/* Selection Details */}
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3 pb-4 border-b">
-                    <Trophy className="w-5 h-5 text-[#2D5B4A] mt-0.5" />
+                  <div className="flex items-start gap-3 pb-4 border-b border-gray-700 dark:border-gray-700">
+                    <Trophy className="w-5 h-5 text-[#50C878] dark:text-[#50C878] mt-0.5" />
                     <div className="flex-1">
-                      <div className="text-xs text-gray-600 mb-1">Sport</div>
-                      <div className="font-semibold text-[#2D5B4A]">
+                      <div className="text-xs text-gray-400 dark:text-gray-400 mb-1">Sport</div>
+                      <div className="font-semibold text-white dark:text-white">
                         {selectedSport?.display_name || 'Not selected'}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 pb-4 border-b">
-                    <Circle className="w-5 h-5 text-[#2D5B4A] mt-0.5" />
+                  <div className="flex items-start gap-3 pb-4 border-b border-gray-700 dark:border-gray-700">
+                    <Circle className="w-5 h-5 text-[#50C878] dark:text-[#50C878] mt-0.5" />
                     <div className="flex-1">
-                      <div className="text-xs text-gray-600 mb-1">Court</div>
-                      <div className="font-semibold text-[#2D5B4A]">
+                      <div className="text-xs text-gray-400 dark:text-gray-400 mb-1">Court</div>
+                      <div className="font-semibold text-white dark:text-white">
                         {selectedCourt?.name || 'Not selected'}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 pb-4 border-b">
-                    <CalendarIcon className="w-5 h-5 text-[#2D5B4A] mt-0.5" />
+                  <div className="flex items-start gap-3 pb-4 border-b border-gray-700 dark:border-gray-700">
+                    <CalendarIcon className="w-5 h-5 text-[#50C878] dark:text-[#50C878] mt-0.5" />
                     <div className="flex-1">
-                      <div className="text-xs text-gray-600 mb-1">Date</div>
-                      <div className="font-semibold text-[#2D5B4A]" aria-busy={isDatePending}>
+                      <div className="text-xs text-gray-400 dark:text-gray-400 mb-1">Date</div>
+                      <div className="font-semibold text-white dark:text-white" aria-busy={isDatePending}>
                         {isDatePending ? 'Updating...' : (selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Not selected')}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 pb-4 border-b">
-                    <Clock className="w-5 h-5 text-[#2D5B4A] mt-0.5" />
+                  <div className="flex items-start gap-3 pb-4 border-b border-gray-700 dark:border-gray-700">
+                    <Clock className="w-5 h-5 text-[#50C878] dark:text-[#50C878] mt-0.5" />
                     <div className="flex-1">
-                      <div className="text-xs text-gray-600 mb-1">Time</div>
-                      <div className="font-semibold text-[#2D5B4A]" aria-busy={isDatePending}>
+                      <div className="text-xs text-gray-400 dark:text-gray-400 mb-1">Time</div>
+                      <div className="font-semibold text-white dark:text-white" aria-busy={isDatePending}>
                         {isDatePending
                           ? 'Updating...'
                           : (selectedTime && endTime ? (
                             <>
                               {format(parseISO(selectedTime), 'h:mm a')} - {format(endTime, 'h:mm a')}
-                              <div className="text-xs text-gray-600 mt-1">
+                              <div className="text-xs text-gray-400 dark:text-gray-400 mt-1">
                                 {durationMinutes} minutes
                               </div>
                             </>
@@ -627,30 +627,30 @@ export function RedesignedBooking() {
 
                 {/* Payment Info */}
                 {checkingAuth && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600 py-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-300 dark:text-gray-300 py-4">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Checking membership status...
                   </div>
                 )}
 
                 {!checkingAuth && requiresPayment && paymentInfo && (
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-4 border border-amber-200">
+                  <div className="bg-gradient-to-br from-amber-900/30 to-orange-900/30 dark:from-amber-900/30 dark:to-orange-900/30 rounded-lg p-4 border border-amber-700/50 dark:border-amber-700/50">
                     <div className="flex items-center gap-2 mb-3">
-                      <CreditCard className="w-5 h-5 text-amber-700" />
-                      <h3 className="font-bold text-amber-900">Payment Required</h3>
+                      <CreditCard className="w-5 h-5 text-amber-400 dark:text-amber-400" />
+                      <h3 className="font-bold text-amber-300 dark:text-amber-300">Payment Required</h3>
                     </div>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between text-gray-700">
+                      <div className="flex justify-between text-gray-300 dark:text-gray-300">
                         <span>Drop-in Fee:</span>
                         <span className="font-semibold">${paymentInfo.price.toFixed(2)}</span>
                       </div>
                       {paymentInfo.tax > 0 && (
-                        <div className="flex justify-between text-gray-700">
+                        <div className="flex justify-between text-gray-300 dark:text-gray-300">
                           <span>Tax:</span>
                           <span className="font-semibold">${paymentInfo.tax.toFixed(2)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between font-bold text-lg pt-2 border-t border-amber-200 text-amber-900">
+                      <div className="flex justify-between font-bold text-lg pt-2 border-t border-amber-700/50 dark:border-amber-700/50 text-amber-300 dark:text-amber-300">
                         <span>Total:</span>
                         <span>${paymentInfo.total.toFixed(2)}</span>
                       </div>
@@ -659,12 +659,12 @@ export function RedesignedBooking() {
                 )}
 
                 {!checkingAuth && !requiresPayment && selectedTime && (
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-                    <div className="flex items-center gap-2 text-green-800">
+                  <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-4 border border-green-700/50 dark:border-green-700/50">
+                    <div className="flex items-center gap-2 text-green-300 dark:text-green-300">
                       <Check className="w-5 h-5" />
                       <span className="font-semibold">Covered by your membership</span>
                     </div>
-                    <p className="text-xs text-green-700 mt-1">
+                    <p className="text-xs text-green-400 dark:text-green-400 mt-1">
                       No additional payment required
                     </p>
                   </div>
@@ -695,7 +695,7 @@ export function RedesignedBooking() {
                 </Button>
 
                 {!isComplete && (
-                  <div className="flex items-start gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-start gap-2 text-xs text-gray-400 dark:text-gray-400 bg-gray-700/50 dark:bg-gray-700/50 rounded-lg p-3">
                     <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <p>Complete all steps above to proceed with your booking</p>
                   </div>

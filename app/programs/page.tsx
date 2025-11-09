@@ -11,7 +11,7 @@ export const metadata = {
 
 export default function ProgramsPage() {
   return (
-    <div className="min-h-screen bg-white pt-16 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-900 dark:bg-gray-900 pt-20 overflow-x-hidden">
       <ProgramsHero />
       <ProgramsGrid />
       <ProgramBenefits />

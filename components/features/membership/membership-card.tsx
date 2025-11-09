@@ -99,38 +99,38 @@ export function MembershipCard({ plan }: MembershipCardProps) {
   return (
     <Card className={`flex flex-col h-full hover:shadow-xl transition-all duration-300 border-2 ${
       isPopular 
-        ? 'border-[#50C878] shadow-lg ring-2 ring-[#50C878]/20' 
-        : 'border-gray-200 hover:border-[#50C878]/50'
+        ? 'border-[#50C878] shadow-lg ring-2 ring-[#50C878]/20 bg-gray-800 dark:bg-gray-800' 
+        : 'border-gray-700 dark:border-gray-700 hover:border-[#50C878]/50 bg-gray-800 dark:bg-gray-800'
     }`}>
       {isPopular && (
         <div className="bg-gradient-to-r from-[#50C878] to-[#2D5B4A] text-white text-center py-2 text-sm font-semibold">
           Most Popular
         </div>
       )}
-      <CardHeader className={isPopular ? 'bg-gradient-to-br from-[#50C878]/5 to-transparent' : ''}>
+      <CardHeader className={isPopular ? 'bg-gradient-to-br from-[#50C878]/10 to-transparent dark:from-[#50C878]/10' : ''}>
         <div className="flex items-center justify-between mb-2">
-          <CardTitle className="text-2xl font-bold text-[#2D5B4A]">{plan.name}</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white dark:text-white">{plan.name}</CardTitle>
         </div>
-        <CardDescription className="text-gray-600">{plan.description}</CardDescription>
+        <CardDescription className="text-gray-300 dark:text-gray-300">{plan.description}</CardDescription>
         <div className="mt-6">
           <div className="flex items-baseline">
-            <span className="text-5xl font-bold text-[#2D5B4A]">{formatPrice(plan.price)}</span>
-            <span className="text-gray-500 ml-2 text-lg">
+            <span className="text-5xl font-bold text-white dark:text-white">{formatPrice(plan.price)}</span>
+            <span className="text-gray-400 dark:text-gray-400 ml-2 text-lg">
               /{plan.billing_interval === 'month' ? 'month' : 'year'}
             </span>
           </div>
-          <p className="text-sm text-gray-500 mt-1">+ tax</p>
+          <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">+ tax</p>
         </div>
       </CardHeader>
       <CardContent className="flex-grow">
         {sports.length > 0 && (
           <div className="mb-6">
-            <p className="text-sm font-semibold text-[#2D5B4A] mb-3">Includes Sports:</p>
+            <p className="text-sm font-semibold text-white dark:text-white mb-3">Includes Sports:</p>
             <div className="flex flex-wrap gap-2">
               {sports.map((sport) => (
                 <Badge 
                   key={sport.id} 
-                  className="bg-[#50C878]/10 text-[#2D5B4A] border-[#50C878]/30 hover:bg-[#50C878]/20"
+                  className="bg-[#50C878]/20 dark:bg-[#50C878]/20 text-[#50C878] dark:text-[#50C878] border-[#50C878]/30 dark:border-[#50C878]/30 hover:bg-[#50C878]/30 dark:hover:bg-[#50C878]/30"
                   variant="outline"
                 >
                   {sport.display_name}
@@ -145,7 +145,7 @@ export function MembershipCard({ plan }: MembershipCardProps) {
               <div className="w-5 h-5 rounded-full bg-[#50C878] flex items-center justify-center mr-3 flex-shrink-0">
                 <Check className="h-3 w-3 text-white" />
               </div>
-              <span className="text-gray-700">Unlimited bookings</span>
+              <span className="text-gray-300 dark:text-gray-300">Unlimited bookings</span>
             </li>
           )}
           {features.priority_booking && (
@@ -153,7 +153,7 @@ export function MembershipCard({ plan }: MembershipCardProps) {
               <div className="w-5 h-5 rounded-full bg-[#50C878] flex items-center justify-center mr-3 flex-shrink-0">
                 <Check className="h-3 w-3 text-white" />
               </div>
-              <span className="text-gray-700">Priority booking access</span>
+              <span className="text-gray-300 dark:text-gray-300">Priority booking access</span>
             </li>
           )}
           {features.gym_access && (
@@ -161,20 +161,20 @@ export function MembershipCard({ plan }: MembershipCardProps) {
               <div className="w-5 h-5 rounded-full bg-[#50C878] flex items-center justify-center mr-3 flex-shrink-0">
                 <Check className="h-3 w-3 text-white" />
               </div>
-              <span className="text-gray-700">Gym access included</span>
+              <span className="text-gray-300 dark:text-gray-300">Gym access included</span>
             </li>
           )}
           <li className="flex items-center text-sm">
             <div className="w-5 h-5 rounded-full bg-[#50C878] flex items-center justify-center mr-3 flex-shrink-0">
               <Check className="h-3 w-3 text-white" />
             </div>
-            <span className="text-gray-700">Monthly auto-renewal</span>
+            <span className="text-gray-300 dark:text-gray-300">Monthly auto-renewal</span>
           </li>
           <li className="flex items-center text-sm">
             <div className="w-5 h-5 rounded-full bg-[#50C878] flex items-center justify-center mr-3 flex-shrink-0">
               <Check className="h-3 w-3 text-white" />
             </div>
-            <span className="text-gray-700">Cancel anytime</span>
+            <span className="text-gray-300 dark:text-gray-300">Cancel anytime</span>
           </li>
         </ul>
       </CardContent>
