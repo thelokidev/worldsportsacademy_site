@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useTransition, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter, usePathname } from "next/navigation"
 import {
@@ -28,17 +28,31 @@ export function Navbar() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [scrolled, setScrolled] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
     const supabase = createClient()
 
-    // Get initial session
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-      setLoading(false)
-    })
+    // Get initial session - optimized with caching
+    const initAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setUser(user)
+      } catch (error) {
+        console.error('Auth error:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initAuth()
 
     // Listen for auth changes
     const {
@@ -60,9 +74,12 @@ export function Navbar() {
   }, [])
 
   const handleSignOut = async () => {
-    await signOut()
-    router.refresh()
-    setUser(null)
+    startTransition(async () => {
+      await signOut()
+      setUser(null)
+      router.push('/')
+      router.refresh()
+    })
   }
 
   const getInitials = (email?: string) => {
@@ -76,11 +93,17 @@ export function Navbar() {
       .slice(0, 2)
   }
 
-  const isActive = (href: string) => {
-    if (href === "/") {
-      return pathname === "/"
+  const isActive = useMemo(() => {
+    return (href: string) => {
+      if (href === "/") {
+        return pathname === "/"
+      }
+      return pathname?.startsWith(href)
     }
-    return pathname?.startsWith(href)
+  }, [pathname])
+
+  const handleLinkClick = () => {
+    setMobileMenuOpen(false)
   }
 
   return (
@@ -98,6 +121,7 @@ export function Navbar() {
             {/* Logo */}
             <Link
               href="/"
+              prefetch={true}
               className="flex items-center gap-3 group relative"
             >
               <div className="relative">
@@ -122,11 +146,12 @@ export function Navbar() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    prefetch={true}
+                    className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
                       active
                         ? "text-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10"
                         : "text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800"
-                    }`}
+                    } ${mounted && isPending ? "opacity-70" : ""}`}
                   >
                     {item.name}
                     {active && (
@@ -174,6 +199,7 @@ export function Navbar() {
                     <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
                       <Link
                         href="/dashboard"
+                        prefetch={true}
                         className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-700 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-300 dark:text-gray-300"
                       >
                         <LayoutDashboard className="w-4 h-4 text-gray-400 dark:text-gray-400" />
@@ -183,6 +209,7 @@ export function Navbar() {
                     <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
                       <Link
                         href="/dashboard/bookings"
+                        prefetch={true}
                         className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-700 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-300 dark:text-gray-300"
                       >
                         <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-400" />
@@ -192,6 +219,7 @@ export function Navbar() {
                     <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
                       <Link
                         href="/dashboard/membership"
+                        prefetch={true}
                         className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-700 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-300 dark:text-gray-300"
                       >
                         <CreditCard className="w-4 h-4 text-gray-400 dark:text-gray-400" />
@@ -218,14 +246,14 @@ export function Navbar() {
                     className="text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800"
                     asChild
                   >
-                    <Link href="/signin">Sign In</Link>
+                    <Link href="/signin" prefetch={true}>Login</Link>
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg hover:shadow-xl transition-all duration-200"
                     asChild
                   >
-                    <Link href="/signup">Get Started</Link>
+                    <Link href="/signup" prefetch={true}>Signup</Link>
                   </Button>
                 </div>
               )}
@@ -265,12 +293,13 @@ export function Navbar() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center px-4 py-3 text-base font-medium rounded-xl transition-all duration-200 ${
+                    prefetch={true}
+                    onClick={handleLinkClick}
+                    className={`flex items-center px-4 py-3 text-base font-medium rounded-xl transition-colors duration-150 ${
                       active
                         ? "text-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10"
                         : "text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800"
-                    }`}
+                    } ${mounted && isPending ? "opacity-70" : ""}`}
                   >
                     {item.name}
                     {active && (
@@ -284,7 +313,8 @@ export function Navbar() {
                   <>
                     <Link
                       href="/dashboard"
-                      onClick={() => setMobileMenuOpen(false)}
+                      prefetch={true}
+                      onClick={handleLinkClick}
                       className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800 rounded-xl transition-colors"
                     >
                       <LayoutDashboard className="w-5 h-5" />
@@ -292,7 +322,8 @@ export function Navbar() {
                     </Link>
                     <Link
                       href="/dashboard/bookings"
-                      onClick={() => setMobileMenuOpen(false)}
+                      prefetch={true}
+                      onClick={handleLinkClick}
                       className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800 rounded-xl transition-colors"
                     >
                       <Calendar className="w-5 h-5" />
@@ -316,16 +347,14 @@ export function Navbar() {
                       variant="outline"
                       className="w-full border-gray-700 dark:border-gray-700 text-gray-300 dark:text-gray-300"
                       asChild
-                      onClick={() => setMobileMenuOpen(false)}
                     >
-                      <Link href="/signin">Sign In</Link>
+                      <Link href="/signin" prefetch={true} onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
                     </Button>
                     <Button
                       className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg"
                       asChild
-                      onClick={() => setMobileMenuOpen(false)}
                     >
-                      <Link href="/signup">Get Started</Link>
+                      <Link href="/signup" prefetch={true} onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
                     </Button>
                   </>
                 )}

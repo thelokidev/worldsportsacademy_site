@@ -71,15 +71,19 @@ export function SignUpForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <FormField
           control={form.control}
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name (optional)</FormLabel>
+              <FormLabel className="text-white dark:text-white">Full Name (optional)</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} />
+                <Input 
+                  placeholder="John Doe" 
+                  className="bg-gray-700 dark:bg-gray-700 border-gray-600 dark:border-gray-600 text-white placeholder:text-gray-400 focus:border-[#50C878] focus:ring-[#50C878]" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -90,9 +94,14 @@ export function SignUpForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-white dark:text-white">Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="you@example.com" {...field} />
+                <Input 
+                  type="email" 
+                  placeholder="you@example.com" 
+                  className="bg-gray-700 dark:bg-gray-700 border-gray-600 dark:border-gray-600 text-white placeholder:text-gray-400 focus:border-[#50C878] focus:ring-[#50C878]" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -103,9 +112,14 @@ export function SignUpForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-white dark:text-white">Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <Input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  className="bg-gray-700 dark:bg-gray-700 border-gray-600 dark:border-gray-600 text-white placeholder:text-gray-400 focus:border-[#50C878] focus:ring-[#50C878]" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -116,15 +130,24 @@ export function SignUpForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel className="text-white dark:text-white">Confirm Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <Input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  className="bg-gray-700 dark:bg-gray-700 border-gray-600 dark:border-gray-600 text-white placeholder:text-gray-400 focus:border-[#50C878] focus:ring-[#50C878]" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full bg-[#50C878] hover:bg-[#50C878]/90 text-white" disabled={form.formState.isSubmitting}>
+        <Button 
+          type="submit" 
+          className="w-full bg-[#50C878] hover:bg-[#50C878]/90 text-white font-semibold h-11 text-base shadow-lg hover:shadow-xl transition-all" 
+          disabled={form.formState.isSubmitting}
+        >
           {form.formState.isSubmitting ? 'Creating account...' : 'Sign Up'}
         </Button>
       </form>
