@@ -238,15 +238,17 @@ export function Navbar() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <div className="hidden md:flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                    asChild
-                  >
-                    <Link href="/auth" prefetch={true}>Login</Link>
-                  </Button>
-                </div>
+                mounted && (
+                  <div className="hidden md:flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                      asChild
+                    >
+                      <Link href="/auth" prefetch={true}>Login</Link>
+                    </Button>
+                  </div>
+                )
               )}
 
               {/* Mobile Menu Button */}
@@ -333,14 +335,16 @@ export function Navbar() {
                     </Button>
                   </>
                 ) : (
-                  <>
-                    <Button
-                      className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg"
-                      asChild
-                    >
-                      <Link href="/auth" prefetch={true} onClick={() => setMobileMenuOpen(false)}>Login</Link>
-                    </Button>
-                  </>
+                  mounted && (
+                    <>
+                      <Button
+                        className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg"
+                        asChild
+                      >
+                        <Link href="/auth" prefetch={true} onClick={() => setMobileMenuOpen(false)}>Login</Link>
+                      </Button>
+                    </>
+                  )
                 )}
               </div>
             </div>
