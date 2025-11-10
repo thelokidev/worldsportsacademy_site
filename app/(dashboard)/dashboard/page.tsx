@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     const { data: { user }, error } = await supabase.auth.getUser()
 
     if (error || !user) {
-      redirect('/signin')
+      redirect('/auth')
     }
 
     let upcomingBookings = []
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
     }
 
     return (
-      <div className="h-screen bg-gray-900 dark:bg-gray-900 overflow-hidden flex flex-col">
+      <div className="h-screen bg-black overflow-hidden flex flex-col">
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-br from-[#1C2A24] via-[#2D5B4A] to-[#50C878] pt-20 pb-8 flex-shrink-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_rgba(255,255,255,0)_60%)] mix-blend-overlay" />
@@ -52,7 +52,7 @@ export default async function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 overflow-y-auto">
           <div className="grid gap-6 md:grid-cols-2 h-full">
             {/* Welcome Card */}
-            <Card className="border-2 border-gray-700 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow bg-gray-800 dark:bg-gray-800 flex flex-col">
+            <Card className="border-2 border-gray-800 shadow-lg hover:shadow-xl transition-shadow bg-black flex flex-col">
               <CardHeader className="bg-gradient-to-br from-[#50C878]/10 to-transparent dark:from-[#50C878]/10">
                 <CardTitle className="text-[#50C878] dark:text-[#50C878] text-2xl">Welcome back!</CardTitle>
                 <CardDescription className="text-gray-300 dark:text-gray-300">
@@ -73,7 +73,7 @@ export default async function DashboardPage() {
                   <Button 
                     asChild
                     variant="outline"
-                    className="border-2 border-gray-600 dark:border-gray-600 text-white dark:text-white hover:bg-gray-700 dark:hover:bg-gray-700"
+                    className="border-2 border-gray-800 text-white hover:bg-gray-900"
                   >
                     <Link href="/memberships">View Memberships</Link>
                   </Button>
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
             </Card>
 
             {/* Upcoming Bookings */}
-            <Card className="border-2 border-gray-700 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow bg-gray-800 dark:bg-gray-800 flex flex-col">
+            <Card className="border-2 border-gray-800 shadow-lg hover:shadow-xl transition-shadow bg-black flex flex-col">
               <CardHeader className="bg-gradient-to-br from-[#50C878]/10 to-transparent dark:from-[#50C878]/10">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-[#50C878] dark:text-[#50C878] text-2xl">Upcoming Bookings</CardTitle>
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
                     {upcomingBookings.slice(0, 3).map((booking: any) => (
                       <div
                         key={booking.id}
-                        className="border-2 border-gray-700 dark:border-gray-700 rounded-xl p-4 space-y-3 hover:border-[#50C878]/50 transition-colors bg-gradient-to-br from-gray-700/50 to-[#50C878]/10 dark:from-gray-700/50 dark:to-[#50C878]/10"
+                        className="border-2 border-gray-800 rounded-xl p-4 space-y-3 hover:border-[#50C878]/50 transition-colors bg-black"
                       >
                         <div className="flex items-start justify-between">
                           <div>
@@ -132,13 +132,13 @@ export default async function DashboardPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-4 text-sm">
-                          <div className="flex items-center gap-2 bg-gray-800 dark:bg-gray-800 rounded-lg px-3 py-1.5 border border-gray-600 dark:border-gray-600">
+                          <div className="flex items-center gap-2 bg-black rounded-lg px-3 py-1.5 border border-gray-800">
                             <Calendar className="h-4 w-4 text-[#50C878]" />
                             <span className="font-medium text-white dark:text-white">
                               {format(parseISO(booking.start_time), 'MMM d')}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 bg-gray-800 dark:bg-gray-800 rounded-lg px-3 py-1.5 border border-gray-600 dark:border-gray-600">
+                          <div className="flex items-center gap-2 bg-black rounded-lg px-3 py-1.5 border border-gray-800">
                             <Clock className="h-4 w-4 text-[#50C878]" />
                             <span className="font-medium text-white dark:text-white">
                               {format(parseISO(booking.start_time), 'h:mm a')}

@@ -38,7 +38,7 @@ const facilities = [
 
 export function FacilitiesSection() {
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-gradient-to-b from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-black relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#50C878]/10 rounded-full blur-3xl" />
       
@@ -141,7 +141,7 @@ export function FacilitiesSection() {
             return (
               <div
                 key={index}
-                className="group bg-gray-800 dark:bg-gray-800 rounded-2xl p-6 border border-gray-700 dark:border-gray-700 hover:border-[#50C878] hover:shadow-xl transition-all duration-300"
+                className="group bg-black rounded-2xl p-6 border border-gray-800 hover:border-[#50C878] hover:shadow-xl transition-all duration-300"
               >
                 <div className="relative h-40 rounded-xl overflow-hidden mb-4">
                   <Image
@@ -176,7 +176,7 @@ export function FacilitiesSection() {
         </div>
 
         {/* CTA banner */}
-        <div className="rounded-2xl bg-gray-800 dark:bg-gray-800 text-white overflow-hidden relative border border-gray-700 dark:border-gray-700">
+        <div className="rounded-2xl bg-black text-white overflow-hidden relative border border-gray-800">
           <div className="relative px-6 sm:px-10 md:px-14 py-14 text-center max-w-3xl mx-auto">
             <p className="uppercase tracking-wider text-[#50C878] dark:text-[#50C878] text-xs mb-3">Get Started</p>
             <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white dark:text-white">Join now and

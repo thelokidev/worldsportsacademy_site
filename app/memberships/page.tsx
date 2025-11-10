@@ -28,76 +28,97 @@ export default async function MembershipsPage() {
   }
 
   return (
-    <div className="h-screen bg-gray-900 dark:bg-gray-900 overflow-hidden flex flex-col">
-      {/* Compact Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1C2A24] via-[#2D5B4A] to-[#50C878] py-8 flex-shrink-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_rgba(255,255,255,0)_60%)] mix-blend-overlay" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div className="min-h-screen bg-black">
+      {/* Modern Hero Section */}
+      <section className="relative overflow-hidden pt-32 pb-12 px-4 sm:px-6 lg:px-8">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1C2A24] via-[#2D5B4A] to-[#50C878] opacity-90" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(80,200,120,0.2)_0%,_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(45,91,74,0.3)_0%,_transparent_50%)]" />
+        
+        {/* Floating Orbs */}
+        <div className="absolute top-16 left-10 w-48 h-48 bg-[#50C878]/15 rounded-full blur-2xl animate-pulse" />
+        <div className="absolute bottom-8 right-20 w-64 h-64 bg-[#2D5B4A]/15 rounded-full blur-2xl animate-pulse delay-1000" />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 mb-4 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#CFEA6C] animate-pulse" />
-              <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">
-                MEMBERSHIPS
-              </span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-3 leading-tight tracking-tight">
               Choose Your{' '}
               <span className="bg-gradient-to-r from-white via-[#CFEA6C] to-[#50C878] bg-clip-text text-transparent">
                 Membership Plan
               </span>
             </h1>
-            <p className="text-sm text-white/90 max-w-2xl mx-auto">
-              Unlock unlimited access to our world-class sports facilities
+            <p className="text-sm md:text-base text-white/90 max-w-2xl mx-auto leading-relaxed">
+              Unlock unlimited access to our world-class sports facilities and training programs
             </p>
           </div>
         </div>
       </section>
 
-      {/* Membership Plans - Scrollable */}
-      <section className="flex-1 overflow-y-auto py-8 px-4 sm:px-6 lg:px-8 bg-gray-900 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto h-full">
+      {/* Membership Plans Section */}
+      <section className="py-10 px-4 sm:px-6 lg:px-8 -mt-4 relative z-10">
+        <div className="max-w-7xl mx-auto">
           {plans.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-400 dark:text-gray-400">No membership plans available at this time.</p>
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-black mb-4">
+                <span className="text-2xl">📋</span>
+              </div>
+              <p className="text-gray-400 text-lg">No membership plans available at this time.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 pb-4">
-              {plans.map((plan) => (
-                <MembershipCard key={plan.id} plan={plan} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+              {plans.map((plan, index) => (
+                <div
+                  key={plan.id}
+                  className="animate-in fade-in slide-in-from-bottom-4"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <MembershipCard plan={plan} />
+                </div>
               ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* Compact Drop-in CTA Section */}
-      <section className="py-5 px-4 sm:px-6 lg:px-8 bg-gray-900 dark:bg-gray-900 flex-shrink-0 border-t border-gray-800 dark:border-gray-800">
+      {/* Modern Drop-in CTA Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 pb-20">
         <div className="max-w-7xl mx-auto">
-          <div className="relative bg-gradient-to-br from-[#50C878]/20 to-[#2D5B4A]/20 dark:from-[#50C878]/20 dark:to-[#2D5B4A]/20 border border-[#50C878]/30 dark:border-[#50C878]/30 rounded-2xl p-5 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/10 to-transparent opacity-50" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#50C878]/20 flex-shrink-0">
-                  <ArrowRight className="w-6 h-6 text-[#50C878]" />
+          <div className="relative group">
+            {/* Glassmorphism Card */}
+            <div className="relative bg-black/80 backdrop-blur-xl border border-gray-800/50 rounded-3xl p-8 md:p-10 overflow-hidden shadow-2xl">
+              {/* Animated Background Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#50C878]/3 via-[#2D5B4A]/3 to-[#50C878]/3 opacity-15 group-hover:opacity-25 transition-opacity duration-500" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#50C878]/5 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#2D5B4A]/5 rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
+              
+              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5 flex-1">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-[#50C878]/20 rounded-2xl blur-xl" />
+                    <div className="relative inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#50C878] to-[#2D5B4A] shadow-lg">
+                      <ArrowRight className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1.5">
+                      Not ready for a membership?
+                    </h2>
+                    <p className="text-sm md:text-base text-gray-300 leading-relaxed">
+                      Try our drop-in rates for flexible access to all facilities
+                    </p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <h2 className="text-lg font-bold text-white dark:text-white mb-0.5">
-                    Not ready for a membership?
-                  </h2>
-                  <p className="text-sm text-gray-300 dark:text-gray-300">
-                    Try our drop-in rates for flexible access
-                  </p>
-                </div>
+                <Button
+                  asChild
+                  className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white text-base font-semibold rounded-xl px-8 py-6 h-auto shadow-xl hover:shadow-2xl transition-all duration-300 group/btn flex-shrink-0 border-0"
+                >
+                  <Link href="/bookings" className="inline-flex items-center gap-2.5">
+                    View Drop-In Rates
+                    <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                  </Link>
+                </Button>
               </div>
-              <Button
-                asChild
-                className="bg-[#50C878] hover:bg-[#50C878]/90 text-white text-sm font-semibold rounded-lg px-6 py-2.5 h-auto shadow-lg hover:shadow-xl transition-all group flex-shrink-0"
-              >
-                <Link href="/bookings" className="inline-flex items-center gap-2">
-                  View Drop-In Rates
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
             </div>
           </div>
         </div>

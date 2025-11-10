@@ -45,7 +45,7 @@ const sports: Sport[] = [
 
 export function SportsSection() {
   return (
-    <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gray-900 dark:bg-gray-900">
+    <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-black">
       {/* Background decoration */}
       <div className="absolute top-20 left-0 w-72 h-72 bg-[#50C878]/10 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-0 w-96 h-96 bg-[#2D5B4A]/10 rounded-full blur-3xl" />

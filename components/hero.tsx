@@ -11,16 +11,19 @@ export function Hero() {
       <div className="mx-auto max-w-7xl">
         <div className="relative rounded-3xl overflow-hidden shadow-2xl">
           {/* Background Image with Next.js Image */}
-          <div className="absolute inset-0">
-            <Image
-              src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop"
-              alt="World Sports Academy Training"
-              fill
-              priority
-              className="object-cover"
-              sizes="(max-width: 1280px) 100vw, 1280px"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-[#2D5B4A]/60" />
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute inset-0 scale-110">
+              <Image
+                src="/hero.png"
+                alt="World Sports Academy - Diverse athletes training in squash, table tennis, chess, and fitness"
+                fill
+                priority
+                className="object-cover"
+                style={{ objectPosition: 'center 30%' }}
+                sizes="(max-width: 1280px) 100vw, 1280px"
+              />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-[#2D5B4A]/50" />
             
             {/* Animated gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/20 to-transparent opacity-0 animate-pulse" />
@@ -41,14 +44,16 @@ export function Hero() {
           {/* Content Overlay */}
           <div className="relative min-h-[700px] md:min-h-[750px] flex items-center p-8 md:p-12 lg:p-16">
             <div className="max-w-4xl">
-              {/* Label with icon */}
-              <div className="flex items-center gap-3 mb-6 animate-fade-in">
-                <div className="w-12 h-12 rounded-full bg-[#50C878]/20 backdrop-blur-sm flex items-center justify-center border border-[#50C878]/30">
-                  <Target className="w-6 h-6 text-[#50C878]" />
+              {/* Label */}
+              <div className="inline-flex items-center gap-4 mb-8 animate-fade-in">
+                <div className="flex flex-col">
+                  <span className="text-xs tracking-widest text-[#CFEA6C] font-bold uppercase mb-0.5">
+                    Welcome to
+                  </span>
+                  <span className="text-base tracking-wide text-white font-bold uppercase">
+                    World Sports Academy
+                  </span>
                 </div>
-                <span className="text-sm tracking-wider text-white/90 font-semibold uppercase">
-                  World Sports Academy
-                </span>
               </div>
 
               {/* Hero Text with gradient */}
@@ -96,11 +101,24 @@ export function Hero() {
               <div className="flex flex-wrap items-center gap-8 pt-8 border-t border-white/20">
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
-                    {[1, 2, 3, 4].map((i) => (
+                    {[
+                      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces",
+                      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces",
+                      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces",
+                      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces"
+                    ].map((avatar, i) => (
                       <div
                         key={i}
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-[#50C878] to-[#2D5B4A] border-2 border-white"
-                      />
+                        className="relative w-10 h-10 rounded-full border-2 border-white overflow-hidden ring-2 ring-black/20"
+                      >
+                        <Image
+                          src={avatar}
+                          alt={`Athlete ${i + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="40px"
+                        />
+                      </div>
                     ))}
                   </div>
                   <span className="text-white/90 text-sm font-medium ml-2">

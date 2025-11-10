@@ -7,7 +7,7 @@ import Image from "next/image"
 
 export function ProgramCTA() {
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-gradient-to-b from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-800">
+    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-black">
       <div className="mx-auto max-w-7xl">
         {/* Main CTA Card */}
         <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-16">
@@ -112,7 +112,7 @@ export function ProgramCTA() {
             return (
               <div
                 key={index}
-                className="group text-center p-8 bg-gray-800 dark:bg-gray-800 rounded-2xl border border-gray-700 dark:border-gray-700 hover:border-[#50C878] hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden"
+                className="group text-center p-8 bg-black rounded-2xl border border-gray-800 hover:border-[#50C878] hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden"
               >
                 {/* Background decoration */}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-[#50C878]/5 rounded-full blur-2xl group-hover:bg-[#50C878]/10 transition-all duration-500" />

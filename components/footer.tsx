@@ -3,26 +3,27 @@
 import { Button } from "@/components/ui/button";
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="bg-[#1F3A33] text-white mt-24 relative overflow-hidden">
-      {/* Decorative curve at right */}
-      <svg className="absolute right-0 bottom-6 h-[240px] w-[260px] md:h-[360px] md:w-[420px] opacity-80" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M40 300 C160 220 240 360 360 300" stroke="#CFEA6C" strokeWidth="12" strokeLinecap="round" />
-        <path d="M100 180 C220 110 330 180 400 240" stroke="#CFEA6C" strokeWidth="8" strokeLinecap="round" />
-      </svg>
-
+    <footer className="bg-black text-white mt-24 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4">
         {/* Footer content */}
         <div className="py-12">
-          <div className="bg-white/5 rounded-lg p-6 md:p-8">
+          <div className="bg-[#1F3A33] rounded-lg p-6 md:p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Brand & CTA */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-[#50C878] rounded flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">W</span>
+                  <div className="relative w-10 h-10">
+                    <Image
+                      src="/logo.png"
+                      alt="World Sports Academy Logo"
+                      width={40}
+                      height={40}
+                      className="object-contain"
+                    />
                   </div>
                   <span className="font-semibold">World Sports Academy</span>
                 </div>

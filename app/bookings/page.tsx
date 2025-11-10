@@ -7,7 +7,7 @@ export default async function BookingsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/signin?redirect=/bookings')
+    redirect('/auth?redirect=/bookings')
   }
 
   return <RedesignedBooking />

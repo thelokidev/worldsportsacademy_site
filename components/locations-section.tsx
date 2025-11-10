@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export function LocationsSection() {
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-12 md:py-20 bg-gray-900 dark:bg-gray-900">
+    <section className="px-4 sm:px-6 lg:px-8 py-12 md:py-20 bg-black">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8">

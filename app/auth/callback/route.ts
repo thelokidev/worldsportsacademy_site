@@ -11,34 +11,43 @@ export async function GET(request: NextRequest) {
 
   // Handle email confirmation via token_hash (magic link style)
   if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       type: type as any,
       token_hash,
     })
 
-    if (!error) {
-      // Email confirmed successfully
-      return NextResponse.redirect(new URL(`/signin?verified=true`, requestUrl.origin))
+    if (!error && data.session) {
+      // Magic link verified and session created - redirect to dashboard or original redirect
+      const redirectTo = requestUrl.searchParams.get('redirect') || '/dashboard'
+      return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
+    } else if (!error) {
+      // Email confirmed but no session (shouldn't happen with magic links)
+      const redirectTo = requestUrl.searchParams.get('redirect')
+      const redirectUrl = redirectTo 
+        ? `/auth?verified=true&redirect=${encodeURIComponent(redirectTo)}`
+        : '/auth?verified=true'
+      return NextResponse.redirect(new URL(redirectUrl, requestUrl.origin))
     } else {
       console.error('Email verification error:', error)
-      return NextResponse.redirect(new URL(`/signin?error=verification_failed`, requestUrl.origin))
+      return NextResponse.redirect(new URL(`/auth?error=verification_failed`, requestUrl.origin))
     }
   }
 
-  // Handle email confirmation via code (PKCE flow)
+  // Handle email confirmation via code (PKCE flow - OAuth)
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
-    if (!error) {
-      // Email confirmed and session created
-      return NextResponse.redirect(new URL(`/dashboard`, requestUrl.origin))
+    if (!error && data.session) {
+      // OAuth session created - redirect to dashboard or original redirect
+      const redirectTo = requestUrl.searchParams.get('redirect') || '/dashboard'
+      return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
     } else {
       console.error('Code exchange error:', error)
-      return NextResponse.redirect(new URL(`/signin?error=verification_failed`, requestUrl.origin))
+      return NextResponse.redirect(new URL(`/auth?error=verification_failed`, requestUrl.origin))
     }
   }
 
-  // If no valid parameters, redirect to sign-in
-  return NextResponse.redirect(new URL(`/signin?error=invalid_link`, requestUrl.origin))
+  // If no valid parameters, redirect to auth
+  return NextResponse.redirect(new URL(`/auth?error=invalid_link`, requestUrl.origin))
 }
 

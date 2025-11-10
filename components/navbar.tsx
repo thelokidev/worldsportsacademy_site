@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, Sparkles } from "lucide-react"
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useTransition, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "@/server/actions/auth"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import Image from "next/image"
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -112,8 +113,8 @@ export function Navbar() {
       <nav
         className={`transition-all duration-300 ${
           scrolled
-            ? "bg-gray-900/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border-b border-gray-800/50 dark:border-gray-800/50"
-            : "bg-gray-900/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-sm"
+            ? "bg-black/80 backdrop-blur-xl shadow-lg border-b border-gray-800/50"
+            : "bg-black/95 backdrop-blur-sm shadow-sm"
         }`}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -122,19 +123,17 @@ export function Navbar() {
             <Link
               href="/"
               prefetch={true}
-              className="flex items-center gap-3 group relative"
+              className="flex items-center group relative"
             >
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#50C878] to-[#2D5B4A] rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
-                <div className="relative w-10 h-10 bg-gradient-to-br from-[#50C878] to-[#3DA860] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
-                  <Sparkles className="w-5 h-5 text-white" strokeWidth={2.5} />
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-white dark:text-white font-bold text-lg leading-tight group-hover:text-[#50C878] transition-colors">
-                  World Sports
-                </span>
-                <span className="text-xs text-gray-400 dark:text-gray-400 font-medium">Academy</span>
+              <div className="relative w-12 h-12 group-hover:scale-105 transition-all duration-300">
+                <Image
+                  src="/logo.png"
+                  alt="World Sports Academy Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain"
+                  priority
+                />
               </div>
             </Link>
 
@@ -150,7 +149,7 @@ export function Navbar() {
                     className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
                       active
                         ? "text-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10"
-                        : "text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800"
+                        : "text-gray-300 hover:text-[#50C878] hover:bg-gray-900"
                     } ${mounted && isPending ? "opacity-70" : ""}`}
                   >
                     {item.name}
@@ -169,7 +168,7 @@ export function Navbar() {
               ) : user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="hidden md:flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-800 transition-colors group">
+                    <button className="hidden md:flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-900 transition-colors group">
                       <Avatar className="w-9 h-9 ring-2 ring-[#50C878]/20 group-hover:ring-[#50C878]/40 transition-all">
                         <AvatarFallback className="bg-gradient-to-br from-[#50C878] to-[#2D5B4A] text-white font-semibold">
                           {getInitials(user.email)}
@@ -185,7 +184,7 @@ export function Navbar() {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
-                    className="w-64 p-2 bg-gray-800 dark:bg-gray-800 backdrop-blur-xl border border-gray-700 dark:border-gray-700 shadow-xl rounded-2xl"
+                    className="w-64 p-2 bg-black backdrop-blur-xl border border-gray-800 shadow-xl rounded-2xl"
                     align="end"
                     forceMount
                   >
@@ -195,12 +194,12 @@ export function Navbar() {
                       </p>
                       <p className="text-xs text-gray-400 dark:text-gray-400 truncate">{user.email}</p>
                     </div>
-                    <DropdownMenuSeparator className="bg-gray-700 dark:bg-gray-700" />
+                    <DropdownMenuSeparator className="bg-gray-800" />
                     <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
                       <Link
                         href="/dashboard"
                         prefetch={true}
-                        className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-700 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-300 dark:text-gray-300"
+                        className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-900 rounded-lg transition-colors text-gray-300"
                       >
                         <LayoutDashboard className="w-4 h-4 text-gray-400 dark:text-gray-400" />
                         <span className="text-sm font-medium">Dashboard</span>
@@ -210,7 +209,7 @@ export function Navbar() {
                       <Link
                         href="/dashboard/bookings"
                         prefetch={true}
-                        className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-700 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-300 dark:text-gray-300"
+                        className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-900 rounded-lg transition-colors text-gray-300"
                       >
                         <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-400" />
                         <span className="text-sm font-medium">My Bookings</span>
@@ -220,13 +219,13 @@ export function Navbar() {
                       <Link
                         href="/dashboard/membership"
                         prefetch={true}
-                        className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-700 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-300 dark:text-gray-300"
+                        className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-900 rounded-lg transition-colors text-gray-300"
                       >
                         <CreditCard className="w-4 h-4 text-gray-400 dark:text-gray-400" />
                         <span className="text-sm font-medium">My Membership</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-gray-700 dark:bg-gray-700" />
+                    <DropdownMenuSeparator className="bg-gray-800" />
                     <DropdownMenuItem
                       onClick={handleSignOut}
                       className="rounded-lg cursor-pointer text-red-400 dark:text-red-400 focus:text-red-400 focus:bg-red-900/20"
@@ -241,19 +240,11 @@ export function Navbar() {
               ) : (
                 <div className="hidden md:flex items-center gap-2">
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800"
-                    asChild
-                  >
-                    <Link href="/signin" prefetch={true}>Login</Link>
-                  </Button>
-                  <Button
                     size="sm"
                     className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg hover:shadow-xl transition-all duration-200"
                     asChild
                   >
-                    <Link href="/signup" prefetch={true}>Signup</Link>
+                    <Link href="/auth" prefetch={true}>Login</Link>
                   </Button>
                 </div>
               )}
@@ -261,7 +252,7 @@ export function Navbar() {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2.5 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-800 transition-colors relative"
+                className="lg:hidden p-2.5 rounded-xl hover:bg-gray-900 transition-colors relative"
                 aria-label="Toggle menu"
               >
                 <div className="relative w-6 h-6">
@@ -298,7 +289,7 @@ export function Navbar() {
                     className={`flex items-center px-4 py-3 text-base font-medium rounded-xl transition-colors duration-150 ${
                       active
                         ? "text-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10"
-                        : "text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800"
+                        : "text-gray-300 hover:text-[#50C878] hover:bg-gray-900"
                     } ${mounted && isPending ? "opacity-70" : ""}`}
                   >
                     {item.name}
@@ -344,17 +335,10 @@ export function Navbar() {
                 ) : (
                   <>
                     <Button
-                      variant="outline"
-                      className="w-full border-gray-700 dark:border-gray-700 text-gray-300 dark:text-gray-300"
-                      asChild
-                    >
-                      <Link href="/signin" prefetch={true} onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                    </Button>
-                    <Button
                       className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg"
                       asChild
                     >
-                      <Link href="/signup" prefetch={true} onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+                      <Link href="/auth" prefetch={true} onClick={() => setMobileMenuOpen(false)}>Login</Link>
                     </Button>
                   </>
                 )}

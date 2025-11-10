@@ -324,7 +324,7 @@ export function RedesignedBooking() {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-gray-800 dark:bg-gray-800 border-b border-gray-700 dark:border-gray-700 shadow-sm sticky top-20 z-40">
+      <div className="bg-black border-b border-gray-800 shadow-sm sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between max-w-2xl mx-auto">
             {[
@@ -344,7 +344,7 @@ export function RedesignedBooking() {
                         ? 'bg-[#50C878] text-white scale-110'
                         : currentStep === step.num
                         ? 'bg-[#50C878] text-white scale-105'
-                        : 'bg-gray-700 dark:bg-gray-700 text-gray-400'
+                        : 'bg-gray-900 text-gray-400'
                     }`}
                   >
                     {step.done ? <Check className="w-5 h-5" /> : step.num}
@@ -360,7 +360,7 @@ export function RedesignedBooking() {
                 {idx < 3 && (
                   <div
                     className={`flex-1 h-1 mx-2 rounded transition-all ${
-                      step.done ? 'bg-[#50C878]' : 'bg-gray-700 dark:bg-gray-700'
+                      step.done ? 'bg-[#50C878]' : 'bg-gray-900'
                     }`}
                   />
                 )}
@@ -376,7 +376,7 @@ export function RedesignedBooking() {
           {/* Left Column - Steps */}
           <div className="lg:col-span-2 space-y-6">
             {/* Step 1: Select Sport */}
-            <div className="bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-700 dark:border-gray-700 overflow-hidden">
+            <div className="bg-black rounded-2xl shadow-sm border border-gray-800 overflow-hidden">
               <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">1</span>
@@ -399,7 +399,7 @@ export function RedesignedBooking() {
                           className={`relative group p-6 rounded-xl border-2 transition-all text-left ${
                             selectedSport?.id === sport.id
                               ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
-                              : 'border-gray-700 dark:border-gray-700 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-700/50 dark:bg-gray-700/50'
+                              : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
                           }`}
                         >
                           <div className="flex items-start gap-4">
@@ -407,7 +407,7 @@ export function RedesignedBooking() {
                               className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
                                 selectedSport?.id === sport.id
                                   ? 'bg-[#50C878] text-white'
-                                  : 'bg-gray-600 dark:bg-gray-600 text-white group-hover:bg-[#50C878]/20'
+                                  : 'bg-gray-900 text-white group-hover:bg-[#50C878]/20'
                               }`}
                             >
                               <Icon className="w-6 h-6" />
@@ -432,7 +432,7 @@ export function RedesignedBooking() {
 
             {/* Step 2: Select Court */}
             {selectedSport && (
-              <div className="bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-700 dark:border-gray-700 overflow-hidden">
+              <div className="bg-black rounded-2xl shadow-sm border border-gray-800 overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">2</span>
@@ -453,7 +453,7 @@ export function RedesignedBooking() {
                           className={`p-6 rounded-xl border-2 transition-all text-left ${
                             selectedCourt?.id === court.id
                               ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
-                              : 'border-gray-700 dark:border-gray-700 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-700/50 dark:bg-gray-700/50'
+                              : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
                           }`}
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -475,7 +475,7 @@ export function RedesignedBooking() {
 
             {/* Step 3 & 4: Select Date & Time */}
             {selectedCourt && (
-              <div className="bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-700 dark:border-gray-700 overflow-hidden">
+              <div className="bg-black rounded-2xl shadow-sm border border-gray-800 overflow-hidden">
                 <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">3</span>
@@ -489,7 +489,7 @@ export function RedesignedBooking() {
                       <label className="block text-sm font-semibold text-white dark:text-white mb-3">
                         Select Date
                       </label>
-                      <div className="text-xs text-gray-300 dark:text-gray-300 mb-2 bg-gray-700 dark:bg-gray-700 px-3 py-2 rounded-md border border-gray-600 dark:border-gray-600">
+                      <div className="text-xs text-gray-300 mb-2 bg-gray-900 px-3 py-2 rounded-md border border-gray-800">
                         📅 Available: Today to {format(addDays(new Date(), 14), 'MMM d, yyyy')}
                       </div>
                       <Calendar
@@ -500,7 +500,7 @@ export function RedesignedBooking() {
                           date < new Date(new Date().setHours(0, 0, 0, 0)) ||
                           date > addDays(new Date(), 14)
                         }
-                        className="rounded-lg border border-gray-700 dark:border-gray-700 bg-gray-800 dark:bg-gray-800"
+                        className="rounded-lg border border-gray-800 bg-black"
                       />
                     </div>
 
@@ -525,7 +525,7 @@ export function RedesignedBooking() {
                                 className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
                                   selectedTime === slot.time
                                     ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
-                                    : 'border-gray-700 dark:border-gray-700 hover:border-[#50C878]/50 bg-gray-700/50 dark:bg-gray-700/50'
+                                    : 'border-gray-800 hover:border-[#50C878]/50 bg-gray-900'
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
@@ -564,7 +564,7 @@ export function RedesignedBooking() {
 
           {/* Right Column - Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-800 dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-700 dark:border-gray-700 overflow-hidden sticky top-32">
+            <div className="bg-black rounded-2xl shadow-lg border border-gray-800 overflow-hidden sticky top-32">
               <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
                 <h2 className="text-xl font-bold text-white">Booking Summary</h2>
               </div>
@@ -693,7 +693,7 @@ export function RedesignedBooking() {
                 </Button>
 
                 {!isComplete && (
-                  <div className="flex items-start gap-2 text-xs text-gray-400 dark:text-gray-400 bg-gray-700/50 dark:bg-gray-700/50 rounded-lg p-3">
+                  <div className="flex items-start gap-2 text-xs text-gray-400 bg-gray-900 rounded-lg p-3">
                     <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <p>Complete all steps above to proceed with your booking</p>
                   </div>

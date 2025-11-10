@@ -74,7 +74,7 @@ const programs = [
 
 export function ProgramsGrid() {
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-gradient-to-b from-gray-900 to-gray-800 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-black relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-20 left-0 w-96 h-96 bg-[#50C878]/10 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-0 w-96 h-96 bg-[#2D5B4A]/10 rounded-full blur-3xl" />
@@ -102,7 +102,7 @@ export function ProgramsGrid() {
             return (
               <div
                 key={program.id}
-                className="group bg-gray-800 dark:bg-gray-800 rounded-3xl border border-gray-700 dark:border-gray-700 overflow-hidden hover:shadow-2xl hover:border-[#50C878]/30 transition-all duration-500 hover:-translate-y-1"
+                className="group bg-black rounded-3xl border border-gray-800 overflow-hidden hover:shadow-2xl hover:border-[#50C878]/30 transition-all duration-500 hover:-translate-y-1"
               >
                 {/* Image Section */}
                 <div className="relative h-72 overflow-hidden">

@@ -38,7 +38,7 @@ const benefits = [
 
 export function ProgramBenefits() {
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-gray-900 dark:bg-gray-900 relative overflow-hidden">
+    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-black relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-[#50C878]/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#2D5B4A]/10 rounded-full blur-3xl" />
@@ -112,7 +112,7 @@ export function ProgramBenefits() {
             return (
               <div
                 key={index}
-                className="group bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 border border-gray-700 dark:border-gray-700 hover:border-[#50C878] hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 relative overflow-hidden"
+                className="group bg-black rounded-2xl p-8 border border-gray-800 hover:border-[#50C878] hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 relative overflow-hidden"
               >
                 {/* Background decoration */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#50C878]/5 rounded-full blur-2xl group-hover:bg-[#50C878]/10 transition-all duration-500" />

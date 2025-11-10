@@ -84,7 +84,7 @@ const renderStars = (rating: number) => {
 
 export function TestimonialsSection() {
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 relative overflow-hidden">
+    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-24 bg-black relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#50C878]/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#2D5B4A]/10 rounded-full blur-3xl" />
@@ -112,7 +112,7 @@ export function TestimonialsSection() {
           {testimonials.map((testimonial) => (
             <Card
               key={testimonial.id}
-              className="group bg-gray-800 dark:bg-gray-800 border border-gray-700 dark:border-gray-700 rounded-2xl p-8 hover:shadow-2xl hover:border-[#50C878]/30 transition-all duration-300 relative overflow-hidden"
+              className="group bg-black border border-gray-800 rounded-2xl p-8 hover:shadow-2xl hover:border-[#50C878]/30 transition-all duration-300 relative overflow-hidden"
             >
               {/* Quote decoration */}
               <div className="absolute top-4 right-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -164,7 +164,7 @@ export function TestimonialsSection() {
           ].map((stat, index) => (
             <div
               key={index}
-              className="text-center p-6 bg-gray-800 dark:bg-gray-800 rounded-xl border border-gray-700 dark:border-gray-700 hover:shadow-lg transition-shadow"
+              className="text-center p-6 bg-black rounded-xl border border-gray-800 hover:shadow-lg transition-shadow"
             >
               <div className="text-3xl md:text-4xl font-bold text-[#50C878] mb-2">
                 {stat.number}

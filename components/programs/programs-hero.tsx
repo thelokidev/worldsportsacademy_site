@@ -51,14 +51,11 @@ export function ProgramsHero() {
           {/* Content Overlay */}
           <div className="relative min-h-[700px] md:min-h-[750px] flex items-center p-8 md:p-12 lg:p-16">
             <div className="max-w-4xl">
-              {/* Label with icon */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-[#50C878]/20 backdrop-blur-sm flex items-center justify-center border border-[#50C878]/30">
-                  <Target className="w-6 h-6 text-[#50C878]" />
-                </div>
+              {/* Label */}
+              <div className="inline-flex items-center gap-4 mb-8">
                 <div className="flex items-center gap-3">
                   <span className="h-0.5 w-10 bg-[#CFEA6C] inline-block" />
-                  <span className="text-sm tracking-wider text-white/90 font-semibold uppercase">Training Programs</span>
+                  <span className="text-base tracking-wide text-white font-bold uppercase">Training Programs</span>
                 </div>
               </div>
 

@@ -7,7 +7,7 @@ import { Footer } from "@/components/footer"
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-900 dark:bg-gray-900 pt-20 overflow-x-hidden">
+    <div className="min-h-screen bg-black pt-20 overflow-x-hidden">
       <Hero />
       <SportsSection />
       <TestimonialsSection />
