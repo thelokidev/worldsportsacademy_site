@@ -24,7 +24,7 @@ export default async function AuthPage({
   
   return (
     <div className="w-full max-w-md">
-      <Card className="relative overflow-hidden shadow-2xl border-gray-800/50 bg-black/95 backdrop-blur-xl">
+      <Card className="relative overflow-hidden shadow-2xl border border-[#50C878]/40 hover:border-[#50C878]/60 bg-black/95 backdrop-blur-xl transition-all duration-300 hover:shadow-lg hover:shadow-[#50C878]/5">
         {/* Decorative gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#50C878]/5 via-transparent to-[#2D5B4A]/5 pointer-events-none" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#50C878]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />

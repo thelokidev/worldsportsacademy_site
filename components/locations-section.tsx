@@ -64,7 +64,7 @@ export function LocationsSection() {
           <div>
             <div className="relative rounded-2xl overflow-hidden h-[360px] md:h-[420px] shadow-lg">
               <Image
-                src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
+                src="/loca/ariel.jpg"
                 alt="World Sports Academy - Burlington, Ontario"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"

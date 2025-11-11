@@ -66,61 +66,59 @@ export default async function MembershipsPage() {
               <p className="text-gray-400 text-lg">No membership plans available at this time.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-              {plans.map((plan, index) => (
-                <div
-                  key={plan.id}
-                  className="animate-in fade-in slide-in-from-bottom-4"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <MembershipCard plan={plan} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Modern Drop-in CTA Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative group">
-            {/* Glassmorphism Card */}
-            <div className="relative bg-black/80 backdrop-blur-xl border border-gray-800/50 rounded-3xl p-8 md:p-10 overflow-hidden shadow-2xl">
-              {/* Animated Background Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#50C878]/3 via-[#2D5B4A]/3 to-[#50C878]/3 opacity-15 group-hover:opacity-25 transition-opacity duration-500" />
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#50C878]/5 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#2D5B4A]/5 rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
-              
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-5 flex-1">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-[#50C878]/20 rounded-2xl blur-xl" />
-                    <div className="relative inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#50C878] to-[#2D5B4A] shadow-lg">
-                      <ArrowRight className="w-6 h-6 text-white" />
-                    </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
+                {plans.map((plan, index) => (
+                  <div
+                    key={plan.id}
+                    className="animate-in fade-in slide-in-from-bottom-4"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <MembershipCard plan={plan} />
                   </div>
-                  <div className="text-left">
-                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1.5">
-                      Not ready for a membership?
-                    </h2>
-                    <p className="text-sm md:text-base text-gray-300 leading-relaxed">
-                      Try our drop-in rates for flexible access to all facilities
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  asChild
-                  className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white text-base font-semibold rounded-xl px-8 py-6 h-auto shadow-xl hover:shadow-2xl transition-all duration-300 group/btn flex-shrink-0 border-0"
-                >
-                  <Link href="/bookings" className="inline-flex items-center gap-2.5">
-                    View Drop-In Rates
-                    <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
+                ))}
               </div>
-            </div>
-          </div>
+
+              {/* Compact Drop-in CTA Section */}
+              <div className="relative group">
+                {/* Glassmorphism Card */}
+                <div className="relative bg-black/80 backdrop-blur-xl border border-gray-800/50 rounded-xl p-4 md:p-5 overflow-hidden shadow-lg">
+                  {/* Animated Background Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#50C878]/1 via-[#2D5B4A]/1 to-[#50C878]/1 opacity-5 group-hover:opacity-8 transition-opacity duration-500" />
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-[#50C878]/5 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
+                  <div className="absolute bottom-0 left-0 w-20 h-20 bg-[#2D5B4A]/5 rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
+                  
+                  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-[#50C878]/20 rounded-lg blur-lg" />
+                        <div className="relative inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-[#50C878] to-[#2D5B4A] shadow-md">
+                          <ArrowRight className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <h2 className="text-base md:text-lg font-bold text-white mb-0.5">
+                          Not ready for a membership?
+                        </h2>
+                        <p className="text-xs md:text-sm text-gray-300">
+                          Try our drop-in rates for flexible access
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      asChild
+                      className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white text-sm font-semibold rounded-lg px-5 py-2.5 h-auto shadow-md hover:shadow-lg transition-all duration-300 group/btn flex-shrink-0 border-0"
+                    >
+                      <Link href="/bookings" className="inline-flex items-center gap-2">
+                        View Drop-In Rates
+                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </section>
     </div>

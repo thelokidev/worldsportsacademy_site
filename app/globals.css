@@ -127,3 +127,35 @@
     letter-spacing: -0.025em;
   }
 }
+
+@keyframes scroll-testimonials-mobile {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-320px * 5 - 1.5rem * 4));
+  }
+}
+
+@keyframes scroll-testimonials-desktop {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-340px * 5 - 1.5rem * 4));
+  }
+}
+
+.animate-scroll-testimonials {
+  animation: scroll-testimonials-mobile 30s linear infinite;
+}
+
+@media (min-width: 768px) {
+  .animate-scroll-testimonials {
+    animation: scroll-testimonials-desktop 30s linear infinite;
+  }
+}
+
+.animate-scroll-testimonials:hover {
+  animation-play-state: paused;
+}

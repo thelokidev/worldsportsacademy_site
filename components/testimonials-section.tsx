@@ -59,15 +59,6 @@ const testimonials: Testimonial[] = [
     rating: 5,
     quote: "As a junior player, the academy provided me with everything I needed to compete at the highest level. The facilities and coaching are truly world-class.",
     sport: "Squash"
-  },
-  {
-    id: "6",
-    name: "David Thompson",
-    role: "Recreational Player",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=256&auto=format&fit=crop",
-    rating: 5,
-    quote: "Even as a recreational player, I feel welcomed and supported. The community here is amazing, and I've made great progress in my game.",
-    sport: "Table Tennis"
   }
 ]
 
@@ -75,8 +66,8 @@ const renderStars = (rating: number) => {
   return Array.from({ length: 5 }).map((_, index) => (
     <Star
       key={index}
-      className={`w-4 h-4 ${
-        index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-600 dark:text-gray-600"
+      className={`w-3 h-3 ${
+        index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-700 dark:text-gray-700"
       }`}
     />
   ))
@@ -91,71 +82,74 @@ export function TestimonialsSection() {
       
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center gap-3 mb-4">
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center gap-3 mb-3">
             <span className="h-0.5 w-10 bg-yellow-400 inline-block" />
             <span className="text-xs tracking-wider text-[#50C878] dark:text-[#50C878] font-semibold uppercase">
               Testimonials
             </span>
             <span className="h-0.5 w-10 bg-yellow-400 inline-block" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white dark:text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white dark:text-white mb-3">
             What our athletes say
           </h2>
-          <p className="text-lg text-gray-300 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base text-gray-300 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
             Join hundreds of satisfied athletes who have transformed their game with World Sports Academy
           </p>
         </div>
 
-        {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {testimonials.map((testimonial) => (
-            <Card
-              key={testimonial.id}
-              className="group bg-black border border-gray-800 rounded-2xl p-8 hover:shadow-2xl hover:border-[#50C878]/30 transition-all duration-300 relative overflow-hidden"
-            >
-              {/* Quote decoration */}
-              <div className="absolute top-4 right-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <Quote className="w-20 h-20 text-[#50C878]" />
-              </div>
-
-              {/* Sport badge */}
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#50C878]/20 dark:bg-[#50C878]/20 text-[#50C878] dark:text-[#50C878] text-xs font-semibold mb-4">
-                {testimonial.sport}
-              </div>
-
-              {/* Rating */}
-              <div className="flex gap-1 mb-4">
-                {renderStars(testimonial.rating)}
-              </div>
-
-              {/* Quote */}
-              <p className="text-gray-300 dark:text-gray-300 leading-relaxed mb-6 relative z-10">
-                "{testimonial.quote}"
-              </p>
-
-              {/* Author */}
-              <div className="flex items-center gap-4 pt-4 border-t border-gray-700 dark:border-gray-700">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-[#50C878]/20">
-                  <Image
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    fill
-                    className="object-cover"
-                    sizes="48px"
-                  />
+        {/* Testimonials Carousel */}
+        <div className="relative overflow-hidden">
+          <div className="flex animate-scroll-testimonials gap-6">
+            {/* Duplicate testimonials for seamless loop */}
+            {[...testimonials, ...testimonials].map((testimonial, index) => (
+              <Card
+                key={`${testimonial.id}-${index}`}
+                className="group bg-gradient-to-br from-black to-gray-900 border border-gray-800/50 rounded-xl p-5 hover:shadow-xl hover:shadow-[#50C878]/10 hover:border-[#50C878]/40 transition-all duration-300 relative overflow-hidden flex-shrink-0 w-[320px] md:w-[340px]"
+              >
+                {/* Quote decoration */}
+                <div className="absolute top-3 right-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <Quote className="w-12 h-12 text-[#50C878]" />
                 </div>
-                <div>
-                  <h4 className="font-semibold text-white dark:text-white">{testimonial.name}</h4>
-                  <p className="text-sm text-gray-400 dark:text-gray-400">{testimonial.role}</p>
+
+                {/* Header: Sport badge and Rating */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#50C878]/15 text-[#50C878] text-xs font-semibold">
+                    {testimonial.sport}
+                  </div>
+                  <div className="flex gap-0.5">
+                    {renderStars(testimonial.rating)}
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+
+                {/* Quote */}
+                <p className="text-gray-300 dark:text-gray-300 text-sm leading-relaxed mb-4 relative z-10 min-h-[80px]">
+                  "{testimonial.quote}"
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-3 border-t border-gray-800">
+                  <div className="relative w-10 h-10 rounded-full overflow-hidden ring-1 ring-[#50C878]/30 flex-shrink-0">
+                    <Image
+                      src={testimonial.image}
+                      alt={testimonial.name}
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-semibold text-white dark:text-white text-sm truncate">{testimonial.name}</h4>
+                    <p className="text-xs text-gray-400 dark:text-gray-400 truncate">{testimonial.role}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
 
         {/* Bottom stats */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { number: "500+", label: "Happy Athletes" },
             { number: "4.9/5", label: "Average Rating" },
@@ -164,12 +158,12 @@ export function TestimonialsSection() {
           ].map((stat, index) => (
             <div
               key={index}
-              className="text-center p-6 bg-black rounded-xl border border-gray-800 hover:shadow-lg transition-shadow"
+              className="text-center p-5 bg-gradient-to-br from-black to-gray-900 rounded-lg border border-gray-800/50 hover:border-[#50C878]/30 hover:shadow-lg hover:shadow-[#50C878]/5 transition-all"
             >
-              <div className="text-3xl md:text-4xl font-bold text-[#50C878] mb-2">
+              <div className="text-2xl md:text-3xl font-bold text-[#50C878] mb-1">
                 {stat.number}
               </div>
-              <div className="text-sm text-gray-300 dark:text-gray-300 font-medium">{stat.label}</div>
+              <div className="text-xs text-gray-300 dark:text-gray-300 font-medium">{stat.label}</div>
             </div>
           ))}
         </div>

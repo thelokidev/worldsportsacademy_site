@@ -97,10 +97,10 @@ export function MembershipCard({ plan }: MembershipCardProps) {
   const isPopular = plan.features.priority_booking
 
   return (
-    <Card className={`relative flex flex-col h-full transition-all duration-300 ${
+    <Card className={`relative flex flex-col h-full transition-all duration-300 hover:border-[#50C878]/60 ${
       isPopular 
-        ? 'border-2 border-[#50C878] bg-black' 
-        : 'border border-gray-800/30 bg-black'
+        ? 'border-2 border-[#50C878] bg-black shadow-lg shadow-[#50C878]/10' 
+        : 'border border-[#50C878]/40 bg-black hover:shadow-md hover:shadow-[#50C878]/5'
     }`}>
       {/* Popular Badge */}
       {isPopular && (
