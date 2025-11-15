@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, memo } from 'react'
-import { format, parseISO, addDays } from 'date-fns'
+import { format, parseISO, addDays, startOfDay } from 'date-fns'
 import { Calendar as CalendarIcon, Clock, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -45,6 +45,29 @@ export const DateTimePicker = memo(function DateTimePicker({
   disabled = false,
 }: DateTimePickerProps) {
   const [dateOpen, setDateOpen] = useState(false)
+  const bookingWindowStart = useMemo(() => startOfDay(new Date()), [])
+  const bookingWindowEnd = useMemo(
+    () => addDays(bookingWindowStart, 14),
+    [bookingWindowStart]
+  )
+  const bookingWindowLabel = useMemo(
+    () => format(bookingWindowEnd, 'MMM d, yyyy'),
+    [bookingWindowEnd]
+  )
+  const calendarModifiers = useMemo(
+    () => ({
+      bookableWindow: { from: bookingWindowStart, to: bookingWindowEnd },
+      lockedWindow: (date: Date) => date < bookingWindowStart || date > bookingWindowEnd,
+    }),
+    [bookingWindowStart, bookingWindowEnd]
+  )
+  const calendarModifierClasses = useMemo(
+    () => ({
+      bookableWindow: 'bg-[#50C878]/10 text-[#2D5B4A] font-semibold border-[#50C878]/20',
+      lockedWindow: 'opacity-30 text-gray-400 line-through cursor-not-allowed',
+    }),
+    []
+  )
 
   // Group time slots by period (Morning, Afternoon, Evening) - optimized
   const groupedSlots = useMemo(() => {
@@ -97,7 +120,7 @@ export const DateTimePicker = memo(function DateTimePicker({
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 border-2 border-[#50C878]/20" align="start">
             <div className="text-xs text-gray-500 px-3 pt-2 pb-1 border-b bg-gray-50">
-              Available dates: Today to {format(addDays(new Date(), 14), 'MMM d, yyyy')}
+              Available dates: Today to {bookingWindowLabel}
             </div>
             <Calendar
               mode="single"
@@ -107,10 +130,12 @@ export const DateTimePicker = memo(function DateTimePicker({
                 setDateOpen(false)
               }}
               disabled={(date) => {
-                const today = new Date(new Date().setHours(0, 0, 0, 0))
-                const maxDate = addDays(today, 14)
-                return date < today || date > maxDate
+                return date < bookingWindowStart || date > bookingWindowEnd
               }}
+              fromDate={bookingWindowStart}
+              toDate={bookingWindowEnd}
+              modifiers={calendarModifiers}
+              modifiersClassNames={calendarModifierClasses}
               initialFocus
               classNames={{
                 months: 'flex flex-col space-y-4',
@@ -139,6 +164,16 @@ export const DateTimePicker = memo(function DateTimePicker({
                 day_hidden: 'invisible',
               }}
             />
+            <div className="flex items-center justify-between gap-3 px-3 py-2 text-[11px] text-gray-500 border-t bg-gray-50">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#50C878]" aria-hidden="true" />
+                <span>Bookable (next 14 days)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-2.5 w-2.5 rounded-full bg-gray-400" aria-hidden="true" />
+                <span>Locked</span>
+              </div>
+            </div>
           </PopoverContent>
         </Popover>
       </div>

@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getAvailableSlots } from '@/server/actions/bookings'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
-import { format, addDays, parseISO } from 'date-fns'
+import { format, addDays, parseISO, startOfDay } from 'date-fns'
 
 interface TimeSlotPickerProps {
   sportId: string
@@ -18,8 +18,37 @@ export function TimeSlotPicker({ sportId, courtId, onSelect }: TimeSlotPickerPro
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [slots, setSlots] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [dateFrom] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [dateTo] = useState(format(addDays(new Date(), 14), 'yyyy-MM-dd'))
+  const bookingWindowStart = useMemo(() => startOfDay(new Date()), [])
+  const bookingWindowEnd = useMemo(
+    () => addDays(bookingWindowStart, 14),
+    [bookingWindowStart]
+  )
+  const dateFrom = useMemo(
+    () => format(bookingWindowStart, 'yyyy-MM-dd'),
+    [bookingWindowStart]
+  )
+  const dateTo = useMemo(
+    () => format(bookingWindowEnd, 'yyyy-MM-dd'),
+    [bookingWindowEnd]
+  )
+  const bookingWindowLabel = useMemo(
+    () => format(bookingWindowEnd, 'MMM d, yyyy'),
+    [bookingWindowEnd]
+  )
+  const calendarModifiers = useMemo(
+    () => ({
+      bookableWindow: { from: bookingWindowStart, to: bookingWindowEnd },
+      lockedWindow: (date: Date) => date < bookingWindowStart || date > bookingWindowEnd,
+    }),
+    [bookingWindowStart, bookingWindowEnd]
+  )
+  const calendarModifierClasses = useMemo(
+    () => ({
+      bookableWindow: 'bg-[#50C878]/10 text-[#2D5B4A] font-semibold',
+      lockedWindow: 'opacity-30 text-gray-400 line-through cursor-not-allowed',
+    }),
+    []
+  )
 
   useEffect(() => {
     if (sportId && courtId) {
@@ -52,13 +81,30 @@ export function TimeSlotPicker({ sportId, courtId, onSelect }: TimeSlotPickerPro
           <CardTitle>Select Date</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="text-xs text-muted-foreground mb-2">
+            Available: Today to {bookingWindowLabel}
+          </div>
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={setSelectedDate}
-            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+            disabled={(date) => date < bookingWindowStart || date > bookingWindowEnd}
+            fromDate={bookingWindowStart}
+            toDate={bookingWindowEnd}
+            modifiers={calendarModifiers}
+            modifiersClassNames={calendarModifierClasses}
             className="rounded-md border"
           />
+          <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#50C878]" aria-hidden="true" />
+              <span>Bookable within 14 days</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-2.5 w-2.5 rounded-full bg-gray-400" aria-hidden="true" />
+              <span>Locked</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

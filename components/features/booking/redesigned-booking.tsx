@@ -5,7 +5,7 @@ import { getSports } from '@/server/queries/bookings'
 import { getCourtsBySport } from '@/server/queries/bookings'
 import { Button } from '@/components/ui/button'
 import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Dumbbell, Circle, Grid3x3, ArrowRight, Info } from 'lucide-react'
-import { format, addDays, parseISO, addMinutes } from 'date-fns'
+import { format, addDays, parseISO, addMinutes, startOfDay } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Calendar } from '@/components/ui/calendar'
@@ -41,8 +41,37 @@ export function RedesignedBooking() {
 
   const [currentStep, setCurrentStep] = useState(1)
 
-  const dateFrom = useMemo(() => format(new Date(), 'yyyy-MM-dd'), [])
-  const dateTo = useMemo(() => format(addDays(new Date(), 14), 'yyyy-MM-dd'), [])
+  const bookingWindowStart = useMemo(() => startOfDay(new Date()), [])
+  const bookingWindowEnd = useMemo(
+    () => addDays(bookingWindowStart, 14),
+    [bookingWindowStart]
+  )
+  const dateFrom = useMemo(
+    () => format(bookingWindowStart, 'yyyy-MM-dd'),
+    [bookingWindowStart]
+  )
+  const dateTo = useMemo(
+    () => format(bookingWindowEnd, 'yyyy-MM-dd'),
+    [bookingWindowEnd]
+  )
+  const bookingWindowLabel = useMemo(
+    () => format(bookingWindowEnd, 'MMM d, yyyy'),
+    [bookingWindowEnd]
+  )
+  const calendarModifiers = useMemo(
+    () => ({
+      bookableWindow: { from: bookingWindowStart, to: bookingWindowEnd },
+      lockedWindow: (date: Date) => date < bookingWindowStart || date > bookingWindowEnd,
+    }),
+    [bookingWindowStart, bookingWindowEnd]
+  )
+  const calendarModifierClasses = useMemo(
+    () => ({
+      bookableWindow: '!bg-[#50C878]/20 !text-[#50C878] !font-bold ring-1 ring-[#50C878]/30',
+      lockedWindow: '!opacity-40 !text-gray-600 line-through !cursor-not-allowed bg-red-900/10',
+    }),
+    []
+  )
 
   // Sport icons
   const getSportIcon = (sportName: string) => {
@@ -490,18 +519,52 @@ export function RedesignedBooking() {
                         Select Date
                       </label>
                       <div className="text-xs text-gray-300 mb-2 bg-gray-900 px-3 py-2 rounded-md border border-gray-800">
-                        📅 Available: Today to {format(addDays(new Date(), 14), 'MMM d, yyyy')}
+                        📅 Available: Today to {bookingWindowLabel}
                       </div>
                       <Calendar
                         mode="single"
                         selected={selectedDate}
                         onSelect={handleDateSelect}
                         disabled={(date) =>
-                          date < new Date(new Date().setHours(0, 0, 0, 0)) ||
-                          date > addDays(new Date(), 14)
+                          date < bookingWindowStart || date > bookingWindowEnd
                         }
-                        className="rounded-lg border border-gray-800 bg-black"
+                        className="rounded-lg border border-gray-800 bg-black [&_.bookableWindow]:bg-[#50C878]/20 [&_.bookableWindow]:text-[#50C878] [&_.bookableWindow]:font-bold [&_.bookableWindow]:ring-1 [&_.bookableWindow]:ring-[#50C878]/40 [&_.lockedWindow]:opacity-40 [&_.lockedWindow]:line-through [&_.lockedWindow]:bg-red-900/10"
+                        fromDate={bookingWindowStart}
+                        toDate={bookingWindowEnd}
+                        modifiers={calendarModifiers}
+                        modifiersClassNames={calendarModifierClasses}
+                        classNames={{
+                          months: 'flex flex-col space-y-4',
+                          month: 'space-y-4',
+                          caption: 'flex justify-center pt-1 relative items-center mb-4',
+                          caption_label: 'text-sm font-semibold text-white',
+                          nav: 'space-x-1 flex items-center',
+                          nav_button: 'h-8 w-8 bg-transparent p-0 hover:bg-[#50C878]/10 rounded-md transition-colors text-white',
+                          nav_button_previous: 'absolute left-1',
+                          nav_button_next: 'absolute right-1',
+                          table: 'w-full border-collapse',
+                          head_row: 'flex mb-2',
+                          head_cell: 'text-gray-400 rounded-md w-10 font-medium text-xs',
+                          row: 'flex w-full mt-1',
+                          cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
+                          day: 'h-10 w-10 p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20',
+                          day_selected: '!bg-[#50C878] !text-white hover:!bg-[#50C878]/90 focus:!bg-[#50C878] !font-bold',
+                          day_today: '!bg-[#50C878]/30 !text-[#50C878] !font-bold !ring-2 !ring-[#50C878]',
+                          day_outside: 'text-gray-600 opacity-30',
+                          day_disabled: '!text-red-500/70 !bg-red-950/30 !opacity-50 hover:!bg-red-950/30 !cursor-not-allowed relative after:content-["🔒"] after:absolute after:bottom-0 after:right-0 after:text-[10px] after:opacity-60',
+                          day_hidden: 'invisible',
+                        }}
                       />
+                      <div className="mt-3 space-y-2 text-xs text-gray-400">
+                        <div className="flex items-center gap-2 bg-[#50C878]/10 px-2 py-1 rounded border border-[#50C878]/30">
+                          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#50C878]" aria-hidden="true" />
+                          <span className="text-[#50C878] font-semibold">Bookable (Next 14 days)</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-red-950/20 px-2 py-1 rounded border border-red-500/30">
+                          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500" aria-hidden="true" />
+                          <span className="text-red-400 font-semibold">Locked 🔒 (Beyond 14 days)</span>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Time Picker */}
