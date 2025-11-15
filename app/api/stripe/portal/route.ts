@@ -42,7 +42,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    // Determine app URL: prefer custom domain, then Vercel URL, then localhost
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl && process.env.VERCEL_URL) {
+      // Vercel automatically provides VERCEL_URL (e.g., 'your-project.vercel.app')
+      appUrl = `https://${process.env.VERCEL_URL}`
+    }
+    if (!appUrl) {
+      appUrl = 'http://localhost:3000'
+    }
 
     // Create portal session
     const session = await stripe.billingPortal.sessions.create({

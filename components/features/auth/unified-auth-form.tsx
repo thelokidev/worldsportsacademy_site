@@ -31,7 +31,11 @@ export function UnifiedAuthForm() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [magicLinkSent, setMagicLinkSent] = useState(false)
-  const redirectTo = searchParams.get('redirect') || '/dashboard'
+  // Decode the redirect URL if it was encoded
+  const redirectParam = searchParams.get('redirect')
+  const redirectTo = redirectParam 
+    ? decodeURIComponent(redirectParam)
+    : '/dashboard'
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

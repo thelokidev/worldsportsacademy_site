@@ -18,7 +18,10 @@ export default async function AuthPage({
   const { data: { user } } = await supabase.auth.getUser()
   
   if (user) {
-    const redirectTo = params?.redirect || '/dashboard'
+    // Decode the redirect URL if it was encoded
+    const redirectTo = params?.redirect 
+      ? decodeURIComponent(params.redirect)
+      : '/dashboard'
     redirect(redirectTo)
   }
   

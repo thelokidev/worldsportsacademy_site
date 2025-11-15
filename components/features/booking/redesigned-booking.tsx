@@ -4,14 +4,15 @@ import { useState, useEffect, useMemo, useTransition } from 'react'
 import { getSports } from '@/server/queries/bookings'
 import { getCourtsBySport } from '@/server/queries/bookings'
 import { Button } from '@/components/ui/button'
-import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Dumbbell, Circle, Grid3x3, ArrowRight, Info } from 'lucide-react'
+import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Dumbbell, Circle, Grid3x3, ArrowRight, Info, X } from 'lucide-react'
 import { format, addDays, parseISO, addMinutes, startOfDay } from 'date-fns'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Calendar } from '@/components/ui/calendar'
 
 export function RedesignedBooking() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   
   // State
   const [sports, setSports] = useState<any[]>([])
@@ -82,6 +83,23 @@ export function RedesignedBooking() {
     if (name.includes('chess')) return Grid3x3
     return Trophy
   }
+
+  // Handle payment cancellation
+  useEffect(() => {
+    const canceled = searchParams.get('canceled')
+    if (canceled === 'true') {
+      toast.error('Payment was canceled. You can continue booking below.', {
+        duration: 5000,
+      })
+      // Remove the canceled parameter from URL
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('canceled')
+      const newUrl = params.toString() 
+        ? `/bookings?${params.toString()}`
+        : '/bookings'
+      router.replace(newUrl)
+    }
+  }, [searchParams, router])
 
   // Fetch sports
   useEffect(() => {

@@ -18,7 +18,10 @@ export async function GET(request: NextRequest) {
 
     if (!error && data.session) {
       // Magic link verified and session created - redirect to dashboard or original redirect
-      const redirectTo = requestUrl.searchParams.get('redirect') || '/dashboard'
+      const redirectParam = requestUrl.searchParams.get('redirect')
+      const redirectTo = redirectParam 
+        ? decodeURIComponent(redirectParam)
+        : '/dashboard'
       return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
     } else if (!error) {
       // Email confirmed but no session (shouldn't happen with magic links)
@@ -39,7 +42,10 @@ export async function GET(request: NextRequest) {
 
     if (!error && data.session) {
       // OAuth session created - redirect to dashboard or original redirect
-      const redirectTo = requestUrl.searchParams.get('redirect') || '/dashboard'
+      const redirectParam = requestUrl.searchParams.get('redirect')
+      const redirectTo = redirectParam 
+        ? decodeURIComponent(redirectParam)
+        : '/dashboard'
       return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
     } else {
       console.error('Code exchange error:', error)
