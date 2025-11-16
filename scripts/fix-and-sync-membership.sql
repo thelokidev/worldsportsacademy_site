@@ -1,13 +1,23 @@
--- Comprehensive Fix: Sync membership and fix missing stripe_customer_id
--- This script handles the case where profile might not have stripe_customer_id set
+-- Comprehensive Fix: Sync Table Tennis Membership Subscription
+-- This script syncs the Table Tennis subscription that was purchased after upgrading from Squash
 -- Run this in Supabase SQL Editor
+
+-- ============================================================================
+-- SUBSCRIPTION DETAILS FROM STRIPE
+-- ============================================================================
+-- Subscription ID: sub_1SUEWCDrcV6C4UxVDo1uv3kL (Table Tennis Monthly Membership)
+-- Customer ID: cus_TR4jdcDwCx3owX
+-- Price ID: price_1SU8HzDrcV6C4UxVkPQVUJZg (Table Tennis Monthly - $100)
+-- Status: active
+-- Created: 1763332440 (2025-01-16 22:07:20 UTC)
+-- Current Period Start: 1763332440
+-- Current Period End: 1765924440 (2025-02-16 22:07:20 UTC)
 
 -- ============================================================================
 -- CONFIGURATION
 -- ============================================================================
--- Update these values if needed:
--- 1. Customer email: Get from Stripe Dashboard → Customers → cus_TR4jdcDwCx3owX
--- 2. If email is different, update the email in the script below
+-- Customer email: lokeshdevsre@gmail.com
+-- If email is different, update the email in STEP 1 below
 
 -- ============================================================================
 -- STEP 1: Find user by email and update profile with stripe_customer_id
@@ -63,14 +73,14 @@ BEGIN
 
   RAISE NOTICE 'Found user_id: %', v_user_id;
 
-  -- Find plan by Stripe price ID
+  -- Find plan by Stripe price ID (Table Tennis Monthly Membership)
   SELECT id INTO v_plan_id
   FROM public.membership_plans
-  WHERE stripe_price_id = 'price_1SU8DiDrcV6C4UxVJ9IJUgFN'
+  WHERE stripe_price_id = 'price_1SU8HzDrcV6C4UxVkPQVUJZg'
   LIMIT 1;
 
   IF v_plan_id IS NULL THEN
-    RAISE EXCEPTION 'Plan not found for Stripe price price_1SU8DiDrcV6C4UxVJ9IJUgFN';
+    RAISE EXCEPTION 'Plan not found for Stripe price price_1SU8HzDrcV6C4UxVkPQVUJZg (Table Tennis Monthly)';
   END IF;
 
   RAISE NOTICE 'Found plan_id: %', v_plan_id;
@@ -78,11 +88,11 @@ BEGIN
   -- Check if membership already exists
   SELECT EXISTS(
     SELECT 1 FROM public.memberships
-    WHERE stripe_subscription_id = 'sub_1SUEJ6DrcV6C4UxVAz7TVlH2'
+    WHERE stripe_subscription_id = 'sub_1SUEWCDrcV6C4UxVDo1uv3kL'
   ) INTO v_membership_exists;
 
   IF v_membership_exists THEN
-    RAISE NOTICE 'Membership already exists for subscription sub_1SUEJ6DrcV6C4UxVAz7TVlH2';
+    RAISE NOTICE 'Membership already exists for subscription sub_1SUEWCDrcV6C4UxVDo1uv3kL';
     
     -- Update existing membership to ensure it's correct
     UPDATE public.memberships
@@ -90,11 +100,11 @@ BEGIN
       user_id = v_user_id,
       plan_id = v_plan_id,
       status = 'active',
-      current_period_start = to_timestamp(1763331628)::timestamptz,
-      current_period_end = to_timestamp(1765923628)::timestamptz,
+      current_period_start = to_timestamp(1763332440)::timestamptz,
+      current_period_end = to_timestamp(1765924440)::timestamptz,
       cancel_at_period_end = false,
       updated_at = NOW()
-    WHERE stripe_subscription_id = 'sub_1SUEJ6DrcV6C4UxVAz7TVlH2';
+    WHERE stripe_subscription_id = 'sub_1SUEWCDrcV6C4UxVDo1uv3kL';
     
     RAISE NOTICE 'Updated existing membership';
   ELSE
@@ -113,17 +123,17 @@ BEGIN
     ) VALUES (
       v_user_id,
       v_plan_id,
-      'sub_1SUEJ6DrcV6C4UxVAz7TVlH2',
+      'sub_1SUEWCDrcV6C4UxVDo1uv3kL',
       v_customer_id,
       'active',
-      to_timestamp(1763331628)::timestamptz,
-      to_timestamp(1765923628)::timestamptz,
+      to_timestamp(1763332440)::timestamptz,
+      to_timestamp(1765924440)::timestamptz,
       false,
       NULL,
       NULL
     );
 
-    RAISE NOTICE 'Successfully created membership for subscription sub_1SUEJ6DrcV6C4UxVAz7TVlH2';
+    RAISE NOTICE 'Successfully created membership for subscription sub_1SUEWCDrcV6C4UxVDo1uv3kL (Table Tennis Monthly)';
   END IF;
 END $$;
 
@@ -147,7 +157,7 @@ SELECT
 FROM public.memberships m
 JOIN public.membership_plans p ON m.plan_id = p.id
 LEFT JOIN public.profiles prof ON m.user_id = prof.id
-WHERE m.stripe_subscription_id = 'sub_1SUEJ6DrcV6C4UxVAz7TVlH2'
+WHERE m.stripe_subscription_id = 'sub_1SUEWCDrcV6C4UxVDo1uv3kL'
 ORDER BY m.created_at DESC
 LIMIT 1;
 
