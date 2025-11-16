@@ -105,30 +105,3 @@ export async function sendMagicLink(email: string, redirectTo?: string) {
 
   return { success: true, message: 'Check your email for the magic link!' }
 }
-
-export async function signInWithGoogle(redirectTo?: string) {
-  const supabase = await createClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  
-  const callbackUrl = redirectTo 
-    ? `${appUrl}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`
-    : `${appUrl}/auth/callback`
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: callbackUrl,
-    },
-  })
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  if (data.url) {
-    // Return the URL for client-side redirect
-    return { success: true, url: data.url }
-  }
-
-  return { success: true }
-}

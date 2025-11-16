@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { sendMagicLink, signInWithGoogle } from '@/server/actions/auth'
+import { sendMagicLink } from '@/server/actions/auth'
 import {
   Form,
   FormControl,
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { Mail, Loader2 } from 'lucide-react'
+import { createClient as createBrowserSupabaseClient } from '@/lib/supabase/client'
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -43,6 +44,7 @@ export function UnifiedAuthForm() {
       email: '',
     },
   })
+  const supabase = useMemo(() => createBrowserSupabaseClient(), [])
 
   async function handleMagicLink(data: FormData) {
     setIsLoading(true)
@@ -67,23 +69,38 @@ export function UnifiedAuthForm() {
   }
 
   async function handleGoogleSignIn() {
+    if (!supabase) return
     setIsLoading(true)
-    const result = await signInWithGoogle(redirectTo)
-    
-    if (result?.error) {
-      setIsLoading(false)
-      toast({ 
-        title: 'Error', 
-        description: result.error, 
-        variant: 'destructive' 
+
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      const callbackUrl = redirectParam
+        ? `${appUrl}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`
+        : `${appUrl}/auth/callback`
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: callbackUrl,
+          skipBrowserRedirect: false,
+        },
       })
-      return
-    }
-    
-    // Redirect to Google OAuth
-    if (result?.url) {
-      window.location.href = result.url
-    } else {
+
+      if (error) {
+        throw error
+      }
+
+      if (data?.url) {
+        window.location.href = data.url
+      }
+    } catch (error) {
+      console.error('Google sign-in error:', error)
+      toast({
+        title: 'Authentication error',
+        description:
+          error instanceof Error ? error.message : 'Failed to start Google sign-in. Please try again.',
+        variant: 'destructive',
+      })
       setIsLoading(false)
     }
   }
