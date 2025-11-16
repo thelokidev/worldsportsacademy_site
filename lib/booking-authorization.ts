@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getServiceSupabaseClient } from '@/lib/supabase/service'
 
 export type BookingAuthorizationResult = {
   canBook: boolean
@@ -7,6 +7,7 @@ export type BookingAuthorizationResult = {
   dropInPrice?: number
   tax?: number
   total?: number
+  coveredByMembership?: boolean
 }
 
 export async function checkBookingAuthorization(
@@ -14,7 +15,8 @@ export async function checkBookingAuthorization(
   sportId: string,
   durationMinutes: number
 ): Promise<BookingAuthorizationResult> {
-  const supabase = await createClient()
+  const supabase = getServiceSupabaseClient()
+  const nowIso = new Date().toISOString()
 
   // Get sport settings
   const { data: sportSettings } = await supabase
@@ -40,29 +42,14 @@ export async function checkBookingAuthorization(
     }
   }
 
+  // Gather membership coverage for this user
+  const membershipCoverage = await getMembershipCoverage(supabase, userId, nowIso)
+  const hasMembershipForSport = membershipCoverage.has(sportId)
+
   // Check if sport requires membership
   if (sportSettings?.requires_membership_for_booking) {
     // Check if user has active membership for this sport
-    const { data: memberships } = await supabase
-      .from('memberships')
-      .select(`
-        id,
-        status,
-        current_period_end,
-        membership_plans:plan_id (
-          sport_ids
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .gt('current_period_end', new Date().toISOString())
-
-    const hasMembership = memberships?.some((membership) => {
-      const plan = membership.membership_plans as any
-      return plan?.sport_ids?.includes(sportId)
-    })
-
-    if (!hasMembership) {
+    if (!hasMembershipForSport) {
       return {
         canBook: false,
         requiresPayment: false,
@@ -74,34 +61,17 @@ export async function checkBookingAuthorization(
     return {
       canBook: true,
       requiresPayment: false,
+      coveredByMembership: true,
     }
   }
 
   // Sport allows drop-ins - check if user has membership (free) or needs to pay
-  const { data: memberships } = await supabase
-    .from('memberships')
-    .select(`
-      id,
-      status,
-      current_period_end,
-      membership_plans:plan_id (
-        sport_ids
-      )
-    `)
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .gt('current_period_end', new Date().toISOString())
-
-  const hasMembership = memberships?.some((membership) => {
-    const plan = membership.membership_plans as any
-    return plan?.sport_ids?.includes(sportId)
-  })
-
-  if (hasMembership) {
+  if (hasMembershipForSport) {
     // Member can book for free
     return {
       canBook: true,
       requiresPayment: false,
+      coveredByMembership: true,
     }
   }
 
@@ -132,5 +102,47 @@ export async function checkBookingAuthorization(
     tax,
     total,
   }
+}
+
+async function getMembershipCoverage(
+  supabase: ReturnType<typeof getServiceSupabaseClient>,
+  userId: string,
+  nowIso: string,
+) {
+  const coverage = new Set<string>()
+
+  const { data, error } = await supabase
+    .from('memberships')
+    .select(
+      `
+        id,
+        status,
+        current_period_end,
+        membership_plans:plan_id (
+          sport_ids
+        )
+      `,
+    )
+    .eq('user_id', userId)
+    .in('status', ['active', 'trialing'])
+    .gt('current_period_end', nowIso)
+
+  if (error) {
+    console.error('Failed to load membership coverage:', error)
+    return coverage
+  }
+
+  for (const membership of data || []) {
+    const plan = membership.membership_plans as { sport_ids?: string[] } | null
+    if (plan?.sport_ids?.length) {
+      plan.sport_ids.forEach((sportId) => {
+        if (typeof sportId === 'string' && sportId.length > 0) {
+          coverage.add(sportId)
+        }
+      })
+    }
+  }
+
+  return coverage
 }
 
