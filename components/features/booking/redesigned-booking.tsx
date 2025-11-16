@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useTransition, useRef } from 'react'
 import { getSports } from '@/server/queries/bookings'
 import { getCourtsBySport } from '@/server/queries/bookings'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Dumbbell, Circle, Grid3x3, ArrowRight, Info, X } from 'lucide-react'
 import { format, addDays, parseISO, addMinutes, startOfDay } from 'date-fns'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -34,7 +33,6 @@ export function RedesignedBooking() {
     total: number
   } | null>(null)
   const [pendingBookingId, setPendingBookingId] = useState<string | null>(null)
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
   const paymentSkipCancelRef = useRef(false)
   
   // Loading states
@@ -310,7 +308,8 @@ export function RedesignedBooking() {
 
       if (requiresPayment) {
         if (pendingBookingId) {
-          setPaymentDialogOpen(true)
+          // Payment form already shown inline, scroll to it
+          document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           return
         }
 
@@ -333,7 +332,10 @@ export function RedesignedBooking() {
 
         const { bookingId } = await response.json()
         setPendingBookingId(bookingId)
-        setPaymentDialogOpen(true)
+        // Scroll to payment form after a brief delay to ensure it's rendered
+        setTimeout(() => {
+          document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
         return
       }
 
@@ -369,7 +371,6 @@ export function RedesignedBooking() {
   const handlePaymentSuccess = () => {
     paymentSkipCancelRef.current = true
     setPendingBookingId(null)
-    setPaymentDialogOpen(false)
     toast.success('Booking confirmed!')
     router.push('/dashboard/bookings')
   }
@@ -392,35 +393,19 @@ export function RedesignedBooking() {
     }
   }
 
-  const handlePaymentCancel = () => {
+  const handlePaymentCancel = async () => {
+    if (pendingBookingId) {
+      try {
+        await fetch('/api/booking/cancel-pending', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: pendingBookingId }),
+        })
+      } catch (error) {
+        console.error('Failed to cancel pending booking', error)
+      }
+    }
     setPendingBookingId(null)
-    setPaymentDialogOpen(false)
-  }
-
-  const handlePaymentDialogChange = async (open: boolean) => {
-    setPaymentDialogOpen(open)
-    if (open) return
-
-    if (paymentSkipCancelRef.current) {
-      paymentSkipCancelRef.current = false
-      return
-    }
-
-    if (!pendingBookingId) {
-      return
-    }
-
-    try {
-      await fetch('/api/booking/cancel-pending', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId: pendingBookingId }),
-      })
-    } catch (error) {
-      console.error('Failed to cancel pending booking', error)
-    } finally {
-      setPendingBookingId(null)
-    }
   }
 
   const durationMinutes = selectedSport?.duration_minutes || 60
@@ -826,33 +811,55 @@ export function RedesignedBooking() {
                 )}
 
                 {/* Action Button */}
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!isComplete || submitting || checkingAuth}
-                  className="w-full h-12 bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg font-semibold text-base shadow-md disabled:opacity-50"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Processing...
-                    </>
-                  ) : requiresPayment ? (
-                    <>
-                      Continue to Payment
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </>
-                  ) : (
-                    <>
-                      <Check className="mr-2 h-5 w-5" />
-                      Confirm Booking
-                    </>
-                  )}
-                </Button>
+                {!pendingBookingId && (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!isComplete || submitting || checkingAuth}
+                    className="w-full h-12 bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg font-semibold text-base shadow-md disabled:opacity-50"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : requiresPayment ? (
+                      <>
+                        Continue to Payment
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </>
+                    ) : (
+                      <>
+                        <Check className="mr-2 h-5 w-5" />
+                        Confirm Booking
+                      </>
+                    )}
+                  </Button>
+                )}
 
-                {!isComplete && (
+                {!isComplete && !pendingBookingId && (
                   <div className="flex items-start gap-2 text-xs text-gray-400 bg-gray-900 rounded-lg p-3">
                     <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <p>Complete all steps above to proceed with your booking</p>
+                  </div>
+                )}
+
+                {/* Inline Payment Form */}
+                {pendingBookingId && paymentInfo && (
+                  <div id="payment-section" className="mt-6 pt-6 border-t border-gray-700">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-white mb-2">Complete Payment</h3>
+                      <p className="text-sm text-gray-400">
+                        Secure payment form powered by Stripe. Your booking is held until payment completes.
+                      </p>
+                    </div>
+                    <PaymentSheet
+                      bookingId={pendingBookingId}
+                      amount={paymentInfo.total}
+                      currency="usd"
+                      onSuccess={handlePaymentSuccess}
+                      onError={handlePaymentError}
+                      onCancel={handlePaymentCancel}
+                    />
                   </div>
                 )}
               </div>
@@ -860,26 +867,6 @@ export function RedesignedBooking() {
           </div>
         </div>
       </div>
-      <Dialog open={paymentDialogOpen} onOpenChange={handlePaymentDialogChange}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Complete Payment</DialogTitle>
-            <DialogDescription>
-              Secure payment form powered by Stripe. Your booking is held until payment completes.
-            </DialogDescription>
-          </DialogHeader>
-          {pendingBookingId && paymentInfo && (
-            <PaymentSheet
-              bookingId={pendingBookingId}
-              amount={paymentInfo.total}
-              currency="usd"
-              onSuccess={handlePaymentSuccess}
-              onError={handlePaymentError}
-              onCancel={handlePaymentCancel}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
