@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useTransition, useRef } from 'react'
+import { useState, useEffect, useMemo, useTransition } from 'react'
 import { getSports } from '@/server/queries/bookings'
 import { getCourtsBySport } from '@/server/queries/bookings'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,6 @@ import { format, addDays, parseISO, addMinutes, startOfDay } from 'date-fns'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Calendar } from '@/components/ui/calendar'
-import { PaymentSheet } from '@/components/features/payments/payment-sheet'
 
 export function RedesignedBooking() {
   const router = useRouter()
@@ -32,8 +31,6 @@ export function RedesignedBooking() {
     tax: number
     total: number
   } | null>(null)
-  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null)
-  const paymentSkipCancelRef = useRef(false)
   
   // Loading states
   const [loadingSports, setLoadingSports] = useState(true)
@@ -293,6 +290,50 @@ export function RedesignedBooking() {
     setSelectedTime(time)
   }
 
+  const cancelPendingBooking = async (bookingId: string) => {
+    try {
+      await fetch('/api/booking/cancel-pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      })
+    } catch (error) {
+      console.error('Failed to cancel pending booking:', error)
+    }
+  }
+
+  const startStripeCheckout = async (bookingId: string) => {
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentType: 'drop_in',
+          bookingId,
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        const errorMessage = data?.error || 'Failed to initialize checkout session'
+        await cancelPendingBooking(bookingId)
+        throw new Error(errorMessage)
+      }
+
+      if (data?.url) {
+        window.location.href = data.url as string
+        return
+      }
+
+      await cancelPendingBooking(bookingId)
+      throw new Error('Checkout session did not return a redirect URL. Please try again.')
+    } catch (error) {
+      await cancelPendingBooking(bookingId)
+      throw error instanceof Error ? error : new Error('Failed to start checkout session')
+    }
+  }
+
   // Handle booking submission
   async function handleSubmit() {
     if (!selectedSport || !selectedCourt || !selectedDate || !selectedTime) {
@@ -307,12 +348,6 @@ export function RedesignedBooking() {
       const end = new Date(start.getTime() + durationMinutes * 60000)
 
       if (requiresPayment) {
-        if (pendingBookingId) {
-          // Payment form already shown inline, scroll to it
-          document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          return
-        }
-
         const response = await fetch('/api/booking/create-pending', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -331,11 +366,12 @@ export function RedesignedBooking() {
         }
 
         const { bookingId } = await response.json()
-        setPendingBookingId(bookingId)
-        // Scroll to payment form after a brief delay to ensure it's rendered
-        setTimeout(() => {
-          document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }, 100)
+
+        if (!bookingId) {
+          throw new Error('Failed to create pending booking')
+        }
+
+        await startStripeCheckout(bookingId)
         return
       }
 
@@ -366,46 +402,6 @@ export function RedesignedBooking() {
     } finally {
       setSubmitting(false)
     }
-  }
-
-  const handlePaymentSuccess = () => {
-    paymentSkipCancelRef.current = true
-    setPendingBookingId(null)
-    toast.success('Booking confirmed!')
-    router.push('/dashboard/bookings')
-  }
-
-  const handlePaymentError = async (error: Error) => {
-    console.error('Payment error:', error)
-    // Automatically cancel pending booking when payment fails
-    if (pendingBookingId) {
-      try {
-        await fetch('/api/booking/cancel-pending', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bookingId: pendingBookingId }),
-        })
-        setPendingBookingId(null)
-        toast.error('Payment failed. Booking has been cancelled.')
-      } catch (cancelError) {
-        console.error('Failed to cancel pending booking on payment error:', cancelError)
-      }
-    }
-  }
-
-  const handlePaymentCancel = async () => {
-    if (pendingBookingId) {
-      try {
-        await fetch('/api/booking/cancel-pending', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bookingId: pendingBookingId }),
-        })
-      } catch (error) {
-        console.error('Failed to cancel pending booking', error)
-      }
-    }
-    setPendingBookingId(null)
   }
 
   const durationMinutes = selectedSport?.duration_minutes || 60
@@ -811,55 +807,33 @@ export function RedesignedBooking() {
                 )}
 
                 {/* Action Button */}
-                {!pendingBookingId && (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!isComplete || submitting || checkingAuth}
-                    className="w-full h-12 bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg font-semibold text-base shadow-md disabled:opacity-50"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Processing...
-                      </>
-                    ) : requiresPayment ? (
-                      <>
-                        Continue to Payment
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </>
-                    ) : (
-                      <>
-                        <Check className="mr-2 h-5 w-5" />
-                        Confirm Booking
-                      </>
-                    )}
-                  </Button>
-                )}
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!isComplete || submitting || checkingAuth}
+                  className="w-full h-12 bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg font-semibold text-base shadow-md disabled:opacity-50"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : requiresPayment ? (
+                    <>
+                      Continue to Payment
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-5 w-5" />
+                      Confirm Booking
+                    </>
+                  )}
+                </Button>
 
-                {!isComplete && !pendingBookingId && (
+                {!isComplete && (
                   <div className="flex items-start gap-2 text-xs text-gray-400 bg-gray-900 rounded-lg p-3">
                     <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <p>Complete all steps above to proceed with your booking</p>
-                  </div>
-                )}
-
-                {/* Inline Payment Form */}
-                {pendingBookingId && paymentInfo && (
-                  <div id="payment-section" className="mt-6 pt-6 border-t border-gray-700">
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-white mb-2">Complete Payment</h3>
-                      <p className="text-sm text-gray-400">
-                        Secure payment form powered by Stripe. Your booking is held until payment completes.
-                      </p>
-                    </div>
-                    <PaymentSheet
-                      bookingId={pendingBookingId}
-                      amount={paymentInfo.total}
-                      currency="usd"
-                      onSuccess={handlePaymentSuccess}
-                      onError={handlePaymentError}
-                      onCancel={handlePaymentCancel}
-                    />
                   </div>
                 )}
               </div>
