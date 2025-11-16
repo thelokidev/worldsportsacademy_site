@@ -107,17 +107,28 @@ export const PaymentSheet = ({ bookingId, onSuccess }: PaymentSheetProps) => {
 
   if (!stripePromise) {
     const envKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+    const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
     const errorMessage = !envKey
       ? 'Stripe publishable key is not configured. Please set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in your environment variables.'
       : 'Invalid Stripe publishable key format. The key must start with "pk_test_" or "pk_live_". Please check your .env.local file.'
+    
+    const deploymentNote = isProduction
+      ? 'If you\'re on Vercel, make sure to redeploy after updating environment variables. Environment variables are only loaded during build time.'
+      : null
     
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950 p-4">
         <div className="flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-          <div className="flex-1 space-y-1">
+          <div className="flex-1 space-y-2">
             <p className="text-sm font-medium text-red-800 dark:text-red-200">Payment Configuration Error</p>
             <p className="text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
+            {deploymentNote && (
+              <div className="rounded-md bg-red-100 dark:bg-red-900/30 p-2 mt-2">
+                <p className="text-xs text-red-800 dark:text-red-200 font-medium">🚨 Vercel Deployment Note:</p>
+                <p className="text-xs text-red-700 dark:text-red-300 mt-1">{deploymentNote}</p>
+              </div>
+            )}
             <p className="text-xs text-red-600 dark:text-red-400 mt-2">
               For development, you can get test keys from{' '}
               <a

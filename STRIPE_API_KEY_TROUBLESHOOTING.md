@@ -4,6 +4,68 @@
 
 If you're seeing the "Invalid API key" error when clicking "Continue to Payment", follow these steps:
 
+## 🚨 Vercel Deployment Issues
+
+If you're deploying on **Vercel** and seeing this error even after updating keys:
+
+### Critical: Vercel Requires Redeployment
+
+**Environment variables in Vercel are only loaded during build time.** Simply updating them in the dashboard is NOT enough!
+
+1. **Update Environment Variables in Vercel:**
+   - Go to your project: https://vercel.com/dashboard
+   - Navigate to: **Settings → Environment Variables**
+   - Verify/Update:
+     - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (must start with `pk_test_` or `pk_live_`)
+     - `STRIPE_SECRET_KEY` (must start with `sk_test_` or `sk_live_`)
+     - `STRIPE_WEBHOOK_SECRET` (must start with `whsec_`)
+
+2. **Redeploy Your Application:**
+   - **Option A:** Trigger a new deployment
+     - Go to **Deployments** tab
+     - Click **"Redeploy"** on the latest deployment
+     - Or push a new commit to trigger automatic deployment
+   - **Option B:** Use Vercel CLI
+     ```bash
+     vercel --prod
+     ```
+
+3. **Verify Environment Variables Are Loaded:**
+   - Check the deployment logs for any environment variable warnings
+   - The build should complete successfully
+
+### Common Vercel Issues
+
+#### Issue: Keys Updated But Error Persists
+**Cause:** Environment variables were updated but deployment wasn't redeployed.
+
+**Solution:** 
+- Redeploy the application (see step 2 above)
+- Wait for the new deployment to complete
+- Clear browser cache and test again
+
+#### Issue: Test vs Live Mode Mismatch
+**Cause:** Using test keys in production or vice versa.
+
+**Solution:**
+- **Production:** Use `pk_live_` and `sk_live_` keys
+- **Preview/Development:** Use `pk_test_` and `sk_test_` keys
+- Make sure both keys are from the same mode
+
+#### Issue: Keys Rotated But Not Updated in Vercel
+**Cause:** Keys were regenerated in Stripe but Vercel still has old keys.
+
+**Solution:**
+1. Get the new keys from Stripe Dashboard
+2. Update them in Vercel Environment Variables
+3. **Redeploy** (this is critical!)
+
+---
+
+## Local Development Issues
+
+If you're seeing the "Invalid API key" error in local development:
+
 ### Step 1: Check Your Environment Variables
 
 1. **Locate your `.env.local` file** in the root directory of your project (same level as `package.json`)
