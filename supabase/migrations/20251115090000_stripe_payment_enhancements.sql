@@ -60,102 +60,64 @@ BEGIN
 END $$;
 
 -- ------------------------------------------------------------------
--- payment_events table (only if bookings exists)
+-- payment_events table
 -- ------------------------------------------------------------------
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public' 
-    AND table_name = 'bookings'
-  ) THEN
-    CREATE TABLE IF NOT EXISTS public.payment_events (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      stripe_event_id TEXT UNIQUE NOT NULL,
-      type TEXT NOT NULL,
-      booking_id UUID REFERENCES public.bookings(id) ON DELETE SET NULL,
-      payment_intent_id TEXT,
-      payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-      status TEXT NOT NULL DEFAULT 'received',
-      requires_retry BOOLEAN NOT NULL DEFAULT false,
-      retry_count INTEGER NOT NULL DEFAULT 0,
-      processed_at TIMESTAMPTZ,
-      error_message TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
+CREATE TABLE IF NOT EXISTS public.payment_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  stripe_event_id TEXT UNIQUE NOT NULL,
+  type TEXT NOT NULL,
+  booking_id UUID REFERENCES public.bookings(id) ON DELETE SET NULL,
+  payment_intent_id TEXT,
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  status TEXT NOT NULL DEFAULT 'received',
+  requires_retry BOOLEAN NOT NULL DEFAULT false,
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  processed_at TIMESTAMPTZ,
+  error_message TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-    CREATE INDEX IF NOT EXISTS idx_payment_events_booking_id ON public.payment_events(booking_id);
-    CREATE INDEX IF NOT EXISTS idx_payment_events_intent ON public.payment_events(payment_intent_id);
-    CREATE INDEX IF NOT EXISTS idx_payment_events_status ON public.payment_events(status);
-  END IF;
-END $$;
+CREATE INDEX IF NOT EXISTS idx_payment_events_booking_id ON public.payment_events(booking_id);
+CREATE INDEX IF NOT EXISTS idx_payment_events_intent ON public.payment_events(payment_intent_id);
+CREATE INDEX IF NOT EXISTS idx_payment_events_status ON public.payment_events(status);
 
 -- ------------------------------------------------------------------
--- payment_refunds table (only if payments and bookings exist)
+-- payment_refunds table
 -- ------------------------------------------------------------------
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public' 
-    AND table_name = 'payments'
-  ) AND EXISTS (
-    SELECT 1 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public' 
-    AND table_name = 'bookings'
-  ) THEN
-    CREATE TABLE IF NOT EXISTS public.payment_refunds (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      payment_id UUID REFERENCES public.payments(id) ON DELETE CASCADE,
-      booking_id UUID REFERENCES public.bookings(id) ON DELETE SET NULL,
-      stripe_refund_id TEXT UNIQUE NOT NULL,
-      amount NUMERIC(10, 2) NOT NULL,
-      status TEXT NOT NULL CHECK (status IN ('pending', 'processing', 'succeeded', 'failed', 'canceled')),
-      reason TEXT,
-      metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
+CREATE TABLE IF NOT EXISTS public.payment_refunds (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  payment_id UUID REFERENCES public.payments(id) ON DELETE CASCADE,
+  booking_id UUID REFERENCES public.bookings(id) ON DELETE SET NULL,
+  stripe_refund_id TEXT UNIQUE NOT NULL,
+  amount NUMERIC(10, 2) NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'processing', 'succeeded', 'failed', 'canceled')),
+  reason TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-    CREATE INDEX IF NOT EXISTS idx_payment_refunds_payment_id ON public.payment_refunds(payment_id);
-    CREATE INDEX IF NOT EXISTS idx_payment_refunds_status ON public.payment_refunds(status);
-  END IF;
-END $$;
+CREATE INDEX IF NOT EXISTS idx_payment_refunds_payment_id ON public.payment_refunds(payment_id);
+CREATE INDEX IF NOT EXISTS idx_payment_refunds_status ON public.payment_refunds(status);
 
 -- ------------------------------------------------------------------
--- booking_payment_audit table (only if bookings exists)
+-- booking_payment_audit table
 -- ------------------------------------------------------------------
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public' 
-    AND table_name = 'bookings'
-  ) THEN
-    CREATE TABLE IF NOT EXISTS public.booking_payment_audit (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
-      previous_status TEXT,
-      next_status TEXT,
-      actor TEXT,
-      reason TEXT,
-      context JSONB NOT NULL DEFAULT '{}'::jsonb,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
+CREATE TABLE IF NOT EXISTS public.booking_payment_audit (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
+  previous_status TEXT,
+  next_status TEXT,
+  actor TEXT,
+  reason TEXT,
+  context JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-    CREATE INDEX IF NOT EXISTS idx_booking_payment_audit_booking_id ON public.booking_payment_audit(booking_id);
-  END IF;
-END $$;
+CREATE INDEX IF NOT EXISTS idx_booking_payment_audit_booking_id ON public.booking_payment_audit(booking_id);
 
 -- ------------------------------------------------------------------
 -- Helper functions
--- Note: Functions are created unconditionally as PostgreSQL validates table
--- existence at execution time, not creation time. Functions will work once
--- the bookings and payments tables exist.
 -- ------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.fn_finalize_booking_payment(
   p_booking_id UUID,
@@ -396,7 +358,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ------------------------------------------------------------------
--- Updated_at trigger for payment_refunds (only if table exists)
+-- Updated_at trigger for payment_refunds
 -- ------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.fn_touch_updated_at()
 RETURNS TRIGGER AS $$
@@ -406,21 +368,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public' 
-    AND table_name = 'payment_refunds'
-  ) THEN
-    DROP TRIGGER IF EXISTS trg_payment_refunds_updated_at ON public.payment_refunds;
-    CREATE TRIGGER trg_payment_refunds_updated_at
-      BEFORE UPDATE ON public.payment_refunds
-      FOR EACH ROW
-      EXECUTE FUNCTION public.fn_touch_updated_at();
-  END IF;
-END $$;
+DROP TRIGGER IF EXISTS trg_payment_refunds_updated_at ON public.payment_refunds;
+CREATE TRIGGER trg_payment_refunds_updated_at
+  BEFORE UPDATE ON public.payment_refunds
+  FOR EACH ROW
+  EXECUTE FUNCTION public.fn_touch_updated_at();
 
 COMMIT;
 
