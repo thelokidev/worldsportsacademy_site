@@ -9,9 +9,37 @@ import { Calendar, CreditCard, CheckCircle2, Clock, ArrowRight, Crown, Sparkles 
 import { format } from 'date-fns'
 import Link from 'next/link'
 
-export default async function MembershipDashboardPage() {
+export default async function MembershipDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string }>
+}) {
+  const params = await searchParams
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  
+  // Try to get user with retry logic for session refresh after external redirects
+  let user = null
+  let authError = null
+  
+  try {
+    const authResult = await supabase.auth.getUser()
+    user = authResult.data.user
+    authError = authResult.error
+  } catch (error) {
+    console.error('Error getting user:', error)
+  }
+
+  // If no user and we have a success param, wait briefly and retry (for Stripe redirect scenarios)
+  if (!user && params.success) {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    try {
+      const retryResult = await supabase.auth.getUser()
+      user = retryResult.data.user
+      authError = retryResult.error
+    } catch (error) {
+      console.error('Error retrying user fetch:', error)
+    }
+  }
 
   if (!user) {
     redirect('/auth?redirect=/dashboard/membership')
@@ -47,6 +75,21 @@ export default async function MembershipDashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-5xl mx-auto">
+          {params.success && (
+            <div className="mb-6 relative overflow-hidden rounded-xl border border-[#50C878]/50 bg-[#50C878]/10 backdrop-blur-sm p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-[#50C878]/20 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-[#50C878]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#50C878] mb-1">Membership Activated!</p>
+                  <p className="text-sm text-gray-300">
+                    Your membership has been successfully activated. Welcome to World Sports Academy!
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           {!membership ? (
             <Card className="relative overflow-hidden border border-gray-800 bg-black/50 backdrop-blur-xl shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-br from-[#50C878]/5 via-transparent to-[#2D5B4A]/5 pointer-events-none" />

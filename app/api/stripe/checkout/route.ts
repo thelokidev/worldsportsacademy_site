@@ -294,7 +294,7 @@ export async function POST(req: NextRequest) {
               quantity: 1,
             },
           ],
-          success_url: `${appUrl}/dashboard/membership?success=true&session_id={CHECKOUT_SESSION_ID}`,
+          success_url: `${appUrl}/dashboard/membership/success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/memberships?canceled=true`,
           metadata: {
             user_id: user.id,
