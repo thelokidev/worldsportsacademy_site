@@ -1,30 +1,20 @@
 import { getAllMembershipPlans } from '@/server/actions/memberships'
 import { MembershipCard } from '@/components/features/membership/membership-card'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { getUserMembership } from '@/server/queries/memberships'
 
 export default async function MembershipsPage() {
   const { plans } = await getAllMembershipPlans()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // If user is already logged in and has active membership, redirect to dashboard
+  // Fetch active membership if user is logged in
+  let activeMembership = null
   if (user) {
-    const { data: activeMembership } = await supabase
-      .from('memberships')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .gt('current_period_end', new Date().toISOString())
-      .limit(1)
-      .single()
-
-    if (activeMembership) {
-      redirect('/dashboard/membership')
-    }
+    activeMembership = await getUserMembership(user.id)
   }
 
   return (
@@ -68,15 +58,23 @@ export default async function MembershipsPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
-                {plans.map((plan, index) => (
-                  <div
-                    key={plan.id}
-                    className="animate-in fade-in slide-in-from-bottom-4"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <MembershipCard plan={plan} />
-                  </div>
-                ))}
+                {plans.map((plan, index) => {
+                  const membershipPlan = activeMembership?.membership_plans as { id: string } | undefined
+                  const isCurrentPlan = activeMembership && membershipPlan?.id === plan.id
+                  return (
+                    <div
+                      key={plan.id}
+                      className="animate-in fade-in slide-in-from-bottom-4"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <MembershipCard 
+                        plan={plan} 
+                        currentMembership={isCurrentPlan ? activeMembership : null}
+                        hasActiveMembership={!!activeMembership}
+                      />
+                    </div>
+                  )
+                })}
               </div>
 
               {/* Compact Drop-in CTA Section */}

@@ -39,7 +39,7 @@ async function getOrCreateProfile(
   }
 
   // Try to get existing profile
-  let { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('stripe_customer_id, full_name')
     .eq('id', userId)
@@ -238,6 +238,48 @@ export async function POST(req: NextRequest) {
           { error: 'Stripe price ID not configured for this plan' },
           { status: 500 }
         )
+      }
+
+      // Check if user has an active membership and cancel it if switching plans
+      const { data: activeMembership } = await supabase
+        .from('memberships')
+        .select('id, plan_id, stripe_subscription_id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .gt('current_period_end', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      // If user has active membership and it's a different plan, cancel it
+      if (activeMembership && activeMembership.plan_id !== plan.id) {
+        if (activeMembership.stripe_subscription_id) {
+          try {
+            // Cancel existing subscription immediately
+            await stripe.subscriptions.cancel(activeMembership.stripe_subscription_id)
+
+            // Update membership in database to canceled status
+            const { error: updateError } = await supabase
+              .from('memberships')
+              .update({ 
+                status: 'canceled',
+                canceled_at: new Date().toISOString(),
+                cancel_at_period_end: false
+              })
+              .eq('id', activeMembership.id)
+
+            if (updateError) {
+              console.error('Failed to update membership status after cancellation:', updateError)
+              // Continue anyway - Stripe subscription is canceled
+            }
+          } catch (cancelError) {
+            console.error('Failed to cancel existing subscription:', cancelError)
+            // If cancellation fails, we should still allow the new subscription
+            // but log the error for investigation
+            const errorMessage = cancelError instanceof Error ? cancelError.message : 'Unknown error'
+            console.error('Cancellation error details:', errorMessage)
+          }
+        }
       }
 
       // Create checkout session for subscription

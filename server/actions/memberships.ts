@@ -208,3 +208,64 @@ export async function cancelMembership(membershipId: string) {
   }
 }
 
+export async function cancelActiveMembershipForSwitch() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      throw new Error('User must be authenticated')
+    }
+
+    // Get active membership with Stripe subscription ID
+    const { data: activeMembership } = await supabase
+      .from('memberships')
+      .select('id, stripe_subscription_id, plan_id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .gt('current_period_end', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (!activeMembership) {
+      // No active membership to cancel - this is fine for new subscriptions
+      return { success: true, canceled: false }
+    }
+
+    if (!activeMembership.stripe_subscription_id) {
+      throw new Error('Stripe subscription ID not found for active membership')
+    }
+
+    const { stripe } = await import('@/lib/stripe/client')
+    
+    // Cancel subscription immediately (for switching)
+    await stripe.subscriptions.cancel(activeMembership.stripe_subscription_id)
+
+    // Update membership in database to canceled status
+    const { error } = await supabase
+      .from('memberships')
+      .update({ 
+        status: 'canceled',
+        canceled_at: new Date().toISOString(),
+        cancel_at_period_end: false
+      })
+      .eq('id', activeMembership.id)
+
+    if (error) {
+      throw new Error(`Failed to update membership status: ${error.message}`)
+    }
+
+    revalidatePath('/memberships')
+    revalidatePath('/dashboard/membership')
+    return { success: true, canceled: true, membershipId: activeMembership.id }
+  } catch (error) {
+    console.error('Cancel active membership error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to cancel active membership',
+      canceled: false,
+    }
+  }
+}
+

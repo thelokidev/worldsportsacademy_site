@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Check, Loader2 } from 'lucide-react'
+import { Check, Loader2, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 type Sport = {
   id: string
@@ -25,13 +26,27 @@ type MembershipPlan = {
   sports?: Sport[]
 }
 
-type MembershipCardProps = {
-  plan: MembershipPlan
+type Membership = {
+  id: string
+  plan_id: string
+  status: string
+  membership_plans: {
+    id: string
+    name: string
+  }
 }
 
-export function MembershipCard({ plan }: MembershipCardProps) {
+type MembershipCardProps = {
+  plan: MembershipPlan
+  currentMembership?: Membership | null
+  hasActiveMembership?: boolean
+}
+
+export function MembershipCard({ plan, currentMembership, hasActiveMembership = false }: MembershipCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  
+  const isCurrentPlan = !!currentMembership
 
   const handlePurchase = async () => {
     setIsLoading(true)
@@ -95,15 +110,28 @@ export function MembershipCard({ plan }: MembershipCardProps) {
   const sports = plan.sports || []
 
   const isPopular = plan.features.priority_booking
+  const hasBadge = isPopular || isCurrentPlan
 
   return (
-    <Card className={`relative flex flex-col h-full transition-all duration-300 hover:border-[#50C878]/60 ${
-      isPopular 
-        ? 'border-2 border-[#50C878] bg-black shadow-lg shadow-[#50C878]/10' 
-        : 'border border-[#50C878]/40 bg-black hover:shadow-md hover:shadow-[#50C878]/5'
+    <Card className={`relative flex flex-col h-full transition-all duration-300 ${
+      isCurrentPlan
+        ? 'border-2 border-[#50C878] bg-black/60 shadow-lg shadow-[#50C878]/20 hover:border-[#50C878]'
+        : isPopular 
+        ? 'border-2 border-[#50C878] bg-black shadow-lg shadow-[#50C878]/10 hover:border-[#50C878]/80'
+        : 'border border-[#50C878]/40 bg-black hover:border-[#50C878]/60 hover:shadow-md hover:shadow-[#50C878]/5'
     }`}>
+      {/* Current Plan Badge */}
+      {isCurrentPlan && (
+        <div className="absolute top-4 right-4 z-10">
+          <div className="bg-gradient-to-r from-[#50C878] to-[#3DA860] text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md">
+            <CheckCircle2 className="w-3 h-3" />
+            Current Plan
+          </div>
+        </div>
+      )}
+      
       {/* Popular Badge */}
-      {isPopular && (
+      {isPopular && !isCurrentPlan && (
         <div className="absolute top-4 right-4 z-10">
           <div className="bg-[#50C878] text-white text-xs font-semibold px-3 py-1 rounded-full">
             Most Popular
@@ -111,7 +139,7 @@ export function MembershipCard({ plan }: MembershipCardProps) {
         </div>
       )}
 
-      <CardHeader className={`pt-6 pb-4 px-6 ${isPopular ? 'pt-14' : ''}`}>
+      <CardHeader className={`pt-6 pb-4 px-6 ${hasBadge ? 'pt-14' : ''}`}>
         <CardTitle className="text-xl font-bold text-white mb-4">{plan.name}</CardTitle>
         
         {/* Price Section */}
@@ -178,20 +206,38 @@ export function MembershipCard({ plan }: MembershipCardProps) {
       </CardContent>
 
       <CardFooter className="pt-0 pb-6 px-6">
-        <Button
-          onClick={handlePurchase}
-          disabled={isLoading}
-          className="w-full h-11 bg-white text-gray-900 hover:bg-gray-100 font-semibold rounded-lg transition-colors"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            'Get Started'
-          )}
-        </Button>
+        {isCurrentPlan ? (
+          <Button
+            asChild
+            className="w-full h-11 bg-gray-700 text-gray-300 hover:bg-gray-600 font-semibold rounded-lg transition-colors"
+            aria-label="Manage current membership plan"
+          >
+            <Link href="/dashboard/membership">
+              Manage Membership
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            onClick={handlePurchase}
+            disabled={isLoading}
+            className={`w-full h-11 font-semibold rounded-lg transition-colors ${
+              hasActiveMembership
+                ? 'bg-gradient-to-r from-[#50C878] to-[#3DA860] text-white hover:from-[#3DA860] hover:to-[#50C878]'
+                : 'bg-white text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : hasActiveMembership ? (
+              'Switch Plan'
+            ) : (
+              'Get Started'
+            )}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   )
