@@ -26,9 +26,10 @@ export async function updateSession(request: NextRequest) {
       },
     })
 
-    // Refresh session for RSC. Ignore failures.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { data: { user } } = await supabase.auth.getUser()
+    // Refresh session for RSC. This ensures cookies are properly set
+    // especially when returning from external redirects (like Stripe).
+    // getUser() will automatically refresh the session if needed and update cookies.
+    await supabase.auth.getUser()
 
     return response
   } catch {
