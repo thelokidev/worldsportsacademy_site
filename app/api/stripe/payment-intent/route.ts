@@ -7,6 +7,7 @@ import { createBookingPaymentIntent, ensureStripeCustomer } from '@/lib/stripe/p
 export async function POST(req: NextRequest) {
   let user: { id: string; email?: string | null } | null = null
   let bookingId: string | undefined = undefined
+  let body: { bookingId?: string } | undefined = undefined
   
   try {
     const supabase = await createClient()
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     user = authUser
-    const body = await req.json()
+    body = await req.json()
     bookingId = body.bookingId
 
     if (!bookingId) {
