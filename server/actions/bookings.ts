@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { initiateBookingRefund } from '@/lib/stripe/payments'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { addMinutes, format, parseISO, startOfDay, eachHourOfInterval, setHours, getDay } from 'date-fns'
 
@@ -388,7 +389,7 @@ export async function cancelBooking(bookingId: string) {
     // Get booking details
     const { data: booking, error: fetchError } = await supabase
       .from('bookings')
-      .select('user_id, start_time, status')
+      .select('user_id, start_time, status, payment_status, payment_id')
       .eq('id', bookingId)
       .single()
 
@@ -417,10 +418,18 @@ export async function cancelBooking(bookingId: string) {
       throw new Error('Booking is already cancelled')
     }
 
-    // Update booking status in Supabase
+    let refundResult: Awaited<ReturnType<typeof initiateBookingRefund>> | null = null
+
+    if (booking.payment_status === 'paid' && booking.payment_id) {
+      refundResult = await initiateBookingRefund({ bookingId, reason: 'user_cancelled' })
+    }
+
     const { data: updatedBooking, error: updateError } = await supabase
       .from('bookings')
-      .update({ status: 'cancelled' })
+      .update({
+        status: 'cancelled',
+        payment_status: refundResult ? 'refunded' : booking.payment_status,
+      })
       .eq('id', bookingId)
       .select()
       .single()
@@ -441,7 +450,11 @@ export async function cancelBooking(bookingId: string) {
     revalidatePath('/dashboard/bookings')
     revalidatePath('/bookings')
 
-    return { success: true, booking: updatedBooking }
+    return {
+      success: true,
+      booking: updatedBooking,
+      refund: refundResult,
+    }
   } catch (error) {
     console.error('Booking cancellation error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Failed to cancel booking'

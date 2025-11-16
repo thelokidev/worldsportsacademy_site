@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createBooking } from '@/server/actions/bookings'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Loader2, Calendar, MapPin, Clock, CreditCard, CheckCircle2 } from 'lucide-react'
 import { format, addMinutes, parseISO } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { formatDuration } from '@/lib/utils/duration'
+import { PaymentSheet } from '@/components/features/payments/payment-sheet'
 
 interface BookingSummaryProps {
   sport: { id: string; display_name: string; duration_minutes?: number }
@@ -28,6 +30,9 @@ export function BookingSummary({
   const [loading, setLoading] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [requiresPayment, setRequiresPayment] = useState(false)
+  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null)
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  const skipCancelRef = useRef(false)
   const [paymentInfo, setPaymentInfo] = useState<{
     price: number
     tax: number
@@ -75,7 +80,11 @@ export function BookingSummary({
     setLoading(true)
     try {
       if (requiresPayment) {
-        // Redirect to payment checkout
+        if (pendingBookingId) {
+          setPaymentDialogOpen(true)
+          return
+        }
+
         const response = await fetch('/api/booking/create-pending', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -94,26 +103,8 @@ export function BookingSummary({
         }
 
         const { bookingId } = await response.json()
-
-        // Create checkout session
-        const checkoutResponse = await fetch('/api/stripe/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookingId,
-            paymentType: 'drop_in',
-          }),
-        })
-
-        if (!checkoutResponse.ok) {
-          const error = await checkoutResponse.json()
-          throw new Error(error.error || 'Failed to create checkout session')
-        }
-
-        const { url } = await checkoutResponse.json()
-        if (url) {
-          window.location.href = url
-        }
+        setPendingBookingId(bookingId)
+        setPaymentDialogOpen(true)
         return
       }
 
@@ -139,6 +130,38 @@ export function BookingSummary({
       toast.error(error instanceof Error ? error.message : 'Failed to create booking')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handlePaymentSuccess = () => {
+    skipCancelRef.current = true
+    setPendingBookingId(null)
+    setPaymentDialogOpen(false)
+    toast.success('Booking confirmed!')
+    router.push('/dashboard/bookings')
+  }
+
+  const handlePaymentDialogChange = async (open: boolean) => {
+    setPaymentDialogOpen(open)
+    if (open) return
+
+    if (skipCancelRef.current) {
+      skipCancelRef.current = false
+      return
+    }
+
+    if (!open && pendingBookingId) {
+      try {
+        await fetch('/api/booking/cancel-pending', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: pendingBookingId }),
+        })
+      } catch (error) {
+        console.error('Failed to cancel pending booking', error)
+      } finally {
+        setPendingBookingId(null)
+      }
     }
   }
 
@@ -261,6 +284,25 @@ export function BookingSummary({
           )}
         </Button>
       </div>
+
+      <Dialog open={paymentDialogOpen} onOpenChange={handlePaymentDialogChange}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogDescription>
+              Securely enter your payment details to confirm this booking.
+            </DialogDescription>
+          </DialogHeader>
+          {pendingBookingId && paymentInfo && (
+            <PaymentSheet
+              bookingId={pendingBookingId}
+              amount={paymentInfo.total}
+              currency="usd"
+              onSuccess={handlePaymentSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

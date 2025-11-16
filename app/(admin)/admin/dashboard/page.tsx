@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AnalyticsCard } from '@/components/features/admin/analytics-card'
+import { PaymentMetricsGrid } from '@/components/features/admin/payment-metrics-grid'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { 
+import {
   Calendar, 
   Users, 
   DollarSign, 
@@ -15,6 +16,7 @@ import {
   BarChart3,
   Activity
 } from 'lucide-react'
+import { getPaymentMetrics } from '@/lib/payments/metrics'
 
 async function getDashboardStats() {
   const supabase = await createClient()
@@ -110,8 +112,11 @@ async function getRecentActivity() {
 }
 
 export default async function AdminDashboardPage() {
-  const stats = await getDashboardStats()
-  const activity = await getRecentActivity()
+  const [stats, activity, paymentMetrics] = await Promise.all([
+    getDashboardStats(),
+    getRecentActivity(),
+    getPaymentMetrics(),
+  ])
 
   return (
     <div className="space-y-6">
@@ -261,6 +266,16 @@ export default async function AdminDashboardPage() {
             </Button>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold">Payments Monitoring</h2>
+          <p className="text-sm text-muted-foreground">
+            Track payment reliability, processing time, and refund queue health.
+          </p>
+        </div>
+        <PaymentMetricsGrid metrics={paymentMetrics} />
       </div>
     </div>
   )

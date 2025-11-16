@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useEffect, useMemo, useTransition } from 'react'
+import { useState, useEffect, useMemo, useTransition, useRef } from 'react'
 import { getSports } from '@/server/queries/bookings'
 import { getCourtsBySport } from '@/server/queries/bookings'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Dumbbell, Circle, Grid3x3, ArrowRight, Info, X } from 'lucide-react'
 import { format, addDays, parseISO, addMinutes, startOfDay } from 'date-fns'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Calendar } from '@/components/ui/calendar'
+import { PaymentSheet } from '@/components/features/payments/payment-sheet'
 
 export function RedesignedBooking() {
   const router = useRouter()
@@ -31,6 +33,9 @@ export function RedesignedBooking() {
     tax: number
     total: number
   } | null>(null)
+  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null)
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  const paymentSkipCancelRef = useRef(false)
   
   // Loading states
   const [loadingSports, setLoadingSports] = useState(true)
@@ -88,9 +93,36 @@ export function RedesignedBooking() {
   useEffect(() => {
     const canceled = searchParams.get('canceled')
     if (canceled === 'true') {
+      // Cancel any pending bookings created from the cancelled payment
+      async function cancelPendingBookings() {
+        try {
+          const response = await fetch('/api/booking/cancel-pending', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            if (data.cancelled > 0) {
+              toast.success(`Cancelled ${data.cancelled} pending booking(s)`, {
+                duration: 4000,
+              })
+              // Refresh the page to update booking lists
+              router.refresh()
+            }
+          }
+        } catch (error) {
+          console.error('Failed to cancel pending bookings:', error)
+          // Don't show error to user, just log it
+        }
+      }
+
+      cancelPendingBookings()
+
       toast.error('Payment was canceled. You can continue booking below.', {
         duration: 5000,
       })
+      
       // Remove the canceled parameter from URL
       const params = new URLSearchParams(searchParams.toString())
       params.delete('canceled')
@@ -277,7 +309,11 @@ export function RedesignedBooking() {
       const end = new Date(start.getTime() + durationMinutes * 60000)
 
       if (requiresPayment) {
-        // Create pending booking and redirect to payment
+        if (pendingBookingId) {
+          setPaymentDialogOpen(true)
+          return
+        }
+
         const response = await fetch('/api/booking/create-pending', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -296,25 +332,8 @@ export function RedesignedBooking() {
         }
 
         const { bookingId } = await response.json()
-
-        const checkoutResponse = await fetch('/api/stripe/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookingId,
-            paymentType: 'drop_in',
-          }),
-        })
-
-        if (!checkoutResponse.ok) {
-          const error = await checkoutResponse.json()
-          throw new Error(error.error || 'Failed to create checkout session')
-        }
-
-        const { url } = await checkoutResponse.json()
-        if (url) {
-          window.location.href = url
-        }
+        setPendingBookingId(bookingId)
+        setPaymentDialogOpen(true)
         return
       }
 
@@ -344,6 +363,40 @@ export function RedesignedBooking() {
       toast.error(error instanceof Error ? error.message : 'Booking failed')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handlePaymentSuccess = () => {
+    paymentSkipCancelRef.current = true
+    setPendingBookingId(null)
+    setPaymentDialogOpen(false)
+    toast.success('Booking confirmed!')
+    router.push('/dashboard/bookings')
+  }
+
+  const handlePaymentDialogChange = async (open: boolean) => {
+    setPaymentDialogOpen(open)
+    if (open) return
+
+    if (paymentSkipCancelRef.current) {
+      paymentSkipCancelRef.current = false
+      return
+    }
+
+    if (!pendingBookingId) {
+      return
+    }
+
+    try {
+      await fetch('/api/booking/cancel-pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: pendingBookingId }),
+      })
+    } catch (error) {
+      console.error('Failed to cancel pending booking', error)
+    } finally {
+      setPendingBookingId(null)
     }
   }
 
@@ -784,6 +837,24 @@ export function RedesignedBooking() {
           </div>
         </div>
       </div>
+      <Dialog open={paymentDialogOpen} onOpenChange={handlePaymentDialogChange}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogDescription>
+              Secure payment form powered by Stripe. Your booking is held until payment completes.
+            </DialogDescription>
+          </DialogHeader>
+          {pendingBookingId && paymentInfo && (
+            <PaymentSheet
+              bookingId={pendingBookingId}
+              amount={paymentInfo.total}
+              currency="usd"
+              onSuccess={handlePaymentSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

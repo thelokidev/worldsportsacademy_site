@@ -44,6 +44,21 @@ CALCOM_API_KEY=your-cal-com-api-key
 
 # Webhook secret for verifying webhook signatures
 # CALCOM_WEBHOOK_SECRET=your-webhook-secret
+
+# Stripe Payments
+STRIPE_SECRET_KEY=sk_test_xxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+# Payment notifications
+RESEND_API_KEY=
+RESEND_SENDER_EMAIL="World Sports Academy <payments@yourdomain.com>"
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM_NUMBER=+15551234567
+
+# Alerting (optional)
+PAYMENT_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
 **Note:** You need either `CALCOM_API_KEY` OR both `CALCOM_OAUTH_CLIENT_ID` and `CALCOM_OAUTH_CLIENT_SECRET`. OAuth is for platform customers managing managed users.
@@ -95,6 +110,12 @@ Any platform that supports Next.js 15 (Vercel recommended):
 1. Set environment variables in the hosting platform.
 2. Build: `npm run build`
 3. Start: `npm start`
+
+## Stripe Drop-in Flow
+- Users with memberships are auto-confirmed without payment.
+- Drop-in bookings now use Stripe Payment Intents + Elements (3D Secure ready).
+- Webhooks finalize bookings and log payment/refund events for reconciliation.
+- Refunds trigger Stripe API, email, and SMS notifications automatically.
 
 ## Scripts
 ```jsonc

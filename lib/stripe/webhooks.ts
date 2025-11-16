@@ -1,6 +1,10 @@
-import { getStripeClient } from './client'
-import { createClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
+
+import { logPaymentError } from '@/lib/logger'
+import { createClient } from '@/lib/supabase/server'
+import { getServiceSupabaseClient } from '@/lib/supabase/service'
+import { finalizeBookingPayment, handlePaymentFailure, recordPaymentEvent } from '@/lib/stripe/payments'
+import { getStripeClient } from './client'
 
 export async function handleStripeWebhook(
   event: Stripe.Event,
@@ -54,11 +58,27 @@ export async function handleStripeWebhook(
       break
 
     case 'payment_intent.succeeded':
-      await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent, supabase)
+      await handlePaymentIntentSucceeded(
+        event.data.object as Stripe.PaymentIntent,
+        event.id,
+        supabase,
+      )
       break
 
     case 'payment_intent.payment_failed':
-      await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent, supabase)
+      await handlePaymentIntentFailed(
+        event.data.object as Stripe.PaymentIntent,
+        event.id,
+        supabase,
+      )
+      break
+
+    case 'charge.refunded':
+      await handleChargeRefunded(event.data.object as Stripe.Charge, event.id)
+      break
+
+    case 'refund.updated':
+      await handleRefundUpdated(event.data.object as Stripe.Refund, event.id)
       break
 
     default:
@@ -291,8 +311,37 @@ async function handleCheckoutSessionCompleted(
 
 async function handlePaymentIntentSucceeded(
   paymentIntent: Stripe.PaymentIntent,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  eventId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>,
 ) {
+  const bookingId = paymentIntent.metadata?.booking_id as string | undefined
+
+  if (bookingId) {
+    await recordPaymentEvent({
+      stripeEventId: eventId,
+      type: 'payment_intent.succeeded',
+      bookingId,
+      paymentIntentId: paymentIntent.id,
+      payload: paymentIntent as unknown as Record<string, unknown>,
+      status: 'processing',
+    })
+
+    await finalizeBookingPayment({
+      bookingId,
+      paymentIntentId: paymentIntent.id,
+      stripePaymentIntent: paymentIntent,
+    })
+
+    await recordPaymentEvent({
+      stripeEventId: eventId,
+      type: 'payment_intent.succeeded',
+      bookingId,
+      paymentIntentId: paymentIntent.id,
+      status: 'processed',
+    })
+    return
+  }
+
   const customerId = paymentIntent.customer as string
 
   if (!customerId) {
@@ -306,7 +355,6 @@ async function handlePaymentIntentSucceeded(
     .single()
 
   if (profile) {
-    // Update payment status if it exists
     await supabase
       .from('payments')
       .update({
@@ -319,8 +367,31 @@ async function handlePaymentIntentSucceeded(
 
 async function handlePaymentIntentFailed(
   paymentIntent: Stripe.PaymentIntent,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  eventId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>,
 ) {
+  const bookingId = paymentIntent.metadata?.booking_id as string | undefined
+
+  if (bookingId) {
+    await recordPaymentEvent({
+      stripeEventId: eventId,
+      type: 'payment_intent.payment_failed',
+      bookingId,
+      paymentIntentId: paymentIntent.id,
+      payload: paymentIntent as unknown as Record<string, unknown>,
+      status: 'failed',
+      requiresRetry: true,
+      errorMessage: paymentIntent.last_payment_error?.message,
+    })
+
+    await handlePaymentFailure({
+      bookingId,
+      paymentIntentId: paymentIntent.id,
+      stripeError: paymentIntent.last_payment_error || undefined,
+    })
+    return
+  }
+
   const customerId = paymentIntent.customer as string
 
   if (!customerId) {
@@ -334,13 +405,76 @@ async function handlePaymentIntentFailed(
     .single()
 
   if (profile) {
-    // Update payment status
     await supabase
       .from('payments')
       .update({
         status: 'failed',
       })
       .eq('stripe_payment_intent_id', paymentIntent.id)
+  }
+}
+
+async function handleChargeRefunded(charge: Stripe.Charge, eventId: string) {
+  if (!charge.refunds?.data?.length) {
+    return
+  }
+
+  for (const refund of charge.refunds.data) {
+    await syncRefundRecord(refund, eventId)
+  }
+}
+
+async function handleRefundUpdated(refund: Stripe.Refund, eventId: string) {
+  await syncRefundRecord(refund, eventId)
+}
+
+async function syncRefundRecord(refund: Stripe.Refund, eventId: string) {
+  const paymentIntentId = refund.payment_intent as string | null
+
+  if (!paymentIntentId) {
+    return
+  }
+
+  const supabase = getServiceSupabaseClient()
+
+  try {
+    const { data: payment } = await supabase
+      .from('payments')
+      .select('id, booking_id, currency')
+      .eq('stripe_payment_intent_id', paymentIntentId)
+      .single()
+
+    if (!payment) {
+      return
+    }
+
+    const { error } = await supabase.rpc('fn_create_refund_record', {
+      p_payment_id: payment.id,
+      p_booking_id: payment.booking_id,
+      p_stripe_refund_id: refund.id,
+      p_amount: (refund.amount || 0) / 100,
+      p_status: refund.status,
+      p_reason: refund.reason || refund.metadata?.reason || 'stripe_refund',
+      p_metadata: refund.metadata || {},
+    })
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    await recordPaymentEvent({
+      stripeEventId: eventId,
+      type: 'refund.updated',
+      bookingId: payment.booking_id,
+      paymentIntentId,
+      status: refund.status,
+      payload: refund as unknown as Record<string, unknown>,
+    })
+  } catch (error) {
+    logPaymentError('Failed to sync refund', error, {
+      refundId: refund.id,
+      paymentIntentId,
+    })
   }
 }
 
