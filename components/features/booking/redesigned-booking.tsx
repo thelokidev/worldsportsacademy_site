@@ -31,6 +31,7 @@ export function RedesignedBooking() {
     tax: number
     total: number
   } | null>(null)
+  const [isMembershipCovered, setIsMembershipCovered] = useState(false)
   
   // Loading states
   const [loadingSports, setLoadingSports] = useState(true)
@@ -205,8 +206,13 @@ export function RedesignedBooking() {
     if (!selectedSport || !selectedTime) {
       setRequiresPayment(false)
       setPaymentInfo(null)
+      setIsMembershipCovered(false)
       return
     }
+
+    setRequiresPayment(true)
+    setPaymentInfo(null)
+    setIsMembershipCovered(false)
 
     const checkAuth = async () => {
       setCheckingAuth(true)
@@ -223,19 +229,52 @@ export function RedesignedBooking() {
 
         const data = await response.json()
 
-        if (data.requiresPayment) {
-          setRequiresPayment(true)
-          setPaymentInfo({
-            price: data.dropInPrice,
-            tax: data.tax,
-            total: data.total,
-          })
-        } else {
+        if (!response.ok) {
+          throw new Error(data?.error || 'Failed to check authorization')
+        }
+
+        if (data.coveredByMembership) {
+          setIsMembershipCovered(true)
           setRequiresPayment(false)
           setPaymentInfo(null)
+          return
         }
+
+        setIsMembershipCovered(false)
+
+        if (data.requiresPayment) {
+          if (
+            typeof data.dropInPrice === 'number' &&
+            typeof data.tax === 'number' &&
+            typeof data.total === 'number'
+          ) {
+            setRequiresPayment(true)
+            setPaymentInfo({
+              price: data.dropInPrice,
+              tax: data.tax,
+              total: data.total,
+            })
+          } else {
+            setRequiresPayment(true)
+            setPaymentInfo(null)
+          }
+          return
+        }
+
+        if (data.canBook === false && data.reason) {
+          toast.error(data.reason, { duration: 4000 })
+        }
+
+        setRequiresPayment(true)
+        setPaymentInfo(null)
       } catch (error) {
         console.error('Authorization check error:', error)
+        setRequiresPayment(true)
+        setIsMembershipCovered(false)
+        setPaymentInfo(null)
+        toast.error('Failed to verify membership. Please try again.', {
+          duration: 4000,
+        })
       } finally {
         setCheckingAuth(false)
       }
@@ -373,6 +412,10 @@ export function RedesignedBooking() {
 
         await startStripeCheckout(bookingId)
         return
+      }
+
+      if (!isMembershipCovered) {
+        throw new Error('Active membership required to book without payment.')
       }
 
       // Member booking - free
@@ -794,7 +837,7 @@ export function RedesignedBooking() {
                   </div>
                 )}
 
-                {!checkingAuth && !requiresPayment && selectedTime && (
+                {!checkingAuth && isMembershipCovered && selectedTime && (
                   <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-4 border border-green-700/50 dark:border-green-700/50">
                     <div className="flex items-center gap-2 text-green-300 dark:text-green-300">
                       <Check className="w-5 h-5" />
@@ -817,15 +860,15 @@ export function RedesignedBooking() {
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       Processing...
                     </>
-                  ) : requiresPayment ? (
-                    <>
-                      Continue to Payment
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </>
-                  ) : (
+                  ) : isMembershipCovered ? (
                     <>
                       <Check className="mr-2 h-5 w-5" />
                       Confirm Booking
+                    </>
+                  ) : (
+                    <>
+                      Continue to Payment
+                      <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}
                 </Button>

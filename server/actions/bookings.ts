@@ -326,6 +326,13 @@ export async function createBooking(formData: FormData) {
     const bookingNotes = formData.get('bookingNotes') as string | null
     const bookingType = (formData.get('bookingType') as string) || 'member'
 
+    if (bookingType === 'member') {
+      const hasCoverage = await userHasMembershipCoverage(supabase, user.id, sportId)
+      if (!hasCoverage) {
+        throw new Error('Active membership required to book without payment')
+      }
+    }
+
     // Create booking in Supabase
     const { data: booking, error } = await supabase
       .from('bookings')
@@ -463,6 +470,37 @@ export async function cancelBooking(bookingId: string) {
       error: errorMessage,
     }
   }
+}
+
+async function userHasMembershipCoverage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  sportId: string,
+) {
+  const nowIso = new Date().toISOString()
+  const { data, error } = await supabase
+    .from('memberships')
+    .select(`
+      id,
+      status,
+      current_period_end,
+      membership_plans:plan_id (
+        sport_ids
+      )
+    `)
+    .eq('user_id', userId)
+    .in('status', ['active', 'trialing'])
+    .gt('current_period_end', nowIso)
+
+  if (error) {
+    console.error('Membership coverage check failed:', error)
+    return false
+  }
+
+  return (data || []).some((membership) => {
+    const plan = membership.membership_plans as { sport_ids?: string[] } | null
+    return plan?.sport_ids?.includes(sportId)
+  })
 }
 
 /**
