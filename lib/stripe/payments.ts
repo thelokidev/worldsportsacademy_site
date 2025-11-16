@@ -105,20 +105,37 @@ export const ensureStripeCustomer = async ({
   const stripe = getStripeClient()
   const supabase = getServiceSupabaseClient()
 
-  const customer = await stripe.customers.create({
-    email: email || undefined,
-    name: fullName || undefined,
-    metadata: {
-      supabase_user_id: userId,
-    },
-  })
+  try {
+    const customer = await stripe.customers.create({
+      email: email || undefined,
+      name: fullName || undefined,
+      metadata: {
+        supabase_user_id: userId,
+      },
+    })
 
-  await supabase
-    .from('profiles')
-    .update({ stripe_customer_id: customer.id })
-    .eq('id', userId)
+    await supabase
+      .from('profiles')
+      .update({ stripe_customer_id: customer.id })
+      .eq('id', userId)
 
-  return customer.id
+    return customer.id
+  } catch (error) {
+    // Provide more helpful error messages for common Stripe API key issues
+    if (error && typeof error === 'object' && 'type' in error) {
+      const stripeError = error as any
+      if (stripeError.type === 'StripeAuthenticationError' || stripeError.message?.includes('Invalid API key')) {
+        const secretKey = process.env.STRIPE_SECRET_KEY
+        const keyPreview = secretKey ? `${secretKey.substring(0, 12)}...` : 'not set'
+        throw new Error(
+          `Stripe API key is invalid. Please verify your STRIPE_SECRET_KEY in Vercel environment variables. ` +
+          `Key preview: ${keyPreview}. ` +
+          `Make sure you're using the correct key from your Stripe Dashboard (test keys start with sk_test_, live keys start with sk_live_).`
+        )
+      }
+    }
+    throw error
+  }
 }
 
 const reuseExistingIntent = async (
@@ -199,42 +216,60 @@ export const createBookingPaymentIntent = async ({
   const stripe = getStripeClient()
   const amountInCents = Math.round(pricing.total * 100)
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: amountInCents,
-    currency: 'usd',
-    customer: customerId,
-    receipt_email: receiptEmail || undefined,
-    description: `Booking ${booking.id} payment`,
-    metadata: {
-      booking_id: booking.id,
-      user_id: booking.user_id,
-    },
-    automatic_payment_methods: {
-      enabled: true,
-    },
-    payment_method_options: {
-      card: {
-        request_three_d_secure: 'automatic',
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInCents,
+      currency: 'usd',
+      customer: customerId,
+      receipt_email: receiptEmail || undefined,
+      description: `Booking ${booking.id} payment`,
+      metadata: {
+        booking_id: booking.id,
+        user_id: booking.user_id,
       },
-    },
-  })
-
-  await supabase
-    .from('bookings')
-    .update({
-      payment_intent_id: paymentIntent.id,
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      payment_method_options: {
+        card: {
+          request_three_d_secure: 'automatic',
+        },
+      },
     })
-    .eq('id', booking.id)
 
-  if (!paymentIntent.client_secret) {
-    throw new Error('Stripe did not return a client secret')
-  }
+    await supabase
+      .from('bookings')
+      .update({
+        payment_intent_id: paymentIntent.id,
+      })
+      .eq('id', booking.id)
 
-  return {
-    clientSecret: paymentIntent.client_secret,
-    paymentIntentId: paymentIntent.id,
-    amount: pricing.total,
-    currency: 'usd',
+    if (!paymentIntent.client_secret) {
+      throw new Error('Stripe did not return a client secret')
+    }
+
+    return {
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      amount: pricing.total,
+      currency: 'usd',
+    }
+  } catch (error) {
+    // Provide more helpful error messages for Stripe API key issues
+    if (error && typeof error === 'object' && 'type' in error) {
+      const stripeError = error as any
+      if (stripeError.type === 'StripeAuthenticationError' || stripeError.message?.includes('Invalid API key')) {
+        const secretKey = process.env.STRIPE_SECRET_KEY
+        const keyPreview = secretKey ? `${secretKey.substring(0, 12)}...` : 'not set'
+        throw new Error(
+          `Stripe API key is invalid. Please verify your STRIPE_SECRET_KEY in Vercel environment variables. ` +
+          `Key preview: ${keyPreview}. ` +
+          `Make sure you're using the correct key from your Stripe Dashboard (test keys start with sk_test_, live keys start with sk_live_). ` +
+          `After updating, you must redeploy your Vercel application for changes to take effect.`
+        )
+      }
+    }
+    throw error
   }
 }
 

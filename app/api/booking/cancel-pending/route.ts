@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     const bookingIds = bookings.map((b) => b.id)
     const { error: updateError } = await supabase
       .from('bookings')
-      .update({ status: 'cancelled', payment_status: 'cancelled' })
+      .update({ status: 'cancelled', payment_status: 'failed' })
       .in('id', bookingIds)
       .eq('user_id', user.id)
       .eq('status', 'pending')

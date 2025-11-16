@@ -31,6 +31,8 @@ type PaymentSheetProps = {
   amount?: number
   currency?: string
   onSuccess?: () => void
+  onError?: (error: Error) => void
+  onCancel?: () => void
 }
 
 type PaymentIntentResponse = {
@@ -40,10 +42,11 @@ type PaymentIntentResponse = {
   currency: string
 }
 
-export const PaymentSheet = ({ bookingId, onSuccess }: PaymentSheetProps) => {
+export const PaymentSheet = ({ bookingId, onSuccess, onError, onCancel }: PaymentSheetProps) => {
   const [intentData, setIntentData] = useState<PaymentIntentResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [hasFailed, setHasFailed] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -51,6 +54,7 @@ export const PaymentSheet = ({ bookingId, onSuccess }: PaymentSheetProps) => {
     const initializeIntent = async () => {
       setIsLoading(true)
       setFetchError(null)
+      setHasFailed(false)
       try {
         const response = await fetch('/api/stripe/payment-intent', {
           method: 'POST',
@@ -60,16 +64,26 @@ export const PaymentSheet = ({ bookingId, onSuccess }: PaymentSheetProps) => {
 
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({}))
-          throw new Error(errorBody.error || 'Failed to initialize payment')
+          const error = new Error(errorBody.error || 'Failed to initialize payment')
+          if (isMounted) {
+            setFetchError(error.message)
+            setHasFailed(true)
+            onError?.(error)
+          }
+          return
         }
 
         const data = (await response.json()) as PaymentIntentResponse
         if (isMounted) {
           setIntentData(data)
+          setHasFailed(false)
         }
       } catch (error) {
         if (isMounted) {
-          setFetchError(error instanceof Error ? error.message : 'Failed to load payment form')
+          const err = error instanceof Error ? error : new Error('Failed to load payment form')
+          setFetchError(err.message)
+          setHasFailed(true)
+          onError?.(err)
         }
       } finally {
         if (isMounted) {
@@ -83,7 +97,22 @@ export const PaymentSheet = ({ bookingId, onSuccess }: PaymentSheetProps) => {
     return () => {
       isMounted = false
     }
-  }, [bookingId])
+  }, [bookingId, onError])
+
+  // Cleanup effect: cancel booking on unmount if payment failed
+  useEffect(() => {
+    return () => {
+      if (hasFailed && bookingId) {
+        fetch('/api/booking/cancel-pending', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId }),
+        }).catch((err) => {
+          console.error('Failed to cancel pending booking on unmount:', err)
+        })
+      }
+    }
+  }, [hasFailed, bookingId])
 
   const appearance: StripeElementsOptions['appearance'] = useMemo(
     () => ({
@@ -147,11 +176,42 @@ export const PaymentSheet = ({ bookingId, onSuccess }: PaymentSheetProps) => {
     )
   }
 
+  const handleCancel = async () => {
+    try {
+      await fetch('/api/booking/cancel-pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      })
+      onCancel?.()
+    } catch (error) {
+      console.error('Failed to cancel pending booking:', error)
+      toast.error('Failed to cancel booking. Please try again.')
+    }
+  }
+
   if (isLoading || !intentData) {
     return (
-      <div className="rounded-xl border border-gray-200 p-6 text-center">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
         {fetchError ? (
-          <p className="text-sm text-red-600">{fetchError}</p>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 justify-center">
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 text-left">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">Payment Initialization Failed</p>
+                <p className="text-sm text-red-700 dark:text-red-300">{fetchError}</p>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-center">
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950"
+              >
+                Cancel Booking
+              </Button>
+            </div>
+          </div>
         ) : (
           <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -179,6 +239,8 @@ export const PaymentSheet = ({ bookingId, onSuccess }: PaymentSheetProps) => {
         bookingId={bookingId}
         paymentIntentId={intentData.paymentIntentId}
         onSuccess={onSuccess}
+        onError={onError}
+        onCancel={onCancel}
       />
     </div>
   )
@@ -191,6 +253,8 @@ const StripeElementsWrapper = ({
   bookingId,
   paymentIntentId,
   onSuccess,
+  onError,
+  onCancel,
 }: {
   stripe: Promise<Stripe | null> | null
   clientSecret: string
@@ -198,31 +262,58 @@ const StripeElementsWrapper = ({
   bookingId: string
   paymentIntentId: string
   onSuccess?: () => void
+  onError?: (error: Error) => void
+  onCancel?: () => void
 }) => {
   const [stripeError, setStripeError] = useState<string | null>(null)
+
+  const handleCancel = async () => {
+    try {
+      await fetch('/api/booking/cancel-pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      })
+      onCancel?.()
+    } catch (error) {
+      console.error('Failed to cancel pending booking:', error)
+      toast.error('Failed to cancel booking. Please try again.')
+    }
+  }
 
   useEffect(() => {
     // Validate that Stripe loaded successfully
     if (stripe) {
       stripe.catch((error) => {
         console.error('Stripe initialization error:', error)
-        setStripeError(
-          error?.message?.includes('Invalid API key')
-            ? 'Invalid Stripe API key. Please check your NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in .env.local'
-            : 'Failed to initialize Stripe. Please check your configuration.'
-        )
+        const errorMessage = error?.message?.includes('Invalid API key')
+          ? 'Invalid Stripe API key. Please check your NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in .env.local'
+          : 'Failed to initialize Stripe. Please check your configuration.'
+        setStripeError(errorMessage)
+        onError?.(new Error(errorMessage))
       })
     }
-  }, [stripe])
+  }, [stripe, onError])
 
   if (stripeError) {
     return (
       <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-          <div className="flex-1 space-y-1">
-            <p className="text-sm font-medium text-red-800 dark:text-red-200">Stripe Error</p>
-            <p className="text-sm text-red-700 dark:text-red-300">{stripeError}</p>
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">Stripe Error</p>
+              <p className="text-sm text-red-700 dark:text-red-300">{stripeError}</p>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950"
+            >
+              Cancel Booking
+            </Button>
           </div>
         </div>
       </div>

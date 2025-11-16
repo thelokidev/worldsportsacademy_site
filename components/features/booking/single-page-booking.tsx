@@ -394,6 +394,29 @@ export function SinglePageBooking() {
     router.push('/dashboard/bookings')
   }
 
+  const handlePaymentError = async (error: Error) => {
+    console.error('Payment error:', error)
+    // Automatically cancel pending booking when payment fails
+    if (pendingBookingId) {
+      try {
+        await fetch('/api/booking/cancel-pending', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: pendingBookingId }),
+        })
+        setPendingBookingId(null)
+        toast.error('Payment failed. Booking has been cancelled.')
+      } catch (cancelError) {
+        console.error('Failed to cancel pending booking on payment error:', cancelError)
+      }
+    }
+  }
+
+  const handlePaymentCancel = () => {
+    setPendingBookingId(null)
+    setPaymentDialogOpen(false)
+  }
+
   const handlePaymentDialogChange = async (open: boolean) => {
     setPaymentDialogOpen(open)
     if (open) return
@@ -803,6 +826,8 @@ export function SinglePageBooking() {
               amount={paymentInfo.total}
               currency="usd"
               onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+              onCancel={handlePaymentCancel}
             />
           )}
         </DialogContent>
