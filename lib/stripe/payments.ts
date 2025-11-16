@@ -120,10 +120,33 @@ export const ensureStripeCustomer = async ({
       },
     })
 
-    await supabase
+    // Try to update profile with Stripe customer ID
+    // If the column doesn't exist or update fails, we'll still return the customer ID
+    // The customer is created in Stripe, so we can proceed even if profile update fails
+    const { error: updateError } = await supabase
       .from('profiles')
       .update({ stripe_customer_id: customer.id })
       .eq('id', userId)
+
+    if (updateError) {
+      // Log the error but don't fail - we have the customer ID and can proceed
+      console.error('Failed to update profile with Stripe customer ID:', {
+        error: updateError,
+        userId,
+        customerId: customer.id,
+        message: updateError.message,
+        code: updateError.code,
+      })
+      
+      // If it's a schema cache issue, suggest running migration
+      if (updateError.code === 'PGRST204' || updateError.message?.includes('schema cache')) {
+        console.error(
+          'PostgREST schema cache issue detected. ' +
+          'Please run migration 20250117000001_fix_profiles_stripe_customer_id.sql ' +
+          'or refresh the schema cache in Supabase Dashboard.'
+        )
+      }
+    }
 
     return customer.id
   } catch (error) {
@@ -132,11 +155,28 @@ export const ensureStripeCustomer = async ({
       const stripeError = error as any
       if (stripeError.type === 'StripeAuthenticationError' || stripeError.message?.includes('Invalid API key')) {
         const secretKey = process.env.STRIPE_SECRET_KEY
-        const keyPreview = secretKey ? `${secretKey.substring(0, 12)}...` : 'not set'
+        const keyPreview = secretKey ? `${secretKey.trim().substring(0, 12)}...` : 'not set'
+        const keyLength = secretKey ? secretKey.trim().length : 0
+        const isVercel = process.env.VERCEL === '1'
+        
+        let diagnosticInfo = `Key preview: ${keyPreview}, Length: ${keyLength} chars`
+        if (!secretKey) {
+          diagnosticInfo = 'Key is not set in environment variables'
+        } else if (!secretKey.trim().startsWith('sk_')) {
+          diagnosticInfo = `Key format is invalid (does not start with 'sk_')`
+        } else if (keyLength < 20) {
+          diagnosticInfo = `Key appears to be truncated (too short: ${keyLength} chars)`
+        }
+        
+        const envHint = isVercel
+          ? 'Please check your Vercel environment variables and redeploy after updating.'
+          : 'Please check your .env.local file and restart the development server.'
+        
         throw new Error(
-          `Stripe API key is invalid. Please verify your STRIPE_SECRET_KEY in Vercel environment variables. ` +
-          `Key preview: ${keyPreview}. ` +
-          `Make sure you're using the correct key from your Stripe Dashboard (test keys start with sk_test_, live keys start with sk_live_).`
+          `Stripe API key is invalid. ${diagnosticInfo}. ` +
+          `Please verify your STRIPE_SECRET_KEY matches the key from your Stripe Dashboard. ` +
+          `Test keys start with 'sk_test_', live keys start with 'sk_live_'. ` +
+          `${envHint}`
         )
       }
     }
