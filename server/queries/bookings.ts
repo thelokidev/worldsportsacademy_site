@@ -77,6 +77,7 @@ export async function getUpcomingBookings(userId: string) {
       )
     `)
     .eq('user_id', userId)
+    .eq('status', 'confirmed')
     .gte('start_time', now)
     .order('start_time', { ascending: true })
 
