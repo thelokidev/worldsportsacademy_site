@@ -373,11 +373,11 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      // Get drop-in pricing
+      // Get drop-in pricing with Stripe IDs
       const duration = booking.selected_duration || 60
       const { data: pricing } = await supabase
         .from('drop_in_pricing')
-        .select('price, tax_rate')
+        .select('price, tax_rate, stripe_price_id, stripe_product_id')
         .eq('sport_id', booking.sport_id)
         .eq('duration_minutes', duration)
         .single()
@@ -389,36 +389,61 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      const subtotal = Number(pricing.price)
-      const tax = subtotal * Number(pricing.tax_rate)
-      const total = subtotal + tax
+      if (!pricing.stripe_price_id) {
+        return NextResponse.json(
+          { error: 'Stripe price ID not configured for drop-in pricing' },
+          { status: 500 }
+        )
+      }
 
-      // Create checkout session for one-time payment
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        mode: 'payment',
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: `${(booking.sports as any)?.name || 'Sport'} Drop-In`,
-                description: `${duration} minute session`,
-              },
-              unit_amount: Math.round(total * 100), // Convert to cents
+      // Create checkout session for one-time payment using static price ID
+      let session
+      try {
+        session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          mode: 'payment',
+          line_items: [
+            {
+              price: pricing.stripe_price_id,
+              quantity: 1,
             },
-            quantity: 1,
+          ],
+          success_url: `${appUrl}/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${appUrl}/bookings?canceled=true`,
+          metadata: {
+            user_id: user.id,
+            booking_id: bookingId,
+            payment_type: 'drop_in',
+            sport_id: booking.sport_id,
+            duration_minutes: duration.toString(),
           },
-        ],
-        success_url: `${appUrl}/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${appUrl}/bookings?canceled=true`,
-        metadata: {
-          user_id: user.id,
-          booking_id: bookingId,
-          payment_type: 'drop_in',
-          sport_id: booking.sport_id,
-        },
-      })
+        })
+      } catch (sessionError) {
+        console.error('Failed to create Stripe checkout session for drop-in:', sessionError)
+        
+        let errorMessage = 'Failed to create checkout session'
+        let errorDetails: string | undefined
+        
+        if (sessionError instanceof Error) {
+          errorDetails = sessionError.message
+          
+          if (sessionError.message.includes('No such price')) {
+            errorMessage = `Stripe price ID "${pricing.stripe_price_id}" not found. Please check your drop-in pricing configuration.`
+            errorDetails = 'The Stripe price ID in the database does not exist in your Stripe account. Please verify the price ID in the drop_in_pricing table matches your Stripe products.'
+          } else if (sessionError.message.includes('Invalid API Key')) {
+            errorMessage = 'Invalid Stripe API key. Please check your STRIPE_SECRET_KEY in .env.local'
+            errorDetails = 'The Stripe secret key is invalid or not properly configured.'
+          }
+        }
+        
+        return NextResponse.json(
+          {
+            error: errorMessage,
+            details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
+          },
+          { status: 500 }
+        )
+      }
 
       return NextResponse.json({ sessionId: session.id, url: session.url })
     }
