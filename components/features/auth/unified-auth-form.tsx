@@ -74,7 +74,7 @@ export function UnifiedAuthForm() {
 
     try {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
-      const callbackUrl = redirectParam
+      const callbackUrl = redirectTo 
         ? `${appUrl}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`
         : `${appUrl}/auth/callback`
 

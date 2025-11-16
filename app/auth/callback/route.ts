@@ -2,49 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
-async function exchangeCodeUsingVerifier(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  code: string,
-  codeVerifier: string,
-) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables')
-  }
-
-  const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=pkce`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: supabaseAnonKey,
-    },
-    body: JSON.stringify({
-      auth_code: code,
-      code_verifier: codeVerifier,
-    }),
-  })
-
-  const data = await response.json()
-
-  if (!response.ok) {
-    const message = data?.error_description || data?.error || 'Failed to exchange code for session'
-    throw new Error(message)
-  }
-
-  if (!data?.session) {
-    throw new Error('Supabase did not return a session')
-  }
-
-  await supabase.auth.setSession({
-    access_token: data.session.access_token,
-    refresh_token: data.session.refresh_token,
-  })
-
-  return data
-}
-
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const token_hash = requestUrl.searchParams.get('token_hash')
@@ -82,20 +39,8 @@ export async function GET(request: NextRequest) {
 
   // Handle email confirmation via code (PKCE flow - OAuth)
   if (code) {
-    const cookieStore = await cookies()
-    const codeVerifierParam = requestUrl.searchParams.get('code_verifier')
-    const codeVerifierCookie = cookieStore.get('sb-code-verifier')?.value
-    const codeVerifierFromCookie = codeVerifierCookie?.split('/')?.[0]
-    const codeVerifier = codeVerifierParam || codeVerifierFromCookie
-
-    if (!codeVerifier) {
-      console.error('Code exchange error: Missing code_verifier')
-      return NextResponse.redirect(
-        new URL(`/auth?error=verification_failed&message=Missing verification code`, requestUrl.origin),
-      )
-    }
-
     try {
+      // Use the built-in exchangeCodeForSession which handles code_verifier from cookies automatically
       const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
       if (!error && data.session) {
@@ -104,13 +49,26 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
       }
 
+      // If exchangeCodeForSession fails, log the error and provide details
       console.error('Code exchange error:', error)
-      // Fall back to manual exchange using the code verifier
-      await exchangeCodeUsingVerifier(supabase, code, codeVerifier)
+      console.error('Error details:', {
+        message: error?.message,
+        status: error?.status,
+        code: code?.substring(0, 20) + '...',
+      })
 
-      const redirectParam = requestUrl.searchParams.get('redirect')
-      const redirectTo = redirectParam ? decodeURIComponent(redirectParam) : '/dashboard'
-      return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
+      // Check if code_verifier exists in cookies for debugging
+      const cookieStore = await cookies()
+      const allCookies = cookieStore.getAll()
+      const authCookies = allCookies.filter(c => c.name.includes('sb-') || c.name.includes('auth'))
+      console.error('Available auth cookies:', authCookies.map(c => ({ name: c.name, hasValue: !!c.value })))
+
+      return NextResponse.redirect(
+        new URL(
+          `/auth?error=verification_failed&message=${encodeURIComponent(error?.message || 'Authentication failed')}`,
+          requestUrl.origin
+        ),
+      )
     } catch (err) {
       console.error('Code exchange exception:', err)
       return NextResponse.redirect(
