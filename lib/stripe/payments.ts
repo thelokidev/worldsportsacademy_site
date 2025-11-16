@@ -76,7 +76,7 @@ const fetchDropInPricing = async (
 ) => {
   const { data, error } = await supabase
     .from('drop_in_pricing')
-    .select('price, tax_rate')
+    .select('price, tax_rate, stripe_price_id, stripe_product_id')
     .eq('sport_id', sportId)
     .eq('duration_minutes', durationMinutes)
     .single()
@@ -89,7 +89,13 @@ const fetchDropInPricing = async (
   const tax = subtotal * Number(data.tax_rate || 0)
   const total = subtotal + tax
 
-  return { subtotal, tax, total }
+  return { 
+    subtotal, 
+    tax, 
+    total,
+    stripe_price_id: data.stripe_price_id || null,
+    stripe_product_id: data.stripe_product_id || null,
+  }
 }
 
 export const ensureStripeCustomer = async ({
@@ -199,6 +205,11 @@ export const createBookingPaymentIntent = async ({
   const durationMinutes = booking.selected_duration || 60
   const pricing = await fetchDropInPricing(supabase, booking.sport_id, durationMinutes)
 
+  // Validate pricing data
+  if (!pricing || pricing.total <= 0) {
+    throw new Error('Invalid pricing configuration. Please contact support.')
+  }
+
   // Persist expected payment metadata for reconciliation
   await supabase
     .from('bookings')
@@ -216,17 +227,33 @@ export const createBookingPaymentIntent = async ({
   const stripe = getStripeClient()
   const amountInCents = Math.round(pricing.total * 100)
 
+  // Validate amount is valid
+  if (amountInCents < 50) {
+    throw new Error(`Invalid payment amount: $${pricing.total}. Minimum payment is $0.50.`)
+  }
+
   try {
+    const paymentIntentMetadata: Record<string, string> = {
+      booking_id: booking.id,
+      user_id: booking.user_id,
+      payment_type: 'drop_in',
+    }
+
+    // Add Stripe price ID to metadata if available
+    if (pricing.stripe_price_id) {
+      paymentIntentMetadata.stripe_price_id = pricing.stripe_price_id
+    }
+    if (pricing.stripe_product_id) {
+      paymentIntentMetadata.stripe_product_id = pricing.stripe_product_id
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: 'usd',
       customer: customerId,
       receipt_email: receiptEmail || undefined,
-      description: `Booking ${booking.id} payment`,
-      metadata: {
-        booking_id: booking.id,
-        user_id: booking.user_id,
-      },
+      description: `Drop-in booking ${booking.id} payment`,
+      metadata: paymentIntentMetadata,
       automatic_payment_methods: {
         enabled: true,
       },
@@ -258,6 +285,7 @@ export const createBookingPaymentIntent = async ({
     // Provide more helpful error messages for Stripe API key issues
     if (error && typeof error === 'object' && 'type' in error) {
       const stripeError = error as any
+      
       if (stripeError.type === 'StripeAuthenticationError' || stripeError.message?.includes('Invalid API key')) {
         const secretKey = process.env.STRIPE_SECRET_KEY
         const keyPreview = secretKey ? `${secretKey.substring(0, 12)}...` : 'not set'
@@ -268,7 +296,27 @@ export const createBookingPaymentIntent = async ({
           `After updating, you must redeploy your Vercel application for changes to take effect.`
         )
       }
+      
+      // Handle other Stripe API errors
+      if (stripeError.type === 'StripeInvalidRequestError') {
+        const errorMessage = stripeError.message || 'Invalid request to Stripe'
+        throw new Error(`Stripe payment error: ${errorMessage}. Please check your payment configuration.`)
+      }
+      
+      if (stripeError.type === 'StripeAPIError') {
+        throw new Error('Stripe API is currently unavailable. Please try again in a few moments.')
+      }
     }
+    
+    // Re-throw with more context if it's a known error
+    if (error instanceof Error) {
+      // Don't wrap if it's already a helpful error message
+      if (error.message.includes('pricing') || error.message.includes('configuration')) {
+        throw error
+      }
+      throw new Error(`Failed to create payment: ${error.message}`)
+    }
+    
     throw error
   }
 }

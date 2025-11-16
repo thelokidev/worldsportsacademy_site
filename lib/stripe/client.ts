@@ -40,9 +40,15 @@ export function getStripeClient(): Stripe {
         typescript: true,
       })
     } catch (error) {
+      const isVercel = process.env.VERCEL === '1'
+      const envHint = isVercel 
+        ? 'Please check your Vercel environment variables and redeploy after updating.'
+        : 'Please check your .env.local file and restart the development server.'
+      
       throw new Error(
         `Failed to initialize Stripe client: ${error instanceof Error ? error.message : 'Unknown error'}. ` +
-        `Please verify your STRIPE_SECRET_KEY is correct.`
+        `Please verify your STRIPE_SECRET_KEY is correct. ${envHint} ` +
+        `The key should start with 'sk_test_' (test mode) or 'sk_live_' (live mode).`
       )
     }
   }

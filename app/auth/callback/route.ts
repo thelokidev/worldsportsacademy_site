@@ -38,18 +38,38 @@ export async function GET(request: NextRequest) {
 
   // Handle email confirmation via code (PKCE flow - OAuth)
   if (code) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    // Check if code_verifier is available (required for PKCE flow)
+    const codeVerifier = requestUrl.searchParams.get('code_verifier')
+    
+    if (!codeVerifier) {
+      // Try to get code_verifier from cookies (stored during OAuth initiation)
+      const cookieStore = await import('next/headers').then(m => m.cookies())
+      const codeVerifierCookie = cookieStore.get('sb-code-verifier')?.value
+      
+      if (!codeVerifierCookie) {
+        console.error('Code exchange error: Missing code_verifier')
+        return NextResponse.redirect(new URL(`/auth?error=verification_failed&message=Missing verification code`, requestUrl.origin))
+      }
+    }
 
-    if (!error && data.session) {
-      // OAuth session created - redirect to dashboard or original redirect
-      const redirectParam = requestUrl.searchParams.get('redirect')
-      const redirectTo = redirectParam 
-        ? decodeURIComponent(redirectParam)
-        : '/dashboard'
-      return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
-    } else {
-      console.error('Code exchange error:', error)
-      return NextResponse.redirect(new URL(`/auth?error=verification_failed`, requestUrl.origin))
+    try {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+      if (!error && data.session) {
+        // OAuth session created - redirect to dashboard or original redirect
+        const redirectParam = requestUrl.searchParams.get('redirect')
+        const redirectTo = redirectParam 
+          ? decodeURIComponent(redirectParam)
+          : '/dashboard'
+        return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
+      } else {
+        console.error('Code exchange error:', error)
+        const errorMessage = error?.message || 'Failed to verify authentication code'
+        return NextResponse.redirect(new URL(`/auth?error=verification_failed&message=${encodeURIComponent(errorMessage)}`, requestUrl.origin))
+      }
+    } catch (err) {
+      console.error('Code exchange exception:', err)
+      return NextResponse.redirect(new URL(`/auth?error=verification_failed&message=Authentication failed`, requestUrl.origin))
     }
   }
 
