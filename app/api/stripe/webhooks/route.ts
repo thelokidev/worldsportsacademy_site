@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Handle the event
-    await handleStripeWebhook(event, signature)
+    await handleStripeWebhook(event)
 
     return NextResponse.json({ received: true })
   } catch (error) {

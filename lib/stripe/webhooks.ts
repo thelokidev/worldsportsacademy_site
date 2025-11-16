@@ -1,14 +1,12 @@
 import Stripe from 'stripe'
 
 import { logPaymentError } from '@/lib/logger'
-import { createClient } from '@/lib/supabase/server'
 import { getServiceSupabaseClient } from '@/lib/supabase/service'
 import { finalizeBookingPayment, handlePaymentFailure, recordPaymentEvent } from '@/lib/stripe/payments'
 import { getStripeClient } from './client'
 
 export async function handleStripeWebhook(
-  event: Stripe.Event,
-  signature: string
+  event: Stripe.Event
 ) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
@@ -17,20 +15,7 @@ export async function handleStripeWebhook(
   }
 
   const stripe = getStripeClient()
-
-  // Verify webhook signature
-  try {
-    event = stripe.webhooks.constructEvent(
-      JSON.stringify(event),
-      signature,
-      webhookSecret
-    ) as Stripe.Event
-  } catch (err) {
-    const error = err as Error
-    throw new Error(`Webhook signature verification failed: ${error.message}`)
-  }
-
-  const supabase = await createClient()
+  const supabase = getServiceSupabaseClient()
 
   switch (event.type) {
     case 'customer.subscription.created':
@@ -90,7 +75,7 @@ export async function handleStripeWebhook(
 
 async function handleSubscriptionCreated(
   subscription: Stripe.Subscription,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
   const customerId = subscription.customer as string
   const priceId = subscription.items.data[0]?.price.id
@@ -107,6 +92,10 @@ async function handleSubscriptionCreated(
     .single()
 
   if (!profile) {
+    console.error('Stripe webhook error: profile not found for customer', {
+      customerId,
+      subscriptionId: subscription.id,
+    })
     throw new Error(`User not found for customer ${customerId}`)
   }
 
@@ -118,6 +107,11 @@ async function handleSubscriptionCreated(
     .single()
 
   if (!plan) {
+    console.error('Stripe webhook error: plan not found for price', {
+      priceId,
+      subscriptionId: subscription.id,
+      customerId,
+    })
     throw new Error(`Membership plan not found for price ${priceId}`)
   }
 
@@ -142,15 +136,28 @@ async function handleSubscriptionCreated(
     .single()
 
   if (error) {
+    console.error('Stripe webhook error: failed to upsert membership', {
+      subscriptionId: subscription.id,
+      customerId,
+      planId: plan.id,
+      error: error.message,
+    })
     throw new Error(`Failed to create membership: ${error.message}`)
   }
+
+  console.log('Membership upserted from Stripe subscription', {
+    membershipId: membership.id,
+    userId: profile.id,
+    planId: plan.id,
+    subscriptionId: subscription.id,
+  })
 
   return membership
 }
 
 async function handleSubscriptionUpdated(
   subscription: Stripe.Subscription,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
   const { error } = await supabase
     .from('memberships')
@@ -172,7 +179,7 @@ async function handleSubscriptionUpdated(
 
 async function handleSubscriptionDeleted(
   subscription: Stripe.Subscription,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
   const { error } = await supabase
     .from('memberships')
@@ -189,7 +196,7 @@ async function handleSubscriptionDeleted(
 
 async function handleInvoicePaymentSucceeded(
   invoice: Stripe.Invoice,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
   const subscriptionId = invoice.subscription as string | null
   const customerId = invoice.customer as string
@@ -243,7 +250,7 @@ async function handleInvoicePaymentSucceeded(
 
 async function handleInvoicePaymentFailed(
   invoice: Stripe.Invoice,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
   const subscriptionId = invoice.subscription as string | null
 
@@ -264,7 +271,7 @@ async function handleInvoicePaymentFailed(
 
 async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session,
-  supabase: Awaited<ReturnType<typeof createClient>>
+  supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
   const customerId = session.customer as string
   const metadata = session.metadata || {}
@@ -312,7 +319,7 @@ async function handleCheckoutSessionCompleted(
 async function handlePaymentIntentSucceeded(
   paymentIntent: Stripe.PaymentIntent,
   eventId: string,
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof getServiceSupabaseClient>,
 ) {
   const bookingId = paymentIntent.metadata?.booking_id as string | undefined
 
@@ -368,7 +375,7 @@ async function handlePaymentIntentSucceeded(
 async function handlePaymentIntentFailed(
   paymentIntent: Stripe.PaymentIntent,
   eventId: string,
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof getServiceSupabaseClient>,
 ) {
   const bookingId = paymentIntent.metadata?.booking_id as string | undefined
 
