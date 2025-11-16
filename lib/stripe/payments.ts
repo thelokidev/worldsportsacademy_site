@@ -288,12 +288,29 @@ export const createBookingPaymentIntent = async ({
       
       if (stripeError.type === 'StripeAuthenticationError' || stripeError.message?.includes('Invalid API key')) {
         const secretKey = process.env.STRIPE_SECRET_KEY
-        const keyPreview = secretKey ? `${secretKey.substring(0, 12)}...` : 'not set'
+        const keyPreview = secretKey ? `${secretKey.trim().substring(0, 12)}...` : 'not set'
+        const keyLength = secretKey ? secretKey.trim().length : 0
+        const isVercel = process.env.VERCEL === '1'
+        
+        // Detailed diagnostic information
+        let diagnosticInfo = `Key preview: ${keyPreview}, Length: ${keyLength} chars`
+        if (!secretKey) {
+          diagnosticInfo = 'Key is not set in environment variables'
+        } else if (!secretKey.trim().startsWith('sk_')) {
+          diagnosticInfo = `Key format is invalid (does not start with 'sk_')`
+        } else if (keyLength < 20) {
+          diagnosticInfo = `Key appears to be truncated (too short: ${keyLength} chars)`
+        }
+        
+        const envHint = isVercel
+          ? 'Please check your Vercel environment variables and redeploy after updating.'
+          : 'Please check your .env.local file and restart the development server.'
+        
         throw new Error(
-          `Stripe API key is invalid. Please verify your STRIPE_SECRET_KEY in Vercel environment variables. ` +
-          `Key preview: ${keyPreview}. ` +
-          `Make sure you're using the correct key from your Stripe Dashboard (test keys start with sk_test_, live keys start with sk_live_). ` +
-          `After updating, you must redeploy your Vercel application for changes to take effect.`
+          `Stripe API key is invalid. ${diagnosticInfo}. ` +
+          `Please verify your STRIPE_SECRET_KEY matches the key from your Stripe Dashboard. ` +
+          `Test keys start with 'sk_test_', live keys start with 'sk_live_'. ` +
+          `${envHint}`
         )
       }
       

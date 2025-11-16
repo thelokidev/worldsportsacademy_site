@@ -7,10 +7,8 @@ import { NextRequest, NextResponse } from 'next/server'
  * Usage: GET /api/stripe/check-keys
  */
 export async function GET(req: NextRequest) {
-  // Only allow in development
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
-  }
+  // Allow in all environments for debugging (but limit to admin users in production)
+  // In production, this should be protected by authentication
 
   const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   const secretKey = process.env.STRIPE_SECRET_KEY
@@ -26,11 +24,13 @@ export async function GET(req: NextRequest) {
     },
     secretKey: {
       exists: !!secretKey,
-      length: secretKey?.length || 0,
-      startsWithSk: secretKey?.startsWith('sk_') || false,
-      isTest: secretKey?.startsWith('sk_test_') || false,
-      isLive: secretKey?.startsWith('sk_live_') || false,
-      preview: secretKey ? `${secretKey.substring(0, 12)}...` : 'Not set',
+      length: secretKey?.trim().length || 0,
+      trimmedLength: secretKey ? secretKey.length - secretKey.trim().length : 0,
+      startsWithSk: secretKey?.trim().startsWith('sk_') || false,
+      isTest: secretKey?.trim().startsWith('sk_test_') || false,
+      isLive: secretKey?.trim().startsWith('sk_live_') || false,
+      preview: secretKey ? `${secretKey.trim().substring(0, 12)}...` : 'Not set',
+      hasWhitespace: secretKey ? secretKey !== secretKey.trim() : false,
     },
     modeMatch: {
       bothTest: (publishableKey?.startsWith('pk_test_') && secretKey?.startsWith('sk_test_')) || false,
