@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { getStripeClient } from '@/lib/stripe/client'
 
@@ -252,33 +253,22 @@ export async function POST(req: NextRequest) {
         .maybeSingle()
 
       // If user has active membership and it's a different plan, cancel it
-      if (activeMembership && activeMembership.plan_id !== plan.id) {
-        if (activeMembership.stripe_subscription_id) {
-          try {
-            // Cancel existing subscription immediately
-            await stripe.subscriptions.cancel(activeMembership.stripe_subscription_id)
-
-            // Update membership in database to canceled status
-            const { error: updateError } = await supabase
-              .from('memberships')
-              .update({ 
-                status: 'canceled',
-                canceled_at: new Date().toISOString(),
-                cancel_at_period_end: false
-              })
-              .eq('id', activeMembership.id)
-
-            if (updateError) {
-              console.error('Failed to update membership status after cancellation:', updateError)
-              // Continue anyway - Stripe subscription is canceled
-            }
-          } catch (cancelError) {
-            console.error('Failed to cancel existing subscription:', cancelError)
-            // If cancellation fails, we should still allow the new subscription
-            // but log the error for investigation
-            const errorMessage = cancelError instanceof Error ? cancelError.message : 'Unknown error'
-            console.error('Cancellation error details:', errorMessage)
-          }
+      if (
+        activeMembership &&
+        activeMembership.plan_id !== plan.id &&
+        activeMembership.stripe_subscription_id
+      ) {
+        try {
+          await handleMembershipUpgradeCancellation({
+            supabase,
+            stripe,
+            membership: activeMembership,
+            newPlanId: plan.id,
+          })
+        } catch (cancelError) {
+          console.error('Failed to process membership upgrade cancellation:', cancelError)
+          const errorMessage = cancelError instanceof Error ? cancelError.message : 'Unknown error'
+          console.error('Cancellation error details:', errorMessage)
         }
       }
 
@@ -458,6 +448,155 @@ export async function POST(req: NextRequest) {
       { error: 'Failed to create checkout session' },
       { status: 500 }
     )
+  }
+}
+
+type SupabaseClientType = Awaited<ReturnType<typeof createClient>>
+
+async function handleMembershipUpgradeCancellation({
+  supabase,
+  stripe,
+  membership,
+  newPlanId,
+}: {
+  supabase: SupabaseClientType
+  stripe: Stripe
+  membership: { id: string; plan_id: string; stripe_subscription_id: string }
+  newPlanId: string
+}) {
+  const subscription = await stripe.subscriptions.retrieve(membership.stripe_subscription_id, {
+    expand: ['latest_invoice.payment_intent', 'items.data.price'],
+  })
+
+  await issueProratedMembershipRefund({
+    supabase,
+    stripe,
+    membership,
+    subscription,
+    newPlanId,
+  })
+
+  await stripe.subscriptions.cancel(membership.stripe_subscription_id)
+
+  const { error: updateError } = await supabase
+    .from('memberships')
+    .update({
+      status: 'canceled',
+      canceled_at: new Date().toISOString(),
+      cancel_at_period_end: false,
+    })
+    .eq('id', membership.id)
+
+  if (updateError) {
+    console.error('Failed to update membership status after cancellation:', updateError)
+  }
+}
+
+async function issueProratedMembershipRefund({
+  supabase,
+  stripe,
+  membership,
+  subscription,
+  newPlanId,
+}: {
+  supabase: SupabaseClientType
+  stripe: Stripe
+  membership: { id: string }
+  subscription: Stripe.Subscription
+  newPlanId: string
+}) {
+  const price = subscription.items.data[0]?.price
+  if (!price || !price.unit_amount || price.unit_amount <= 0) {
+    return
+  }
+
+  const totalSeconds = subscription.current_period_end - subscription.current_period_start
+  const nowSeconds = Math.floor(Date.now() / 1000)
+  const remainingSeconds = subscription.current_period_end - nowSeconds
+
+  if (totalSeconds <= 0 || remainingSeconds <= 0) {
+    return
+  }
+
+  const proratedAmount = Math.min(
+    price.unit_amount,
+    Math.floor((price.unit_amount * Math.max(remainingSeconds, 0)) / totalSeconds),
+  )
+
+  if (proratedAmount <= 0) {
+    return
+  }
+
+  // Fetch latest membership payment to record refund
+  const { data: latestPayment } = await supabase
+    .from('payments')
+    .select('id, stripe_payment_intent_id')
+    .eq('membership_id', membership.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  let paymentIntentId: string | null = null
+  const latestInvoice = subscription.latest_invoice
+
+  if (latestInvoice && typeof latestInvoice !== 'string') {
+    if (typeof latestInvoice.payment_intent === 'string') {
+      paymentIntentId = latestInvoice.payment_intent
+    } else if (latestInvoice.payment_intent) {
+      paymentIntentId = latestInvoice.payment_intent.id
+    }
+  } else if (typeof latestInvoice === 'string') {
+    // Fallback: retrieve invoice to get payment intent
+    try {
+      const invoice = await stripe.invoices.retrieve(latestInvoice, { expand: ['payment_intent'] })
+      if (typeof invoice.payment_intent === 'string') {
+        paymentIntentId = invoice.payment_intent
+      } else if (invoice.payment_intent) {
+        paymentIntentId = invoice.payment_intent.id
+      }
+    } catch (invoiceError) {
+      console.error('Failed to retrieve invoice for membership refund:', invoiceError)
+    }
+  }
+
+  if (!paymentIntentId && latestPayment?.stripe_payment_intent_id) {
+    paymentIntentId = latestPayment.stripe_payment_intent_id
+  }
+
+  if (!paymentIntentId) {
+    console.warn('Unable to determine payment intent for membership refund.')
+    return
+  }
+
+  try {
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+      amount: proratedAmount,
+      reason: 'requested_by_customer',
+      metadata: {
+        reason: 'membership_upgrade',
+        previous_subscription: subscription.id,
+        upgrade_to_plan_id: newPlanId,
+      },
+    })
+
+    if (latestPayment?.id) {
+      const { error: refundRecordError } = await supabase.rpc('fn_create_refund_record', {
+        p_payment_id: latestPayment.id,
+        p_booking_id: null,
+        p_stripe_refund_id: refund.id,
+        p_amount: (refund.amount || 0) / 100,
+        p_status: refund.status,
+        p_reason: 'membership_upgrade',
+        p_metadata: refund.metadata || {},
+      })
+
+      if (refundRecordError) {
+        console.error('Failed to create refund record for membership upgrade:', refundRecordError)
+      }
+    }
+  } catch (refundError) {
+    console.error('Failed to issue membership refund during upgrade:', refundError)
   }
 }
 

@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getServiceSupabaseClient } from '@/lib/supabase/service'
 import { getStripeClient } from '@/lib/stripe/client'
 import { redirect } from 'next/navigation'
 import { getUserMembership } from '@/server/queries/memberships'
@@ -24,7 +25,7 @@ async function verifyCheckoutSession(sessionId: string) {
   }
 }
 
-async function checkMembershipCreated(userId: string, maxRetries = 5, delayMs = 2000) {
+async function checkMembershipCreated(userId: string, maxRetries = 8, delayMs = 2000) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const membership = await getUserMembership(userId)
@@ -42,6 +43,71 @@ async function checkMembershipCreated(userId: string, maxRetries = 5, delayMs = 
   }
   
   return { found: false, membership: null }
+}
+
+async function syncMembershipFromSubscription(userId: string, subscriptionId: string) {
+  try {
+    const stripe = getStripeClient()
+    const supabaseAdmin = getServiceSupabaseClient()
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ['items.data.price'],
+    })
+
+    const price = subscription.items.data[0]?.price
+    const priceId = price?.id
+
+    if (!priceId) {
+      return { success: false }
+    }
+
+    const { data: plan } = await supabaseAdmin
+      .from('membership_plans')
+      .select('id')
+      .eq('stripe_price_id', priceId)
+      .maybeSingle()
+
+    if (!plan) {
+      console.error('Sync membership failed: plan not found for price', priceId)
+      return { success: false }
+    }
+
+    await supabaseAdmin
+      .from('profiles')
+      .update({ stripe_customer_id: subscription.customer as string })
+      .eq('id', userId)
+
+    const payload = {
+      user_id: userId,
+      plan_id: plan.id,
+      stripe_subscription_id: subscription.id,
+      stripe_customer_id: subscription.customer as string,
+      status:
+        subscription.status === 'trialing' || subscription.status === 'active'
+          ? 'active'
+          : subscription.status,
+      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      cancel_at_period_end: subscription.cancel_at_period_end || false,
+      trial_start: subscription.trial_start
+        ? new Date(subscription.trial_start * 1000).toISOString()
+        : null,
+      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+    }
+
+    const { error } = await supabaseAdmin
+      .from('memberships')
+      .upsert(payload, { onConflict: 'stripe_subscription_id' })
+
+    if (error) {
+      console.error('Failed to upsert membership from subscription:', error)
+      return { success: false }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Sync membership from subscription failed:', error)
+    return { success: false }
+  }
 }
 
 async function MembershipSuccessContent({ sessionId }: { sessionId: string }) {
@@ -93,6 +159,16 @@ async function MembershipSuccessContent({ sessionId }: { sessionId: string }) {
   if (membershipFound && membership) {
     // Success! Redirect to membership dashboard
     redirect('/dashboard/membership?success=true')
+  }
+
+  if (!membershipFound && session.subscription && typeof session.subscription === 'string') {
+    const syncResult = await syncMembershipFromSubscription(user.id, session.subscription)
+    if (syncResult.success) {
+      const syncedMembership = await getUserMembership(user.id)
+      if (syncedMembership) {
+        redirect('/dashboard/membership?success=true')
+      }
+    }
   }
 
   // Membership not found yet, but session is verified
