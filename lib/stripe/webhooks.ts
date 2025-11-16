@@ -77,79 +77,180 @@ async function handleSubscriptionCreated(
   subscription: Stripe.Subscription,
   supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
+  console.log('[webhook:subscription.created] START', {
+    subscriptionId: subscription.id,
+    customerId: subscription.customer,
+    status: subscription.status,
+    priceId: subscription.items.data[0]?.price.id,
+  })
+
   const customerId = subscription.customer as string
   const priceId = subscription.items.data[0]?.price.id
 
   if (!priceId) {
+    console.error('[webhook:subscription.created] ERROR: No price ID', {
+      subscriptionId: subscription.id,
+      items: subscription.items.data.length,
+    })
     throw new Error('No price ID found in subscription')
   }
 
   // Get user by Stripe customer ID
-  const { data: profile } = await supabase
+  console.log('[webhook:subscription.created] Looking up profile', { customerId })
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, email, stripe_customer_id')
     .eq('stripe_customer_id', customerId)
-    .single()
+    .maybeSingle()
 
   if (!profile) {
-    console.error('Stripe webhook error: profile not found for customer', {
+    console.error('[webhook:subscription.created] ERROR: Profile not found', {
       customerId,
       subscriptionId: subscription.id,
+      profileError: profileError?.message,
     })
+    
+    // Fallback: Try to find user by email from Stripe customer
+    const stripe = getStripeClient()
+    try {
+      const stripeCustomer = await stripe.customers.retrieve(customerId) as Stripe.Customer
+      const customerEmail = stripeCustomer.email
+      
+      if (customerEmail) {
+        console.log('[webhook:subscription.created] Trying email fallback', { customerEmail })
+        const { data: authUser, error: authError } = await supabase.auth.admin.listUsers()
+        const foundUser = authUser?.users?.find(u => u.email === customerEmail)
+        
+        if (foundUser) {
+          console.log('[webhook:subscription.created] Found user by email, updating profile', {
+            userId: foundUser.id,
+            customerEmail,
+          })
+          
+          // Update profile with customer_id
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .upsert({ 
+              id: foundUser.id, 
+              stripe_customer_id: customerId,
+              email: customerEmail 
+            }, { onConflict: 'id' })
+          
+          if (updateError) {
+            console.error('[webhook:subscription.created] ERROR: Failed to update profile', {
+              userId: foundUser.id,
+              error: updateError.message,
+            })
+          }
+          
+          // Re-fetch profile
+          const { data: updatedProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', foundUser.id)
+            .single()
+          
+          if (!updatedProfile) {
+            throw new Error(`User not found for customer ${customerId} even after update`)
+          }
+          
+          // Continue with updated profile
+          return await createMembershipRecord(subscription, updatedProfile.id, customerId, priceId, supabase)
+        }
+      }
+    } catch (fallbackError) {
+      console.error('[webhook:subscription.created] Email fallback failed', {
+        error: fallbackError instanceof Error ? fallbackError.message : 'Unknown',
+      })
+    }
+    
     throw new Error(`User not found for customer ${customerId}`)
   }
 
+  console.log('[webhook:subscription.created] Profile found', {
+    userId: profile.id,
+    email: profile.email,
+  })
+
+  return await createMembershipRecord(subscription, profile.id, customerId, priceId, supabase)
+}
+
+async function createMembershipRecord(
+  subscription: Stripe.Subscription,
+  userId: string,
+  customerId: string,
+  priceId: string,
+  supabase: ReturnType<typeof getServiceSupabaseClient>
+) {
   // Get membership plan by Stripe price ID
-  const { data: plan } = await supabase
+  console.log('[webhook:membership] Looking up plan', { priceId })
+  const { data: plan, error: planError } = await supabase
     .from('membership_plans')
-    .select('id')
+    .select('id, name')
     .eq('stripe_price_id', priceId)
-    .single()
+    .maybeSingle()
 
   if (!plan) {
-    console.error('Stripe webhook error: plan not found for price', {
+    console.error('[webhook:membership] ERROR: Plan not found', {
       priceId,
       subscriptionId: subscription.id,
       customerId,
+      planError: planError?.message,
     })
     throw new Error(`Membership plan not found for price ${priceId}`)
   }
 
+  console.log('[webhook:membership] Plan found', {
+    planId: plan.id,
+    planName: plan.name,
+  })
+
   // Create or update membership
+  const payload = {
+    user_id: userId,
+    plan_id: plan.id,
+    stripe_subscription_id: subscription.id,
+    stripe_customer_id: customerId,
+    status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : subscription.status,
+    current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    cancel_at_period_end: subscription.cancel_at_period_end || false,
+    canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+    trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+    trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+  }
+
+  console.log('[webhook:membership] Upserting membership', {
+    payload,
+  })
+
   const { data: membership, error } = await supabase
     .from('memberships')
-    .upsert({
-      user_id: profile.id,
-      plan_id: plan.id,
-      stripe_subscription_id: subscription.id,
-      stripe_customer_id: customerId,
-      status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : subscription.status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: subscription.cancel_at_period_end || false,
-      trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
-      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-    }, {
+    .upsert(payload, {
       onConflict: 'stripe_subscription_id',
     })
     .select()
     .single()
 
   if (error) {
-    console.error('Stripe webhook error: failed to upsert membership', {
+    console.error('[webhook:membership] ERROR: Failed to upsert', {
       subscriptionId: subscription.id,
       customerId,
       planId: plan.id,
+      userId,
       error: error.message,
+      errorDetails: error,
     })
     throw new Error(`Failed to create membership: ${error.message}`)
   }
 
-  console.log('Membership upserted from Stripe subscription', {
+  console.log('[webhook:membership] SUCCESS', {
     membershipId: membership.id,
-    userId: profile.id,
+    userId,
     planId: plan.id,
+    planName: plan.name,
     subscriptionId: subscription.id,
+    status: membership.status,
   })
 
   return membership
