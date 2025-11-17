@@ -3,24 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { format } from 'date-fns'
+import { confirmBookingPaymentFromSession } from '@/server/actions/booking-payments'
 
 async function CheckoutSuccessContent({ sessionId }: { sessionId: string }) {
   // Verify payment and update booking
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/booking/confirm-payment`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId }),
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to confirm payment')
-    }
-
-    const { booking } = await response.json()
+    const booking = await confirmBookingPaymentFromSession(sessionId)
+    const start = new Date(booking.start_time)
+    const end = new Date(booking.end_time)
 
     return (
-      <Card>
+      <Card className="border-green-500/40 bg-green-500/5">
         <CardHeader>
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="h-6 w-6 text-green-500" />
@@ -31,9 +25,32 @@ async function CheckoutSuccessContent({ sessionId }: { sessionId: string }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Your booking is now confirmed. You'll receive a confirmation email shortly.
-          </p>
+          <div className="rounded-xl border border-green-500/30 bg-black/40 p-4 text-sm text-gray-200 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Sport</span>
+              <span className="font-semibold text-white">
+                {booking.sports?.display_name || booking.sports?.name || 'Squash'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Court</span>
+              <span className="font-semibold text-white">
+                {booking.courts?.name || 'Court'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Date</span>
+              <span className="font-semibold text-white">
+                {format(start, 'EEEE, MMMM d, yyyy')}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Time</span>
+              <span className="font-semibold text-white">
+                {format(start, 'h:mm a')} – {format(end, 'h:mm a')}
+              </span>
+            </div>
+          </div>
           <div className="flex gap-4">
             <Button asChild>
               <Link href="/dashboard/bookings">View My Bookings</Link>
