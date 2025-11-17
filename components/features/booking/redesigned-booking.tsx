@@ -636,9 +636,6 @@ export function RedesignedBooking() {
                       <label className="block text-sm font-semibold text-white dark:text-white mb-3">
                         Select Date
                       </label>
-                      <div className="text-xs text-gray-300 mb-2 bg-gray-900 px-3 py-2 rounded-md border border-gray-800">
-                        📅 Available: Today to {bookingWindowLabel}
-                      </div>
                       <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -677,10 +674,6 @@ export function RedesignedBooking() {
                         <div className="flex items-center gap-2 bg-[#50C878]/10 px-2 py-1 rounded border border-[#50C878]/30">
                           <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#50C878]" aria-hidden="true" />
                           <span className="text-[#50C878] font-semibold">Bookable (Next 14 days)</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-red-950/20 px-2 py-1 rounded border border-red-500/30">
-                          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-red-500" aria-hidden="true" />
-                          <span className="text-red-400 font-semibold">Locked 🔒 (Beyond 14 days)</span>
                         </div>
                       </div>
                     </div>

@@ -81,9 +81,6 @@ export function TimeSlotPicker({ sportId, courtId, onSelect }: TimeSlotPickerPro
           <CardTitle>Select Date</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-xs text-muted-foreground mb-2">
-            Available: Today to {bookingWindowLabel}
-          </div>
           <Calendar
             mode="single"
             selected={selectedDate}
