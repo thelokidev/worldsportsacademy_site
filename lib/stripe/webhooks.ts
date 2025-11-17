@@ -203,12 +203,24 @@ async function createMembershipRecord(
 
   const period = getPeriodBounds(subscription)
 
+  // Map Stripe subscription status to our membership status
+  let membershipStatus: string
+  if (subscription.status === 'active' || subscription.status === 'trialing') {
+    membershipStatus = 'active'
+  } else if (subscription.status === 'incomplete') {
+    // Treat incomplete as active initially - will be updated by invoice.payment_succeeded
+    membershipStatus = 'active'
+    console.log('[webhook:membership] Subscription is incomplete, treating as active pending payment')
+  } else {
+    membershipStatus = subscription.status
+  }
+
   const payload = {
     user_id: userId,
     plan_id: plan.id,
     stripe_subscription_id: subscription.id,
     stripe_customer_id: customerId,
-    status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : subscription.status,
+    status: membershipStatus,
     current_period_start: period.start,
     current_period_end: period.end,
     cancel_at_period_end: subscription.cancel_at_period_end || false,
@@ -257,11 +269,27 @@ async function handleSubscriptionUpdated(
   subscription: Stripe.Subscription,
   supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
+  console.log('[webhook:subscription.updated] START', {
+    subscriptionId: subscription.id,
+    status: subscription.status,
+  })
+
   const period = getPeriodBounds(subscription)
+  
+  // Map Stripe subscription status to our membership status
+  let membershipStatus: string
+  if (subscription.status === 'active' || subscription.status === 'trialing') {
+    membershipStatus = 'active'
+  } else if (subscription.status === 'incomplete') {
+    membershipStatus = 'active' // Keep as active pending payment
+  } else {
+    membershipStatus = subscription.status
+  }
+
   const { error } = await supabase
     .from('memberships')
     .update({
-      status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : subscription.status,
+      status: membershipStatus,
       current_period_start: period.start,
       current_period_end: period.end,
       cancel_at_period_end: subscription.cancel_at_period_end || false,
@@ -272,8 +300,17 @@ async function handleSubscriptionUpdated(
     .eq('stripe_subscription_id', subscription.id)
 
   if (error) {
+    console.error('[webhook:subscription.updated] ERROR', {
+      subscriptionId: subscription.id,
+      error: error.message,
+    })
     throw new Error(`Failed to update membership: ${error.message}`)
   }
+
+  console.log('[webhook:subscription.updated] SUCCESS', {
+    subscriptionId: subscription.id,
+    status: membershipStatus,
+  })
 }
 
 async function handleSubscriptionDeleted(
