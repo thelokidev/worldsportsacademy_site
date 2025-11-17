@@ -472,6 +472,75 @@ export async function cancelBooking(bookingId: string) {
   }
 }
 
+export async function getBookingRefundQuote(bookingId: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      throw new Error('User must be authenticated')
+    }
+
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select('id, user_id, start_time, payment_status, payment_id')
+      .eq('id', bookingId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (bookingError || !booking) {
+      throw new Error(bookingError?.message || 'Booking not found')
+    }
+
+    const startTime = new Date(booking.start_time)
+    const now = new Date()
+    const isPast = startTime < now
+
+    if (!booking.payment_id || booking.payment_status !== 'paid') {
+      return {
+        success: true,
+        refundable: false,
+        reason: isPast ? 'Past bookings cannot be refunded.' : 'No payment captured for this booking.',
+      }
+    }
+
+    const { data: payment, error: paymentError } = await supabase
+      .from('payments')
+      .select('amount, currency, status')
+      .eq('id', booking.payment_id)
+      .single()
+
+    if (paymentError || !payment) {
+      throw new Error(paymentError?.message || 'Payment record not found')
+    }
+
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: (payment.currency || 'usd').toUpperCase(),
+    })
+
+    const amount = Number(payment.amount || 0)
+    const currency = payment.currency || 'usd'
+
+    return {
+      success: true,
+      refundable: !isPast,
+      amount,
+      currency,
+      formattedAmount: formatter.format(amount),
+      message: isPast
+        ? 'This booking is in the past and cannot be refunded.'
+        : 'You will receive a full refund once the booking is cancelled.',
+    }
+  } catch (error) {
+    console.error('Refund quote error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch refund details',
+    }
+  }
+}
+
 async function userHasMembershipCoverage(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,

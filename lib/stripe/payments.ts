@@ -492,11 +492,7 @@ export const initiateBookingRefund = async ({
         stripe_payment_intent_id,
         booking_id,
         status,
-        profiles:user_id (
-          email,
-          phone_number,
-          full_name
-        )
+        user_id
       `,
     )
     .eq('booking_id', bookingId)
@@ -509,6 +505,12 @@ export const initiateBookingRefund = async ({
   if (!payment.stripe_payment_intent_id) {
     throw new Error('Missing payment intent for booking')
   }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, phone_number, full_name')
+    .eq('id', payment.user_id)
+    .maybeSingle()
 
   const refund = await stripe.refunds.create({
     payment_intent: payment.stripe_payment_intent_id,
@@ -537,9 +539,9 @@ export const initiateBookingRefund = async ({
   const currency = refund.currency || payment.currency || 'usd'
   const formattedAmount = formatCurrency(amount, currency)
 
-  if (payment.profiles?.email) {
+  if (profile?.email) {
     await sendRefundEmail({
-      to: payment.profiles.email,
+      to: profile.email,
       amount,
       currency,
       bookingReference: bookingId,
@@ -547,9 +549,9 @@ export const initiateBookingRefund = async ({
     })
   }
 
-  if (payment.profiles?.phone_number) {
+  if (profile?.phone_number) {
     await sendRefundSms({
-      to: payment.profiles.phone_number,
+      to: profile.phone_number,
       amount,
       currency,
       etaMessage,

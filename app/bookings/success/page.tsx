@@ -97,8 +97,52 @@ export default async function CheckoutSuccessPage({
 
   if (!sessionId) {
     return (
-      <div className="container mx-auto px-4 py-16">
-        <Card>
+      <div className="min-h-screen bg-black px-4 py-16">
+        <div className="mx-auto max-w-2xl">
+          <Card className="border-red-500/40 bg-red-500/5">
+            <CardHeader>
+              <CardTitle>Invalid Session</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-300">
+                No session ID provided. Please check your bookings page.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Button asChild>
+                  <Link href="/dashboard/bookings">View My Bookings</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/bookings">Book Another</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-black px-4 py-16">
+      <div className="mx-auto flex max-w-3xl items-center justify-center">
+        <Suspense
+          fallback={
+            <Card className="w-full border-gray-800 bg-black/60">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center justify-center py-10 gap-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                  <p className="text-sm text-gray-400">Confirming your booking...</p>
+                </div>
+              </CardContent>
+            </Card>
+          }
+        >
+          <CheckoutSuccessContent sessionId={sessionId} />
+        </Suspense>
+      </div>
+    </div>
+  )
+}
           <CardHeader>
             <CardTitle>Invalid Session</CardTitle>
           </CardHeader>
