@@ -13,7 +13,11 @@ Memberships are not being created/updated in the database after successful Strip
 **Symptom**: No webhook calls are being made to your endpoint
 **Fix**: Configure webhook endpoint in Stripe Dashboard
 
-### 3. Profile Missing stripe_customer_id
+### 3. Invalid or Missing SUPABASE_SERVICE_ROLE_KEY
+**Symptom**: Vercel logs show `profileError: "Invalid API key"` or Supabase admin calls fail
+**Fix**: Add `SUPABASE_SERVICE_ROLE_KEY` (from Supabase Settings → API) to Vercel env vars and redeploy. This key is REQUIRED for webhook inserts and auth admin lookups.
+
+### 4. Profile Missing stripe_customer_id
 **Symptom**: Webhook fails to find user by Stripe customer ID
 **Fix**: The webhook now has fallback logic to find user by email and update profile
 
@@ -129,6 +133,7 @@ WHERE stripe_price_id IS NOT NULL;
 **Verify in Stripe**:
 - Check that the price ID in Stripe matches the database
 - Run migration if needed: `supabase/migrations/20250117000000_update_stripe_product_ids.sql`
+- Or run `scripts/update-membership-stripe-ids.sql` in Supabase SQL Editor to force-update the latest IDs provided by the client.
 
 ### Webhook Returns 500 Error
 

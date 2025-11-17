@@ -4,6 +4,8 @@ import { logPaymentError } from '@/lib/logger'
 import { getServiceSupabaseClient } from '@/lib/supabase/service'
 import { finalizeBookingPayment, handlePaymentFailure, recordPaymentEvent } from '@/lib/stripe/payments'
 import { getStripeClient } from './client'
+import { ensurePlanForPriceId } from '@/lib/stripe/membership-plans'
+import { getOptionalStripeDate, getPeriodBounds } from '@/lib/stripe/subscription-period'
 
 export async function handleStripeWebhook(
   event: Stripe.Event
@@ -182,20 +184,14 @@ async function createMembershipRecord(
   priceId: string,
   supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
-  // Get membership plan by Stripe price ID
   console.log('[webhook:membership] Looking up plan', { priceId })
-  const { data: plan, error: planError } = await supabase
-    .from('membership_plans')
-    .select('id, name')
-    .eq('stripe_price_id', priceId)
-    .maybeSingle()
+  const plan = await ensurePlanForPriceId(supabase, priceId)
 
   if (!plan) {
-    console.error('[webhook:membership] ERROR: Plan not found', {
+    console.error('[webhook:membership] ERROR: Plan not found even after fallback', {
       priceId,
       subscriptionId: subscription.id,
       customerId,
-      planError: planError?.message,
     })
     throw new Error(`Membership plan not found for price ${priceId}`)
   }
@@ -205,19 +201,20 @@ async function createMembershipRecord(
     planName: plan.name,
   })
 
-  // Create or update membership
+  const period = getPeriodBounds(subscription)
+
   const payload = {
     user_id: userId,
     plan_id: plan.id,
     stripe_subscription_id: subscription.id,
     stripe_customer_id: customerId,
     status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : subscription.status,
-    current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    current_period_start: period.start,
+    current_period_end: period.end,
     cancel_at_period_end: subscription.cancel_at_period_end || false,
-    canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
-    trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
-    trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+    canceled_at: getOptionalStripeDate(subscription.canceled_at),
+    trial_start: getOptionalStripeDate(subscription.trial_start),
+    trial_end: getOptionalStripeDate(subscription.trial_end),
   }
 
   console.log('[webhook:membership] Upserting membership', {
@@ -260,16 +257,17 @@ async function handleSubscriptionUpdated(
   subscription: Stripe.Subscription,
   supabase: ReturnType<typeof getServiceSupabaseClient>
 ) {
+  const period = getPeriodBounds(subscription)
   const { error } = await supabase
     .from('memberships')
     .update({
       status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : subscription.status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      current_period_start: period.start,
+      current_period_end: period.end,
       cancel_at_period_end: subscription.cancel_at_period_end || false,
-      canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
-      trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
-      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+      canceled_at: getOptionalStripeDate(subscription.canceled_at),
+      trial_start: getOptionalStripeDate(subscription.trial_start),
+      trial_end: getOptionalStripeDate(subscription.trial_end),
     })
     .eq('stripe_subscription_id', subscription.id)
 
@@ -310,12 +308,13 @@ async function handleInvoicePaymentSucceeded(
   // Update membership period if needed
   const stripe = getStripeClient()
   const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const period = getPeriodBounds(subscription)
   
   await supabase
     .from('memberships')
     .update({
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      current_period_start: period.start,
+      current_period_end: period.end,
     })
     .eq('stripe_subscription_id', subscriptionId)
 
@@ -416,6 +415,7 @@ async function handleCheckoutSessionCompleted(
     }
   }
 }
+
 
 async function handlePaymentIntentSucceeded(
   paymentIntent: Stripe.PaymentIntent,

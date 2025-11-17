@@ -8,6 +8,8 @@ import { getServiceSupabaseClient } from '@/lib/supabase/service'
 import { getStripeClient } from '@/lib/stripe/client'
 import { redirect } from 'next/navigation'
 import { getUserMembership } from '@/server/queries/memberships'
+import { ensurePlanForPriceId } from '@/lib/stripe/membership-plans'
+import { getOptionalStripeDate, getPeriodBounds } from '@/lib/stripe/subscription-period'
 
 async function verifyCheckoutSession(sessionId: string) {
   try {
@@ -60,11 +62,7 @@ async function syncMembershipFromSubscription(userId: string, subscriptionId: st
       return { success: false }
     }
 
-    const { data: plan } = await supabaseAdmin
-      .from('membership_plans')
-      .select('id')
-      .eq('stripe_price_id', priceId)
-      .maybeSingle()
+    const plan = await ensurePlanForPriceId(supabaseAdmin, priceId)
 
     if (!plan) {
       console.error('Sync membership failed: plan not found for price', priceId)
@@ -76,6 +74,8 @@ async function syncMembershipFromSubscription(userId: string, subscriptionId: st
       .update({ stripe_customer_id: subscription.customer as string })
       .eq('id', userId)
 
+    const period = getPeriodBounds(subscription)
+
     const payload = {
       user_id: userId,
       plan_id: plan.id,
@@ -85,13 +85,11 @@ async function syncMembershipFromSubscription(userId: string, subscriptionId: st
         subscription.status === 'trialing' || subscription.status === 'active'
           ? 'active'
           : subscription.status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      current_period_start: period.start,
+      current_period_end: period.end,
       cancel_at_period_end: subscription.cancel_at_period_end || false,
-      trial_start: subscription.trial_start
-        ? new Date(subscription.trial_start * 1000).toISOString()
-        : null,
-      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+      trial_start: getOptionalStripeDate(subscription.trial_start),
+      trial_end: getOptionalStripeDate(subscription.trial_end),
     }
 
     const { error } = await supabaseAdmin
