@@ -97,7 +97,7 @@ export default async function CheckoutSuccessPage({
 
   if (!sessionId) {
     return (
-      <div className="min-h-screen bg-black px-4 py-16">
+      <div className="min-h-screen bg-black px-4 pt-24 pb-16">
         <div className="mx-auto max-w-2xl">
           <Card className="border-red-500/40 bg-red-500/5">
             <CardHeader>
@@ -123,8 +123,8 @@ export default async function CheckoutSuccessPage({
   }
 
   return (
-    <div className="min-h-screen bg-black px-4 py-16">
-      <div className="mx-auto flex max-w-3xl items-center justify-center">
+    <div className="min-h-screen bg-black px-4 pt-24 pb-16">
+      <div className="mx-auto flex max-w-3xl items-center justify-center min-h-[calc(100vh-6rem)]">
         <Suspense
           fallback={
             <Card className="w-full border-gray-800 bg-black/60">
