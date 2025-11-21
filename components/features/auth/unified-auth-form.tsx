@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { Mail, Loader2 } from 'lucide-react'
 import { createClient as createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { WaiverModal } from './waiver-modal'
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -32,9 +33,13 @@ export function UnifiedAuthForm() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const [showWaiver, setShowWaiver] = useState(false)
+  const [waiverSigned, setWaiverSigned] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'google' | 'magic' | null>(null)
+
   // Decode the redirect URL if it was encoded
   const redirectParam = searchParams.get('redirect')
-  const redirectTo = redirectParam 
+  const redirectTo = redirectParam
     ? decodeURIComponent(redirectParam)
     : '/dashboard'
 
@@ -46,35 +51,61 @@ export function UnifiedAuthForm() {
   })
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
 
+  const handleWaiverSigned = () => {
+    setWaiverSigned(true)
+    setShowWaiver(false)
+
+    if (pendingAction === 'google') {
+      handleGoogleSignIn()
+    } else if (pendingAction === 'magic') {
+      handleMagicLink(form.getValues())
+    }
+    setPendingAction(null)
+  }
+
   async function handleMagicLink(data: FormData) {
     setIsLoading(true)
     const result = await sendMagicLink(data.email, redirectTo)
     setIsLoading(false)
-    
+
     if (result?.error) {
-      toast({ 
-        title: 'Error', 
-        description: result.error, 
-        variant: 'destructive' 
+      toast({
+        title: 'Error',
+        description: result.error,
+        variant: 'destructive'
       })
       return
     }
-    
+
     setMagicLinkSent(true)
-    toast({ 
-      title: 'Magic link sent!', 
+    toast({
+      title: 'Magic link sent!',
       description: 'Check your email for the sign-in link.',
-      duration: 5000
     })
   }
 
+  const onMagicLinkSubmit = (data: FormData) => {
+    if (!waiverSigned) {
+      setPendingAction('magic')
+      setShowWaiver(true)
+      return
+    }
+    handleMagicLink(data)
+  }
+
   async function handleGoogleSignIn() {
+    if (!waiverSigned) {
+      setPendingAction('google')
+      setShowWaiver(true)
+      return
+    }
+
     if (!supabase) return
     setIsLoading(true)
 
     try {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
-      const callbackUrl = redirectTo 
+      const callbackUrl = redirectTo
         ? `${appUrl}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`
         : `${appUrl}/auth/callback`
 
@@ -136,6 +167,12 @@ export function UnifiedAuthForm() {
 
   return (
     <div className="space-y-6">
+      <WaiverModal
+        isOpen={showWaiver}
+        onOpenChange={setShowWaiver}
+        onSigned={handleWaiverSigned}
+      />
+
       {/* Social Login Buttons */}
       <div className="space-y-3">
         <Button
@@ -182,7 +219,7 @@ export function UnifiedAuthForm() {
 
       {/* Magic Link Form */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleMagicLink)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onMagicLinkSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="email"
@@ -192,11 +229,11 @@ export function UnifiedAuthForm() {
                 <FormControl>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                    <Input 
-                      type="email" 
-                      placeholder="name@example.com" 
-                      className="h-12 bg-black/50 border-gray-800 text-white placeholder:text-gray-500 pl-12 pr-4 focus:border-[#50C878] focus:ring-2 focus:ring-[#50C878]/20 rounded-xl transition-all" 
-                      {...field} 
+                    <Input
+                      type="email"
+                      placeholder="name@example.com"
+                      className="h-12 bg-black/50 border-gray-800 text-white placeholder:text-gray-500 pl-12 pr-4 focus:border-[#50C878] focus:ring-2 focus:ring-[#50C878]/20 rounded-xl transition-all"
+                      {...field}
                     />
                   </div>
                 </FormControl>
@@ -204,9 +241,9 @@ export function UnifiedAuthForm() {
               </FormItem>
             )}
           />
-          <Button 
-            type="submit" 
-            className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white font-semibold h-12 text-base shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all rounded-xl" 
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white font-semibold h-12 text-base shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all rounded-xl"
             disabled={isLoading || form.formState.isSubmitting}
           >
             {isLoading || form.formState.isSubmitting ? (
@@ -226,4 +263,3 @@ export function UnifiedAuthForm() {
     </div>
   )
 }
-
