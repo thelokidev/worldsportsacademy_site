@@ -6,9 +6,13 @@ import { getCourtsBySport } from '@/server/queries/bookings'
 import { Button } from '@/components/ui/button'
 import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Dumbbell, Circle, Grid3x3, ArrowRight, Info, X } from 'lucide-react'
 import { format, addDays, parseISO, addMinutes, startOfDay } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Calendar } from '@/components/ui/calendar'
+
+// Facility timezone - must match the timezone used in server/actions/bookings.ts
+const FACILITY_TIMEZONE = 'America/Chicago'
 
 export function RedesignedBooking() {
   const router = useRouter()
@@ -690,7 +694,7 @@ export function RedesignedBooking() {
                       ) : availableTimeSlots.length > 0 ? (
                         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
                           {availableTimeSlots.map((slot: any) => {
-                            const slotTime = parseISO(slot.time)
+                            const slotTime = toZonedTime(parseISO(slot.time), FACILITY_TIMEZONE)
                             const slotEndTime = addMinutes(slotTime, durationMinutes)
                             return (
                               <button
@@ -784,7 +788,7 @@ export function RedesignedBooking() {
                           ? 'Updating...'
                           : (selectedTime && endTime ? (
                             <>
-                              {format(parseISO(selectedTime), 'h:mm a')} - {format(endTime, 'h:mm a')}
+                              {format(toZonedTime(parseISO(selectedTime), FACILITY_TIMEZONE), 'h:mm a')} - {format(toZonedTime(endTime, FACILITY_TIMEZONE), 'h:mm a')}
                               <div className="text-xs text-gray-400 dark:text-gray-400 mt-1">
                                 {durationMinutes} minutes
                               </div>

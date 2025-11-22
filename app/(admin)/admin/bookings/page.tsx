@@ -4,9 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Filter } from 'lucide-react'
 import { BookingFilters } from '@/components/features/admin/booking-filters'
+
+// Facility timezone - must match the timezone used in server/actions/bookings.ts
+const FACILITY_TIMEZONE = 'America/Chicago'
 
 export default async function AdminBookingsPage({
   searchParams,
@@ -124,8 +128,8 @@ export default async function AdminBookingsPage({
                       </div>
                       <p className="text-sm text-gray-600">
                         {(booking.courts as any)?.name || 'Unknown Court'} •{' '}
-                        {format(new Date(booking.start_time), 'MMM d, yyyy h:mm a')} - 
-                        {format(new Date(booking.end_time), 'h:mm a')}
+                        {format(toZonedTime(new Date(booking.start_time), FACILITY_TIMEZONE), 'MMM d, yyyy h:mm a')} - 
+                        {format(toZonedTime(new Date(booking.end_time), FACILITY_TIMEZONE), 'h:mm a')}
                       </p>
                       {(booking.profiles as any) && (
                         <p className="text-xs text-gray-500 mt-1">

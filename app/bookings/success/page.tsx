@@ -4,14 +4,18 @@ import { CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { format } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 import { confirmBookingPaymentFromSession } from '@/server/actions/booking-payments'
+
+// Facility timezone - must match the timezone used in server/actions/bookings.ts
+const FACILITY_TIMEZONE = 'America/Chicago'
 
 async function CheckoutSuccessContent({ sessionId }: { sessionId: string }) {
   // Verify payment and update booking
   try {
     const booking = await confirmBookingPaymentFromSession(sessionId)
-    const start = new Date(booking.start_time)
-    const end = new Date(booking.end_time)
+    const start = toZonedTime(new Date(booking.start_time), FACILITY_TIMEZONE)
+    const end = toZonedTime(new Date(booking.end_time), FACILITY_TIMEZONE)
 
     return (
       <Card className="border-green-500/40 bg-green-500/5">

@@ -6,9 +6,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Clock, MapPin, X, CalendarDays, ArrowRight } from 'lucide-react'
 import { format, parseISO, differenceInMinutes, isPast, isFuture } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 import { CancelBookingButton } from '@/components/features/booking/cancel-booking-button'
 import { formatDuration } from '@/lib/utils/duration'
 import Link from 'next/link'
+
+// Facility timezone - must match the timezone used in server/actions/bookings.ts
+const FACILITY_TIMEZONE = 'America/Chicago'
 
 export default async function MyBookingsPage() {
   const supabase = await createClient()
@@ -133,7 +137,7 @@ export default async function MyBookingsPage() {
                                   <div>
                                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Date</p>
                                     <p className="text-base font-bold text-white">
-                                      {format(parseISO(booking.start_time), 'EEEE, MMMM d, yyyy')}
+                                      {format(toZonedTime(parseISO(booking.start_time), FACILITY_TIMEZONE), 'EEEE, MMMM d, yyyy')}
                                     </p>
                                   </div>
                                 </div>
@@ -145,7 +149,7 @@ export default async function MyBookingsPage() {
                                   <div>
                                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Time</p>
                                     <p className="text-base font-bold text-white">
-                                      {format(parseISO(booking.start_time), 'h:mm a')} - {format(parseISO(booking.end_time), 'h:mm a')}
+                                      {format(toZonedTime(parseISO(booking.start_time), FACILITY_TIMEZONE), 'h:mm a')} - {format(toZonedTime(parseISO(booking.end_time), FACILITY_TIMEZONE), 'h:mm a')}
                                     </p>
                                     <p className="text-sm text-[#50C878] font-medium mt-1">
                                       {formatDuration(
@@ -215,7 +219,7 @@ export default async function MyBookingsPage() {
                                 <div>
                                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Date</p>
                                   <p className="text-sm font-medium text-gray-400">
-                                    {format(parseISO(booking.start_time), 'MMM d, yyyy')}
+                                    {format(toZonedTime(parseISO(booking.start_time), FACILITY_TIMEZONE), 'MMM d, yyyy')}
                                   </p>
                                 </div>
                               </div>
@@ -227,7 +231,7 @@ export default async function MyBookingsPage() {
                                 <div>
                                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Time</p>
                                   <p className="text-sm font-medium text-gray-400">
-                                    {format(parseISO(booking.start_time), 'h:mm a')} - {format(parseISO(booking.end_time), 'h:mm a')}
+                                    {format(toZonedTime(parseISO(booking.start_time), FACILITY_TIMEZONE), 'h:mm a')} - {format(toZonedTime(parseISO(booking.end_time), FACILITY_TIMEZONE), 'h:mm a')}
                                   </p>
                                 </div>
                               </div>
@@ -282,7 +286,7 @@ export default async function MyBookingsPage() {
                                 <div>
                                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Date</p>
                                   <p className="text-sm font-medium text-gray-400">
-                                    {format(parseISO(booking.start_time), 'MMM d, yyyy')}
+                                    {format(toZonedTime(parseISO(booking.start_time), FACILITY_TIMEZONE), 'MMM d, yyyy')}
                                   </p>
                                 </div>
                               </div>
@@ -294,7 +298,7 @@ export default async function MyBookingsPage() {
                                 <div>
                                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Time</p>
                                   <p className="text-sm font-medium text-gray-400">
-                                    {format(parseISO(booking.start_time), 'h:mm a')} - {format(parseISO(booking.end_time), 'h:mm a')}
+                                    {format(toZonedTime(parseISO(booking.start_time), FACILITY_TIMEZONE), 'h:mm a')} - {format(toZonedTime(parseISO(booking.end_time), FACILITY_TIMEZONE), 'h:mm a')}
                                   </p>
                                 </div>
                               </div>
