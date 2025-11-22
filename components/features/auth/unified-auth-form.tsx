@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { checkWaiverStatus, saveWaiverSignature } from '@/server/actions/waiver'
-import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import { sendMagicLink } from '@/server/actions/auth'
 import { useToast } from '@/hooks/use-toast'
 import { WaiverModal } from './waiver-modal'
@@ -34,7 +34,7 @@ export function UnifiedAuthForm() {
   useEffect(() => {
     async function checkWaiver() {
       try {
-        const supabase = createBrowserSupabaseClient()
+        const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           const { signed } = await checkWaiverStatus(user.id)
@@ -62,7 +62,7 @@ export function UnifiedAuthForm() {
       email: '',
     },
   })
-  const supabase = useMemo(() => createBrowserSupabaseClient(), [])
+  const supabase = useMemo(() => createClient(), [])
 
   const handleWaiverSigned = async (signature: { name: string; address: string; date: string }) => {
     setWaiverSigned(true)
@@ -70,7 +70,7 @@ export function UnifiedAuthForm() {
 
     // We can't save to DB yet if not logged in, but we can proceed to auth.
     // We'll save it after successful auth or if we are already logged in.
-    
+
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       await saveWaiverSignature(user.id, signature)
@@ -205,7 +205,7 @@ export function UnifiedAuthForm() {
       <div className="space-y-3">
         <Button
           type="button"
-          onClick={handleGoogleSignIn}
+          onClick={() => handleGoogleSignIn()}
           disabled={isLoading}
           className="w-full h-12 bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-xl transition-all border border-gray-200"
         >
