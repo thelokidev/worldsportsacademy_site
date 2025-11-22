@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 interface WaiverModalProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onSigned: (signature: { name: string; date: string }) => void
+  onSigned: (signature: { name: string; address: string; date: string }) => void
 }
 
 export function WaiverModal({ isOpen, onOpenChange, onSigned }: WaiverModalProps) {
@@ -28,8 +28,8 @@ export function WaiverModal({ isOpen, onOpenChange, onSigned }: WaiverModalProps
   }
 
   const handleSign = () => {
-    if (name && isAgreed) {
-      onSigned({ name, date: new Date().toISOString() })
+    if (name && address && isAgreed) {
+      onSigned({ name, address, date: new Date().toISOString() })
       onOpenChange(false)
     }
   }

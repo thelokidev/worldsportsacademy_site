@@ -5,21 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { sendMagicLink } from '@/server/actions/auth'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { useToast } from '@/hooks/use-toast'
-import { Mail, Loader2 } from 'lucide-react'
-import { createClient as createBrowserSupabaseClient } from '@/lib/supabase/client'
-import { WaiverModal } from './waiver-modal'
+import { checkWaiverStatus, saveWaiverSignature } from '@/server/actions/waiver'
+import { useEffect } from 'react'
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -36,6 +23,70 @@ export function UnifiedAuthForm() {
   const [showWaiver, setShowWaiver] = useState(false)
   const [waiverSigned, setWaiverSigned] = useState(false)
   const [pendingAction, setPendingAction] = useState<'google' | 'magic' | null>(null)
+  const [waiverSignature, setWaiverSignature] = useState<{ name: string; address: string } | null>(null)
+
+  // Check waiver status on mount
+  useEffect(() => {
+    async function checkWaiver() {
+      // Only check if we have a user session, but here we are on the auth page so we likely don't.
+      // However, we might want to check if the email being entered has a waiver associated with it?
+      // Actually, for new logins, we can't know if they signed until they are authenticated.
+      // But the user asked to "Save acceptance → Automatically continue to Google OAuth"
+      // This implies we need to save the waiver BEFORE full authentication or right after.
+      // Since we can't save to profile without auth, the flow must be:
+      // 1. User clicks Google
+      // 2. If not authenticated, we can't check profile yet.
+      // 3. But wait, the requirement says: "The waiver acceptance should be saved (localStorage, cookies, or database)"
+      // And "On subsequent visits, the disclaimer shouldn't show again (if already accepted)"
+      
+      // If they are not logged in, we can't check the database for their profile.
+      // The only way to check "if already accepted" for a logged-out user is if they are actually logged in but on the auth page?
+      // Or maybe the flow is intended for when they sign up?
+      
+      // Let's assume the standard flow:
+      // 1. Click Google -> OAuth -> Callback -> Check Waiver -> If not signed, show modal -> Sign -> Save -> Dashboard
+      // BUT the prompt says: "Disclaimer modal appears immediately (blocking OAuth)"
+      // This means we are showing it BEFORE OAuth.
+      
+      // If we show it BEFORE OAuth, we can't save it to the database linked to the user yet because we don't have the user ID.
+      // Unless we save it to localStorage and then sync it after login?
+      
+      // The prompt says: "User accepts waiver → Save acceptance → Automatically continue to Google OAuth"
+      // This implies we accept it locally, then proceed to OAuth.
+      // Then "Next time: Skip disclaimer, go straight to OAuth"
+      // This implies we need to know they signed it.
+      
+      // If we want to save it to the DB, we must do it AFTER they have a user ID (after OAuth).
+      // BUT the user wants the modal blocking OAuth.
+      
+      // OPTION A: LocalStorage approach (Pre-Auth)
+      // 1. User clicks Google.
+      // 2. Check localStorage for 'waiver_signed'.
+      // 3. If no, show modal.
+      // 4. Sign -> Save to localStorage -> Continue to Google.
+      // 5. After OAuth callback, we need to sync this to the DB if not already there.
+      
+      // OPTION B: The "Waiver First" approach requested seems to be:
+      // 1. Click Google
+      // 2. Show Waiver
+      // 3. Sign
+      // 4. Store signature in state/localStorage
+      // 5. Redirect to Google
+      // 6. Come back
+      // 7. Save signature to DB
+      
+      // Let's implement checking if we have a user session first (maybe they are re-authenticating?)
+      const supabase = createBrowserSupabaseClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { signed } = await checkWaiverStatus(user.id)
+        if (signed) {
+          setWaiverSigned(true)
+        }
+      }
+    }
+    checkWaiver()
+  }, [])
 
   // Decode the redirect URL if it was encoded
   const redirectParam = searchParams.get('redirect')
@@ -51,19 +102,40 @@ export function UnifiedAuthForm() {
   })
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
 
-  const handleWaiverSigned = () => {
+  const handleWaiverSigned = async (signature: { name: string; address: string; date: string }) => {
     setWaiverSigned(true)
     setShowWaiver(false)
+    setWaiverSignature({ name: signature.name, address: signature.address })
+
+    // We can't save to DB yet if not logged in, but we can proceed to auth.
+    // We'll save it after successful auth or if we are already logged in.
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await saveWaiverSignature(user.id, signature)
+    } else {
+      // Store in sessionStorage to persist across the OAuth redirect if needed, 
+      // though usually we want to save it after they come back. 
+      // Actually, we can't easily pass this data through Google OAuth flow unless we use state parameter or cookie.
+      // Let's use a cookie or sessionStorage.
+      sessionStorage.setItem('pending_waiver_signature', JSON.stringify(signature))
+    }
 
     if (pendingAction === 'google') {
-      handleGoogleSignIn()
+      handleGoogleSignIn(true) // Force proceed
     } else if (pendingAction === 'magic') {
-      handleMagicLink(form.getValues())
+      handleMagicLink(form.getValues(), true) // Force proceed
     }
     setPendingAction(null)
   }
 
-  async function handleMagicLink(data: FormData) {
+  async function handleMagicLink(data: FormData, forceProceed = false) {
+    if (!forceProceed && !waiverSigned) {
+      setPendingAction('magic')
+      setShowWaiver(true)
+      return
+    }
+
     setIsLoading(true)
     const result = await sendMagicLink(data.email, redirectTo)
     setIsLoading(false)
@@ -85,16 +157,11 @@ export function UnifiedAuthForm() {
   }
 
   const onMagicLinkSubmit = (data: FormData) => {
-    if (!waiverSigned) {
-      setPendingAction('magic')
-      setShowWaiver(true)
-      return
-    }
     handleMagicLink(data)
   }
 
-  async function handleGoogleSignIn() {
-    if (!waiverSigned) {
+  async function handleGoogleSignIn(forceProceed = false) {
+    if (!forceProceed && !waiverSigned) {
       setPendingAction('google')
       setShowWaiver(true)
       return

@@ -142,7 +142,14 @@ async function calculateLocalAvailability(
       // Default to 9 AM - 9 PM if no schedule
       const dayStart = setHours(startOfDay(d), 9)
       const dayEnd = setHours(startOfDay(d), 21)
-      const hours = eachHourOfInterval({ start: dayStart, end: dayEnd })
+      
+      const hours = []
+      let currentSlot = dayStart
+      while (currentSlot < dayEnd) {
+        hours.push(currentSlot)
+        currentSlot = addMinutes(currentSlot, durationMinutes)
+      }
+
       const slots: Array<{ time: string; available: boolean }> = []
       const dayBookings = bookingsByDate.get(dateKey) || []
       const now = new Date()
@@ -190,7 +197,13 @@ async function calculateLocalAvailability(
     }
 
     // Generate hourly slots
-    const hours = eachHourOfInterval({ start: dayStart, end: dayEnd })
+    const hours = []
+    let currentSlot = dayStart
+    while (currentSlot < dayEnd) {
+      hours.push(currentSlot)
+      currentSlot = addMinutes(currentSlot, durationMinutes)
+    }
+    
     const slots: Array<{ time: string; available: boolean }> = []
 
     const dayBookings = bookingsByDate.get(dateKey) || []
@@ -257,7 +270,14 @@ function generateSafeAvailability(
     const dateKey = format(d, 'yyyy-MM-dd')
     const dayStart = setHours(startOfDay(d), 8)
     const dayEnd = setHours(startOfDay(d), 23)
-    const hours = eachHourOfInterval({ start: dayStart, end: dayEnd })
+    
+    const hours = []
+    let currentSlot = dayStart
+    while (currentSlot < dayEnd) {
+      hours.push(currentSlot)
+      currentSlot = addMinutes(currentSlot, durationMinutes)
+    }
+
     const daySlots: Array<{ time: string; available: boolean }> = []
 
     hours.forEach((hour) => {
