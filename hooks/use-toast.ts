@@ -1,8 +1,8 @@
 'use client'
 
-import { toast } from 'sonner'
+import { toast as sonnerToast } from 'sonner'
 
-export const useToast = () => {
+export function useToast() {
   return {
     toast: (props: {
       title?: string
@@ -11,12 +11,12 @@ export const useToast = () => {
       duration?: number
     }) => {
       if (props.variant === 'destructive') {
-        toast.error(props.title || 'Error', {
+        sonnerToast.error(props.title || 'Error', {
           description: props.description,
           duration: props.duration
         })
       } else {
-        toast.success(props.title || 'Success', {
+        sonnerToast.success(props.title || 'Success', {
           description: props.description,
           duration: props.duration
         })

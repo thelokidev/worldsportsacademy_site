@@ -33,61 +33,18 @@ export function UnifiedAuthForm() {
   // Check waiver status on mount
   useEffect(() => {
     async function checkWaiver() {
-      // Only check if we have a user session, but here we are on the auth page so we likely don't.
-      // However, we might want to check if the email being entered has a waiver associated with it?
-      // Actually, for new logins, we can't know if they signed until they are authenticated.
-      // But the user asked to "Save acceptance → Automatically continue to Google OAuth"
-      // This implies we need to save the waiver BEFORE full authentication or right after.
-      // Since we can't save to profile without auth, the flow must be:
-      // 1. User clicks Google
-      // 2. If not authenticated, we can't check profile yet.
-      // 3. But wait, the requirement says: "The waiver acceptance should be saved (localStorage, cookies, or database)"
-      // And "On subsequent visits, the disclaimer shouldn't show again (if already accepted)"
-      
-      // If they are not logged in, we can't check the database for their profile.
-      // The only way to check "if already accepted" for a logged-out user is if they are actually logged in but on the auth page?
-      // Or maybe the flow is intended for when they sign up?
-      
-      // Let's assume the standard flow:
-      // 1. Click Google -> OAuth -> Callback -> Check Waiver -> If not signed, show modal -> Sign -> Save -> Dashboard
-      // BUT the prompt says: "Disclaimer modal appears immediately (blocking OAuth)"
-      // This means we are showing it BEFORE OAuth.
-      
-      // If we show it BEFORE OAuth, we can't save it to the database linked to the user yet because we don't have the user ID.
-      // Unless we save it to localStorage and then sync it after login?
-      
-      // The prompt says: "User accepts waiver → Save acceptance → Automatically continue to Google OAuth"
-      // This implies we accept it locally, then proceed to OAuth.
-      // Then "Next time: Skip disclaimer, go straight to OAuth"
-      // This implies we need to know they signed it.
-      
-      // If we want to save it to the DB, we must do it AFTER they have a user ID (after OAuth).
-      // BUT the user wants the modal blocking OAuth.
-      
-      // OPTION A: LocalStorage approach (Pre-Auth)
-      // 1. User clicks Google.
-      // 2. Check localStorage for 'waiver_signed'.
-      // 3. If no, show modal.
-      // 4. Sign -> Save to localStorage -> Continue to Google.
-      // 5. After OAuth callback, we need to sync this to the DB if not already there.
-      
-      // OPTION B: The "Waiver First" approach requested seems to be:
-      // 1. Click Google
-      // 2. Show Waiver
-      // 3. Sign
-      // 4. Store signature in state/localStorage
-      // 5. Redirect to Google
-      // 6. Come back
-      // 7. Save signature to DB
-      
-      // Let's implement checking if we have a user session first (maybe they are re-authenticating?)
-      const supabase = createBrowserSupabaseClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { signed } = await checkWaiverStatus(user.id)
-        if (signed) {
-          setWaiverSigned(true)
+      try {
+        const supabase = createBrowserSupabaseClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { signed } = await checkWaiverStatus(user.id)
+          if (signed) {
+            setWaiverSigned(true)
+          }
         }
+      } catch (error) {
+        // Silently fail - user might not be logged in yet
+        console.error('Error checking waiver status:', error)
       }
     }
     checkWaiver()
