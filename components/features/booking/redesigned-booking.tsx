@@ -666,7 +666,7 @@ export function RedesignedBooking() {
                           head_cell: 'text-gray-400 rounded-md w-10 font-medium text-xs text-center',
                           row: 'flex w-full mt-1',
                           cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
-                          day: 'h-10 w-10 p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20',
+                          day: 'h-10 w-10 p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20 flex items-center justify-center',
                           day_selected: '!bg-[#50C878] !text-white hover:!bg-[#50C878]/90 focus:!bg-[#50C878] !font-bold',
                           day_today: '!bg-[#50C878]/30 !text-[#50C878] !font-bold !ring-2 !ring-[#50C878]',
                           day_outside: 'text-gray-600 opacity-30',

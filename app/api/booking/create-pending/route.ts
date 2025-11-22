@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check for conflicts
+    // Check for conflicts on the same court
     const { data: conflictingBookings } = await supabase
       .from('bookings')
       .select('id')
@@ -55,6 +55,21 @@ export async function POST(req: NextRequest) {
     if (conflictingBookings && conflictingBookings.length > 0) {
       return NextResponse.json(
         { error: 'This time slot is no longer available' },
+        { status: 400 }
+      )
+    }
+
+    // Check if user already has a booking on any court during this time period
+    const { data: userConflictingBookings } = await supabase
+      .from('bookings')
+      .select('id, court_id, start_time, end_time')
+      .eq('user_id', user.id)
+      .in('status', ['pending', 'confirmed'])
+      .or(`and(start_time.lt.${endTime},end_time.gt.${startTime})`)
+
+    if (userConflictingBookings && userConflictingBookings.length > 0) {
+      return NextResponse.json(
+        { error: 'You already have a booking during this time. Please choose a different time slot.' },
         { status: 400 }
       )
     }

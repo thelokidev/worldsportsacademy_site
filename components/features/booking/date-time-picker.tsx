@@ -154,7 +154,7 @@ export const DateTimePicker = memo(function DateTimePicker({
                 row: 'flex w-full mt-1',
                 cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
                 day: cn(
-                  'h-10 w-10 p-0 font-medium rounded-md hover:bg-[#50C878]/10 transition-colors',
+                  'h-10 w-10 p-0 font-medium rounded-md hover:bg-[#50C878]/10 transition-colors flex items-center justify-center',
                   'aria-selected:opacity-100'
                 ),
                 day_selected: 'bg-[#50C878] text-white hover:bg-[#50C878]/90 focus:bg-[#50C878]',

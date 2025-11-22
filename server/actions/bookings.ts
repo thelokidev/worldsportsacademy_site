@@ -340,7 +340,7 @@ export async function createBooking(formData: FormData) {
       throw new Error('Court is currently blocked')
     }
 
-    // Check for conflicts
+    // Check for conflicts on the same court
     const startDate = new Date(startTime)
     const endDate = new Date(endTime)
 
@@ -353,6 +353,18 @@ export async function createBooking(formData: FormData) {
 
     if (conflictingBookings && conflictingBookings.length > 0) {
       throw new Error('This time slot is no longer available')
+    }
+
+    // Check if user already has a booking on any court during this time period
+    const { data: userConflictingBookings } = await supabase
+      .from('bookings')
+      .select('id, court_id, start_time, end_time')
+      .eq('user_id', user.id)
+      .in('status', ['pending', 'confirmed'])
+      .or(`and(start_time.lt.${endTime},end_time.gt.${startTime})`)
+
+    if (userConflictingBookings && userConflictingBookings.length > 0) {
+      throw new Error('You already have a booking during this time. Please choose a different time slot.')
     }
 
     const selectedDuration = formData.get('selectedDuration') ? parseInt(formData.get('selectedDuration') as string) : null
