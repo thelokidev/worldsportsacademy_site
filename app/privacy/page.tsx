@@ -172,7 +172,7 @@ export default function PrivacyPolicyPage() {
                                 <p>You can request deletion of your account and associated data by contacting us. Some information may be retained as required by law or for legitimate business purposes.</p>
 
                                 <h3 className="text-xl font-semibold text-white mt-4">5.4 Marketing Communications</h3>
-                                <p>You can opt out of marketing emails by clicking the "unsubscribe" link in any marketing email or updating your communication preferences in your account.</p>
+                                <p>You can opt out of marketing emails by clicking the &quot;unsubscribe&quot; link in any marketing email or updating your communication preferences in your account.</p>
 
                                 <h3 className="text-xl font-semibold text-white mt-4">5.5 Cookies</h3>
                                 <p>You can control cookies through your browser settings. Note that disabling cookies may affect website functionality.</p>
@@ -196,7 +196,7 @@ export default function PrivacyPolicyPage() {
                         </section>
 
                         <section>
-                            <h2 className="text-2xl font-bold text-white mb-4">7. Children's Privacy</h2>
+                            <h2 className="text-2xl font-bold text-white mb-4">7. Children&apos;s Privacy</h2>
                             <p className="text-gray-300 leading-relaxed">
                                 Our services are not directed to children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us to request deletion.
                             </p>
@@ -212,7 +212,7 @@ export default function PrivacyPolicyPage() {
                         <section>
                             <h2 className="text-2xl font-bold text-white mb-4">9. Changes to This Privacy Policy</h2>
                             <p className="text-gray-300 leading-relaxed">
-                                We may update this Privacy Policy from time to time. We will notify you of significant changes by email or through a prominent notice on our website. The "Last updated" date at the top of this policy indicates when it was last revised.
+                                We may update this Privacy Policy from time to time. We will notify you of significant changes by email or through a prominent notice on our website. The &quot;Last updated&quot; date at the top of this policy indicates when it was last revised.
                             </p>
                         </section>
 
@@ -225,7 +225,7 @@ export default function PrivacyPolicyPage() {
                                     <p className="mt-2">Burlington, Ontario, Canada</p>
                                     <p className="mt-2">Email: <a href="mailto:privacy@worldsportsacademy.com" className="text-[#50C878] hover:text-[#CFEA6C] font-semibold">privacy@worldsportsacademy.com</a></p>
                                     <p className="mt-4 text-sm text-gray-400">
-                                        For data protection inquiries, please include "Privacy Request" in your email subject line.
+                                        For data protection inquiries, please include &quot;Privacy Request&quot; in your email subject line.
                                     </p>
                                 </div>
                             </div>

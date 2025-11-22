@@ -1,12 +1,19 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useMemo, useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { checkWaiverStatus, saveWaiverSignature } from '@/server/actions/waiver'
-import { useEffect } from 'react'
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+import { sendMagicLink } from '@/server/actions/auth'
+import { useToast } from '@/hooks/use-toast'
+import { WaiverModal } from './waiver-modal'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Mail, Loader2 } from 'lucide-react'
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -15,7 +22,6 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 export function UnifiedAuthForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
@@ -23,7 +29,6 @@ export function UnifiedAuthForm() {
   const [showWaiver, setShowWaiver] = useState(false)
   const [waiverSigned, setWaiverSigned] = useState(false)
   const [pendingAction, setPendingAction] = useState<'google' | 'magic' | null>(null)
-  const [waiverSignature, setWaiverSignature] = useState<{ name: string; address: string } | null>(null)
 
   // Check waiver status on mount
   useEffect(() => {
@@ -105,7 +110,6 @@ export function UnifiedAuthForm() {
   const handleWaiverSigned = async (signature: { name: string; address: string; date: string }) => {
     setWaiverSigned(true)
     setShowWaiver(false)
-    setWaiverSignature({ name: signature.name, address: signature.address })
 
     // We can't save to DB yet if not logged in, but we can proceed to auth.
     // We'll save it after successful auth or if we are already logged in.
@@ -212,7 +216,7 @@ export function UnifiedAuthForm() {
         <div>
           <h3 className="text-xl font-bold text-white mb-2">Check your email</h3>
           <p className="text-gray-400 text-sm mb-4">
-            We've sent a magic link to <span className="font-semibold text-white">{form.getValues('email')}</span>
+            We&apos;ve sent a magic link to <span className="font-semibold text-white">{form.getValues('email')}</span>
           </p>
           <p className="text-gray-500 text-xs">
             Click the link in the email to sign in. The link will expire in 1 hour.

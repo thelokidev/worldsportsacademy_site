@@ -90,7 +90,7 @@ export default function TermsOfServicePage() {
                                     <li>Subject to facility rules and availability</li>
                                 </ul>
                                 <p className="mt-4">
-                                    We reserve the right to modify membership benefits and pricing with 30 days' advance notice to active members.
+                                    We reserve the right to modify membership benefits and pricing with 30 days&apos; advance notice to active members.
                                 </p>
                             </div>
                         </section>

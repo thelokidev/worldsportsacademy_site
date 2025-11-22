@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -51,7 +51,7 @@ export function WaiverModal({ isOpen, onOpenChange, onSigned }: WaiverModalProps
           onScroll={handleScroll}
         >
           <p>
-            In consideration of <strong>1000417123 Ontario Inc. (Batts Athletics Burlington)</strong> (the "Company") permitting the individual named below ("I" or "me") to participate in activities at Company's facilities (the "Activities"), and for other good and valuable consideration, I agree to all the terms and conditions set forth in this agreement (this "Agreement").
+            In consideration of <strong>1000417123 Ontario Inc. (Batts Athletics Burlington)</strong> (the &quot;Company&quot;) permitting the individual named below (&quot;I&quot; or &quot;me&quot;) to participate in activities at Company&apos;s facilities (the &quot;Activities&quot;), and for other good and valuable consideration, I agree to all the terms and conditions set forth in this agreement (this &quot;Agreement&quot;).
           </p>
 
           <h4 className="font-bold underline">ASSUMPTION OF RISKS</h4>
@@ -60,7 +60,7 @@ export function WaiverModal({ isOpen, onOpenChange, onSigned }: WaiverModalProps
           </p>
 
           <p>
-            I hereby expressly waive and release any and all claims which I have or may in the future have against the Company, its affiliates, and their respective directors, officers, employees, contractors, agents, representatives, shareholders, successors, and assigns (collectively, "Releasees"), arising out of or attributable to the Activities, due to any cause whatever, including without limitation the negligence of the Company or any other Releasee, breach of contract, or breach of any statutory or other duty of care owing under occupiers liability legislation or otherwise. I covenant not to make or bring any such claim against the Company or any other Releasee, and forever release and discharge the Company and all other Releasees from liability under such claims.
+            I hereby expressly waive and release any and all claims which I have or may in the future have against the Company, its affiliates, and their respective directors, officers, employees, contractors, agents, representatives, shareholders, successors, and assigns (collectively, &quot;Releasees&quot;), arising out of or attributable to the Activities, due to any cause whatever, including without limitation the negligence of the Company or any other Releasee, breach of contract, or breach of any statutory or other duty of care owing under occupiers liability legislation or otherwise. I covenant not to make or bring any such claim against the Company or any other Releasee, and forever release and discharge the Company and all other Releasees from liability under such claims.
           </p>
 
           <p>
