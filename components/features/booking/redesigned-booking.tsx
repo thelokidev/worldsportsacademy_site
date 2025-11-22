@@ -659,7 +659,7 @@ export function RedesignedBooking() {
                           nav_button_next: 'absolute right-1',
                           table: 'w-full border-collapse',
                           head_row: 'flex mb-2',
-                          head_cell: 'text-gray-400 rounded-md w-10 font-medium text-xs',
+                          head_cell: 'text-gray-400 rounded-md w-10 font-medium text-xs text-center',
                           row: 'flex w-full mt-1',
                           cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
                           day: 'h-10 w-10 p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20',

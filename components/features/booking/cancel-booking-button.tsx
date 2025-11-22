@@ -126,7 +126,13 @@ export function CancelBookingButton({ bookingId }: CancelBookingButtonProps) {
                 </div>
                 <div className="flex justify-between text-base font-semibold text-white">
                   <span>{quote?.formattedAmount ?? '—'}</span>
-                  <span>{cannotRefund ? 'Not refundable' : 'Full refund'}</span>
+                  <span>
+                    {cannotRefund
+                      ? 'Not refundable'
+                      : quote?.amount === 0
+                      ? 'Free cancellation'
+                      : 'Full refund'}
+                  </span>
                 </div>
               </div>
               <p className="text-xs text-gray-400">

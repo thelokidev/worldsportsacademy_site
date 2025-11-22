@@ -14,7 +14,7 @@ export async function getAvailableSlots(
 ) {
   try {
     const supabase = await createClient()
-    
+
     // Get sport details
     const { data: sport, error: sportError } = await supabase
       .from('sports')
@@ -105,15 +105,15 @@ async function calculateLocalAvailability(
   }
 
   const bookings = existingBookings || []
-  
+
   // Group bookings by date for easy lookup
   const bookingsByDate = new Map<string, Array<{ start: Date; end: Date }>>()
-  
+
   bookings.forEach((booking: any) => {
     const start = parseISO(booking.start_time)
     const end = parseISO(booking.end_time)
     const dateKey = format(start, 'yyyy-MM-dd')
-    
+
     if (!bookingsByDate.has(dateKey)) {
       bookingsByDate.set(dateKey, [])
     }
@@ -128,15 +128,15 @@ async function calculateLocalAvailability(
 
   const start = parseISO(startDate)
   const end = parseISO(endDate)
-  
+
   // Generate slots for each day
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const dateKey = format(d, 'yyyy-MM-dd')
     const dayOfWeek = getDay(d) // 0 = Sunday, 6 = Saturday
-    
+
     // Get schedule for this day
     const daySchedule = (schedules as any)?.find((s: any) => s.day_of_week === dayOfWeek)
-    
+
     // Skip if court is closed on this day or no schedule (fallback to default hours)
     if (!daySchedule) {
       // Default to 9 AM - 9 PM if no schedule
@@ -146,27 +146,27 @@ async function calculateLocalAvailability(
       const slots: Array<{ time: string; available: boolean }> = []
       const dayBookings = bookingsByDate.get(dateKey) || []
       const now = new Date()
-      
+
       hours.forEach((hour) => {
         const slotStart = hour
         const slotEnd = addMinutes(slotStart, durationMinutes)
-        
+
         if (slotStart < now || slotEnd > dayEnd) {
           slots.push({ time: slotStart.toISOString(), available: false })
           return
         }
-        
+
         const isBooked = dayBookings.some((booking) => {
           return slotStart < booking.end && slotEnd > booking.start
         })
-        
+
         slots.push({ time: slotStart.toISOString(), available: !isBooked })
       })
-      
+
       availability.push({ date: dateKey, slots })
       continue
     }
-    
+
     if (daySchedule.is_closed) {
       availability.push({
         date: dateKey,
@@ -178,28 +178,28 @@ async function calculateLocalAvailability(
     // Parse open and close times
     const [openHour, openMin] = daySchedule.open_time.split(':').map(Number)
     const [closeHour, closeMin] = daySchedule.close_time.split(':').map(Number)
-    
+
     const dayStart = setHours(startOfDay(d), openHour)
     if (openMin > 0) {
       dayStart.setMinutes(openMin)
     }
-    
+
     const dayEnd = setHours(startOfDay(d), closeHour)
     if (closeMin > 0) {
       dayEnd.setMinutes(closeMin)
     }
-    
+
     // Generate hourly slots
     const hours = eachHourOfInterval({ start: dayStart, end: dayEnd })
     const slots: Array<{ time: string; available: boolean }> = []
-    
+
     const dayBookings = bookingsByDate.get(dateKey) || []
     const now = new Date()
-    
+
     hours.forEach((hour) => {
       const slotStart = hour
       const slotEnd = addMinutes(slotStart, durationMinutes)
-      
+
       // Slot is in the past
       if (slotStart < now) {
         slots.push({
@@ -208,7 +208,7 @@ async function calculateLocalAvailability(
         })
         return
       }
-      
+
       // Check if slot would exceed court closing time
       if (slotEnd > dayEnd) {
         slots.push({
@@ -217,19 +217,19 @@ async function calculateLocalAvailability(
         })
         return
       }
-      
+
       // Check if this slot overlaps with any existing booking
       const isBooked = dayBookings.some((booking) => {
         // Check for overlap: slotStart < booking.end && slotEnd > booking.start
         return slotStart < booking.end && slotEnd > booking.start
       })
-      
+
       slots.push({
         time: slotStart.toISOString(),
         available: !isBooked,
       })
     })
-    
+
     availability.push({
       date: dateKey,
       slots,
@@ -310,7 +310,7 @@ export async function createBooking(formData: FormData) {
     // Check for conflicts
     const startDate = new Date(startTime)
     const endDate = new Date(endTime)
-    
+
     const { data: conflictingBookings } = await supabase
       .from('bookings')
       .select('id')
@@ -483,7 +483,7 @@ export async function getBookingRefundQuote(bookingId: string) {
 
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
-      .select('id, user_id, start_time, payment_status, payment_id')
+      .select('id, user_id, start_time, payment_status, payment_id, booking_type')
       .eq('id', bookingId)
       .eq('user_id', user.id)
       .single()
@@ -497,6 +497,19 @@ export async function getBookingRefundQuote(bookingId: string) {
     const isPast = startTime < now
 
     if (!booking.payment_id || booking.payment_status !== 'paid') {
+      if (booking.booking_type === 'member') {
+        return {
+          success: true,
+          refundable: !isPast,
+          amount: 0,
+          currency: 'usd',
+          formattedAmount: '—',
+          message: isPast
+            ? 'This booking is in the past and cannot be cancelled.'
+            : 'Free cancellation included with your membership.',
+        }
+      }
+
       return {
         success: true,
         refundable: false,

@@ -150,7 +150,7 @@ export const DateTimePicker = memo(function DateTimePicker({
                 nav_button_next: 'absolute right-1',
                 table: 'w-full border-collapse',
                 head_row: 'flex mb-2',
-                head_cell: 'text-gray-500 rounded-md w-10 font-medium text-xs',
+                head_cell: 'text-gray-500 rounded-md w-10 font-medium text-xs text-center',
                 row: 'flex w-full mt-1',
                 cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
                 day: cn(
