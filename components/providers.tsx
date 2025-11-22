@@ -2,6 +2,8 @@
 
 import { ThemeProvider } from "next-themes"
 
+import { WaiverSync } from "@/components/features/auth/waiver-sync"
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
@@ -11,6 +13,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
       forcedTheme="dark"
     >
+      <WaiverSync />
       {children}
     </ThemeProvider>
   )
