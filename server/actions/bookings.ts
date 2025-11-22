@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 import { initiateBookingRefund } from '@/lib/stripe/payments'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { addMinutes, format, parseISO, startOfDay, eachHourOfInterval, setHours, getDay } from 'date-fns'
+import { fromZonedTime } from 'date-fns-tz'
+
+// Facility timezone - change this if your facility is in a different timezone
+const FACILITY_TIMEZONE = 'America/Chicago'
 
 export async function getAvailableSlots(
   sportId: string,
@@ -140,9 +144,13 @@ async function calculateLocalAvailability(
     // Skip if court is closed on this day or no schedule (fallback to default hours)
     if (!daySchedule) {
       // Default to 9 AM - 9 PM if no schedule
-      const dayStart = setHours(startOfDay(d), 9)
-      const dayEnd = setHours(startOfDay(d), 21)
-      
+      // Create times in facility timezone, then convert to UTC
+      const dayStartLocal = setHours(startOfDay(new Date(dateKey)), 9)
+      const dayEndLocal = setHours(startOfDay(new Date(dateKey)), 21)
+
+      const dayStart = fromZonedTime(dayStartLocal, FACILITY_TIMEZONE)
+      const dayEnd = fromZonedTime(dayEndLocal, FACILITY_TIMEZONE)
+
       const hours = []
       let currentSlot = dayStart
       while (currentSlot < dayEnd) {
@@ -186,15 +194,20 @@ async function calculateLocalAvailability(
     const [openHour, openMin] = daySchedule.open_time.split(':').map(Number)
     const [closeHour, closeMin] = daySchedule.close_time.split(':').map(Number)
 
-    const dayStart = setHours(startOfDay(d), openHour)
+    // Create date-time objects in the facility's timezone, then convert to UTC
+    const dayStartLocal = setHours(startOfDay(new Date(dateKey)), openHour)
     if (openMin > 0) {
-      dayStart.setMinutes(openMin)
+      dayStartLocal.setMinutes(openMin)
     }
 
-    const dayEnd = setHours(startOfDay(d), closeHour)
+    const dayEndLocal = setHours(startOfDay(new Date(dateKey)), closeHour)
     if (closeMin > 0) {
-      dayEnd.setMinutes(closeMin)
+      dayEndLocal.setMinutes(closeMin)
     }
+
+    // Convert facility timezone to UTC
+    const dayStart = fromZonedTime(dayStartLocal, FACILITY_TIMEZONE)
+    const dayEnd = fromZonedTime(dayEndLocal, FACILITY_TIMEZONE)
 
     // Generate hourly slots
     const hours = []
@@ -203,7 +216,7 @@ async function calculateLocalAvailability(
       hours.push(currentSlot)
       currentSlot = addMinutes(currentSlot, durationMinutes)
     }
-    
+
     const slots: Array<{ time: string; available: boolean }> = []
 
     const dayBookings = bookingsByDate.get(dateKey) || []
@@ -270,7 +283,7 @@ function generateSafeAvailability(
     const dateKey = format(d, 'yyyy-MM-dd')
     const dayStart = setHours(startOfDay(d), 8)
     const dayEnd = setHours(startOfDay(d), 23)
-    
+
     const hours = []
     let currentSlot = dayStart
     while (currentSlot < dayEnd) {
