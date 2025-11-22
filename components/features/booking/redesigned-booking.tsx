@@ -647,21 +647,26 @@ export function RedesignedBooking() {
                         disabled={(date) =>
                           date < bookingWindowStart || date > bookingWindowEnd
                         }
-                        className="rounded-lg border border-gray-800 bg-black [&_.bookableWindow]:bg-[#50C878]/20 [&_.bookableWindow]:text-[#50C878] [&_.bookableWindow]:font-bold [&_.bookableWindow]:ring-1 [&_.bookableWindow]:ring-[#50C878]/40 [&_.lockedWindow]:opacity-40 [&_.lockedWindow]:line-through [&_.lockedWindow]:bg-red-900/10"
+                        className="rounded-lg border border-gray-800 bg-black"
                         fromDate={bookingWindowStart}
                         toDate={bookingWindowEnd}
                         modifiers={calendarModifiers}
                         modifiersClassNames={calendarModifierClasses}
                         classNames={{
+                          months: 'flex flex-col space-y-4',
+                          month: 'space-y-4',
                           caption: 'flex justify-center pt-1 relative items-center mb-4',
                           caption_label: 'text-sm font-semibold text-white',
                           nav: 'space-x-1 flex items-center',
                           nav_button: 'h-8 w-8 bg-transparent p-0 hover:bg-[#50C878]/10 rounded-md transition-colors text-white',
                           nav_button_previous: 'absolute left-1',
                           nav_button_next: 'absolute right-1',
+                          table: 'w-full border-collapse',
+                          head_row: 'flex mb-2',
                           head_cell: 'text-gray-400 rounded-md w-10 font-medium text-xs text-center',
-                          cell: 'h-10 w-10 p-0 text-center text-sm focus-within:relative focus-within:z-20 relative',
-                          day: 'h-10 w-10 p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20 flex items-center justify-center',
+                          row: 'flex w-full mt-1',
+                          cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
+                          day: 'h-10 w-10 p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20',
                           day_selected: '!bg-[#50C878] !text-white hover:!bg-[#50C878]/90 focus:!bg-[#50C878] !font-bold',
                           day_today: '!bg-[#50C878]/30 !text-[#50C878] !font-bold !ring-2 !ring-[#50C878]',
                           day_outside: 'text-gray-600 opacity-30',
