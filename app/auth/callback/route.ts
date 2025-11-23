@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { checkWaiverStatus } from '@/server/actions/waiver'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -18,12 +19,21 @@ export async function GET(request: NextRequest) {
     })
 
     if (!error && data.session) {
-      // Magic link verified and session created - redirect to dashboard or original redirect
+      // Magic link verified and session created - check waiver status
       const redirectParam = requestUrl.searchParams.get('redirect')
-      const redirectTo = redirectParam 
+      const intendedRedirect = redirectParam 
         ? decodeURIComponent(redirectParam)
         : '/dashboard'
-      return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
+      
+      // Check if user has signed waiver
+      const { signed } = await checkWaiverStatus(data.user.id)
+      if (!signed) {
+        return NextResponse.redirect(
+          new URL(`/waiver?redirect=${encodeURIComponent(intendedRedirect)}`, requestUrl.origin)
+        )
+      }
+      
+      return NextResponse.redirect(new URL(intendedRedirect, requestUrl.origin))
     } else if (!error) {
       // Email confirmed but no session (shouldn't happen with magic links)
       const redirectTo = requestUrl.searchParams.get('redirect')
@@ -45,8 +55,17 @@ export async function GET(request: NextRequest) {
 
       if (!error && data.session) {
         const redirectParam = requestUrl.searchParams.get('redirect')
-        const redirectTo = redirectParam ? decodeURIComponent(redirectParam) : '/dashboard'
-        return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
+        const intendedRedirect = redirectParam ? decodeURIComponent(redirectParam) : '/dashboard'
+        
+        // Check if user has signed waiver
+        const { signed } = await checkWaiverStatus(data.user.id)
+        if (!signed) {
+          return NextResponse.redirect(
+            new URL(`/waiver?redirect=${encodeURIComponent(intendedRedirect)}`, requestUrl.origin)
+          )
+        }
+        
+        return NextResponse.redirect(new URL(intendedRedirect, requestUrl.origin))
       }
 
       // If exchangeCodeForSession fails, log the error and provide details

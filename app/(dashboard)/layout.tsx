@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { checkWaiverStatus } from '@/server/actions/waiver'
 
 export default async function DashboardLayout({
   children,
@@ -12,6 +13,12 @@ export default async function DashboardLayout({
     
     if (error || !user) {
       redirect('/auth')
+    }
+
+    // Check if user has signed the waiver
+    const { signed } = await checkWaiverStatus(user.id)
+    if (!signed) {
+      redirect('/waiver?redirect=/dashboard')
     }
     
     return <>{children}</>

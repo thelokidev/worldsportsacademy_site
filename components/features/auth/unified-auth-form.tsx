@@ -1,15 +1,13 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { checkWaiverStatus, saveWaiverSignature } from '@/server/actions/waiver'
 import { createClient } from '@/lib/supabase/client'
 import { sendMagicLink } from '@/server/actions/auth'
 import { useToast } from '@/hooks/use-toast'
-import { WaiverModal } from './waiver-modal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -26,29 +24,6 @@ export function UnifiedAuthForm() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [magicLinkSent, setMagicLinkSent] = useState(false)
-  const [showWaiver, setShowWaiver] = useState(false)
-  const [waiverSigned, setWaiverSigned] = useState(false)
-  const [pendingAction, setPendingAction] = useState<'google' | 'magic' | null>(null)
-
-  // Check waiver status on mount
-  useEffect(() => {
-    async function checkWaiver() {
-      try {
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { signed } = await checkWaiverStatus(user.id)
-          if (signed) {
-            setWaiverSigned(true)
-          }
-        }
-      } catch (error) {
-        // Silently fail - user might not be logged in yet
-        console.error('Error checking waiver status:', error)
-      }
-    }
-    checkWaiver()
-  }, [])
 
   // Decode the redirect URL if it was encoded
   const redirectParam = searchParams.get('redirect')
@@ -64,39 +39,7 @@ export function UnifiedAuthForm() {
   })
   const supabase = useMemo(() => createClient(), [])
 
-  const handleWaiverSigned = async (signature: { name: string; address: string; date: string }) => {
-    setWaiverSigned(true)
-    setShowWaiver(false)
-
-    // We can't save to DB yet if not logged in, but we can proceed to auth.
-    // We'll save it after successful auth or if we are already logged in.
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await saveWaiverSignature(user.id, signature)
-    } else {
-      // Store in sessionStorage to persist across the OAuth redirect if needed, 
-      // though usually we want to save it after they come back. 
-      // Actually, we can't easily pass this data through Google OAuth flow unless we use state parameter or cookie.
-      // Let's use a cookie or sessionStorage.
-      sessionStorage.setItem('pending_waiver_signature', JSON.stringify(signature))
-    }
-
-    if (pendingAction === 'google') {
-      handleGoogleSignIn(true) // Force proceed
-    } else if (pendingAction === 'magic') {
-      handleMagicLink(form.getValues(), true) // Force proceed
-    }
-    setPendingAction(null)
-  }
-
-  async function handleMagicLink(data: FormData, forceProceed = false) {
-    if (!forceProceed && !waiverSigned) {
-      setPendingAction('magic')
-      setShowWaiver(true)
-      return
-    }
-
+  async function handleMagicLink(data: FormData) {
     setIsLoading(true)
     const result = await sendMagicLink(data.email, redirectTo)
     setIsLoading(false)
@@ -121,12 +64,7 @@ export function UnifiedAuthForm() {
     handleMagicLink(data)
   }
 
-  async function handleGoogleSignIn(forceProceed = false) {
-    if (!forceProceed && !waiverSigned) {
-      setPendingAction('google')
-      setShowWaiver(true)
-      return
-    }
+  async function handleGoogleSignIn() {
 
     if (!supabase) return
     setIsLoading(true)
@@ -195,12 +133,6 @@ export function UnifiedAuthForm() {
 
   return (
     <div className="space-y-6">
-      <WaiverModal
-        isOpen={showWaiver}
-        onOpenChange={setShowWaiver}
-        onSigned={handleWaiverSigned}
-      />
-
       {/* Social Login Buttons */}
       <div className="space-y-3">
         <Button
