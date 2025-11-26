@@ -17,7 +17,6 @@ async function getAllMemberships() {
       ),
       profiles:user_id (
         id,
-        email,
         full_name
       )
     `)

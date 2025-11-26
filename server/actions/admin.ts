@@ -127,8 +127,7 @@ export async function getCourtBookingStats(courtId: string) {
       end_time,
       status,
       profiles:user_id (
-        full_name,
-        email
+        full_name
       )
     `)
     .eq('court_id', courtId)
@@ -163,10 +162,7 @@ export async function getAllMembers(page = 1, limit = 50) {
     .select(`
       id,
       full_name,
-      email,
-      phone_number,
       role,
-      stripe_customer_id,
       created_at,
       updated_at
     `)
@@ -316,11 +312,10 @@ export async function searchMembers(query: string) {
     .select(`
       id,
       full_name,
-      email,
       role,
       created_at
     `)
-    .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
+    .ilike('full_name', `%${query}%`)
     .limit(20)
 
   if (error) {

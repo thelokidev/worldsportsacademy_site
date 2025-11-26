@@ -12,5 +12,12 @@ export const createClient = () => {
     )
   }
 
-  return createBrowserClient<Database>(url, anonKey)
+  return createBrowserClient<Database>(url, anonKey, {
+    auth: {
+      flowType: 'pkce',
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  })
 }

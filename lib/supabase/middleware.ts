@@ -9,6 +9,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
+  // Skip middleware for auth callback to prevent interfering with PKCE flow
+  if (request.nextUrl.pathname.startsWith('/auth/callback')) {
+    return NextResponse.next({ request })
+  }
+
   const response = NextResponse.next({ request })
 
   try {
