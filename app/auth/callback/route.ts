@@ -21,23 +21,23 @@ export async function GET(request: NextRequest) {
     if (!error && data.session) {
       // Magic link verified and session created - check waiver status
       const redirectParam = requestUrl.searchParams.get('redirect')
-      const intendedRedirect = redirectParam 
+      const intendedRedirect = redirectParam
         ? decodeURIComponent(redirectParam)
         : '/dashboard'
-      
+
       // Check if user has signed waiver
-      const { signed } = await checkWaiverStatus(data.user.id)
-      if (!signed) {
+      const { signed } = await checkWaiverStatus(data.user?.id || '')
+      if (!signed && data.user) {
         return NextResponse.redirect(
           new URL(`/waiver?redirect=${encodeURIComponent(intendedRedirect)}`, requestUrl.origin)
         )
       }
-      
+
       return NextResponse.redirect(new URL(intendedRedirect, requestUrl.origin))
     } else if (!error) {
       // Email confirmed but no session (shouldn't happen with magic links)
       const redirectTo = requestUrl.searchParams.get('redirect')
-      const redirectUrl = redirectTo 
+      const redirectUrl = redirectTo
         ? `/auth?verified=true&redirect=${encodeURIComponent(redirectTo)}`
         : '/auth?verified=true'
       return NextResponse.redirect(new URL(redirectUrl, requestUrl.origin))
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       if (!error && data.session) {
         const redirectParam = requestUrl.searchParams.get('redirect')
         const intendedRedirect = redirectParam ? decodeURIComponent(redirectParam) : '/dashboard'
-        
+
         // Check if user has signed waiver
         const { signed } = await checkWaiverStatus(data.user.id)
         if (!signed) {
@@ -64,27 +64,16 @@ export async function GET(request: NextRequest) {
             new URL(`/waiver?redirect=${encodeURIComponent(intendedRedirect)}`, requestUrl.origin)
           )
         }
-        
+
         return NextResponse.redirect(new URL(intendedRedirect, requestUrl.origin))
       }
 
-      // If exchangeCodeForSession fails, log the error and provide details
+      // If exchangeCodeForSession fails, log the error
       console.error('Code exchange error:', error)
-      console.error('Error details:', {
-        message: error?.message,
-        status: error?.status,
-        code: code?.substring(0, 20) + '...',
-      })
-
-      // Check if code_verifier exists in cookies for debugging
-      const cookieStore = await cookies()
-      const allCookies = cookieStore.getAll()
-      const authCookies = allCookies.filter(c => c.name.includes('sb-') || c.name.includes('auth'))
-      console.error('Available auth cookies:', authCookies.map(c => ({ name: c.name, hasValue: !!c.value })))
 
       return NextResponse.redirect(
         new URL(
-          `/auth?error=verification_failed&message=${encodeURIComponent(error?.message || 'Authentication failed')}`,
+          `/auth?error=verification_failed&message=${encodeURIComponent(error?.message || 'Authentication failed. Please try again.')}`,
           requestUrl.origin
         ),
       )

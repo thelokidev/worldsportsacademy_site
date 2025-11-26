@@ -70,7 +70,9 @@ export function UnifiedAuthForm() {
     setIsLoading(true)
 
     try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      // Use window.location.origin to ensure we redirect to the same domain
+      // This prevents issues where cookies are set for one domain but callback is on another
+      const appUrl = window.location.origin
       const callbackUrl = redirectTo
         ? `${appUrl}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`
         : `${appUrl}/auth/callback`
