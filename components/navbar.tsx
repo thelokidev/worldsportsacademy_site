@@ -38,14 +38,28 @@ export function Navbar() {
     setMounted(true)
   }, [])
 
+  const [isAdmin, setIsAdmin] = useState(false)
+
   useEffect(() => {
     const supabase = createClient()
+
+    const checkAdmin = async (userId: string) => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single()
+      setIsAdmin(profile?.role === 'admin')
+    }
 
     // Get initial session - optimized with caching
     const initAuth = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
+        if (user) {
+          await checkAdmin(user.id)
+        }
       } catch (error) {
         console.error('Auth error:', error)
       } finally {
@@ -58,8 +72,13 @@ export function Navbar() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null)
+      if (session?.user) {
+        await checkAdmin(session.user.id)
+      } else {
+        setIsAdmin(false)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -111,11 +130,10 @@ export function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50">
       {/* Main Navigation */}
       <nav
-        className={`transition-all duration-300 ${
-          scrolled
-            ? "bg-black/80 backdrop-blur-xl shadow-lg border-b border-gray-800/50"
-            : "bg-black/95 backdrop-blur-sm shadow-sm"
-        }`}
+        className={`transition-all duration-300 ${scrolled
+          ? "bg-black/80 backdrop-blur-xl shadow-lg border-b border-gray-800/50"
+          : "bg-black/95 backdrop-blur-sm shadow-sm"
+          }`}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
@@ -146,11 +164,10 @@ export function Navbar() {
                     key={item.name}
                     href={item.href}
                     prefetch={true}
-                    className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
-                      active
-                        ? "text-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10"
-                        : "text-gray-300 hover:text-[#50C878] hover:bg-gray-900"
-                    } ${mounted && isPending ? "opacity-70" : ""}`}
+                    className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${active
+                      ? "text-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10"
+                      : "text-gray-300 hover:text-[#50C878] hover:bg-gray-900"
+                      } ${mounted && isPending ? "opacity-70" : ""}`}
                   >
                     {item.name}
                     {active && (
@@ -195,6 +212,18 @@ export function Navbar() {
                       <p className="text-xs text-gray-400 dark:text-gray-400 truncate">{user.email}</p>
                     </div>
                     <DropdownMenuSeparator className="bg-gray-800" />
+                    {isAdmin && (
+                      <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                        <Link
+                          href="/admin/dashboard"
+                          prefetch={true}
+                          className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-900 rounded-lg transition-colors text-gray-300"
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-[#50C878]" />
+                          <span className="text-sm font-medium text-[#50C878]">Admin Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
                       <Link
                         href="/dashboard"
@@ -202,7 +231,7 @@ export function Navbar() {
                         className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-900 rounded-lg transition-colors text-gray-300"
                       >
                         <LayoutDashboard className="w-4 h-4 text-gray-400 dark:text-gray-400" />
-                        <span className="text-sm font-medium">Dashboard</span>
+                        <span className="text-sm font-medium">User Dashboard</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
@@ -259,14 +288,12 @@ export function Navbar() {
               >
                 <div className="relative w-6 h-6">
                   <Menu
-                    className={`absolute inset-0 w-6 h-6 text-gray-300 dark:text-gray-300 transition-all duration-300 ${
-                      mobileMenuOpen ? "opacity-0 rotate-90" : "opacity-100 rotate-0"
-                    }`}
+                    className={`absolute inset-0 w-6 h-6 text-gray-300 dark:text-gray-300 transition-all duration-300 ${mobileMenuOpen ? "opacity-0 rotate-90" : "opacity-100 rotate-0"
+                      }`}
                   />
                   <X
-                    className={`absolute inset-0 w-6 h-6 text-gray-300 dark:text-gray-300 transition-all duration-300 ${
-                      mobileMenuOpen ? "opacity-100 rotate-0" : "opacity-0 -rotate-90"
-                    }`}
+                    className={`absolute inset-0 w-6 h-6 text-gray-300 dark:text-gray-300 transition-all duration-300 ${mobileMenuOpen ? "opacity-100 rotate-0" : "opacity-0 -rotate-90"
+                      }`}
                   />
                 </div>
               </button>
@@ -275,9 +302,8 @@ export function Navbar() {
 
           {/* Mobile Menu - Slide Animation */}
           <div
-            className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-              mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-            }`}
+            className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+              }`}
           >
             <div className="py-4 space-y-1 border-t border-gray-800/50 dark:border-gray-800/50 mt-2">
               {navigation.map((item) => {
@@ -288,11 +314,10 @@ export function Navbar() {
                     href={item.href}
                     prefetch={true}
                     onClick={handleLinkClick}
-                    className={`flex items-center px-4 py-3 text-base font-medium rounded-xl transition-colors duration-150 ${
-                      active
-                        ? "text-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10"
-                        : "text-gray-300 hover:text-[#50C878] hover:bg-gray-900"
-                    } ${mounted && isPending ? "opacity-70" : ""}`}
+                    className={`flex items-center px-4 py-3 text-base font-medium rounded-xl transition-colors duration-150 ${active
+                      ? "text-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10"
+                      : "text-gray-300 hover:text-[#50C878] hover:bg-gray-900"
+                      } ${mounted && isPending ? "opacity-70" : ""}`}
                   >
                     {item.name}
                     {active && (
