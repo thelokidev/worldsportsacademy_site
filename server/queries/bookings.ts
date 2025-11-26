@@ -169,14 +169,14 @@ export async function getAllBookingsForAdmin(
 
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, email, full_name')
+      .select('id, full_name')
       .in('id', userIds)
 
     const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || [])
 
     bookingsWithProfiles = bookingsData.map((booking: any) => ({
       ...booking,
-      profiles: profileMap.get(booking.user_id) || { email: 'Unknown', full_name: 'Unknown User' }
+      profiles: profileMap.get(booking.user_id) || { full_name: 'Unknown User' }
     }))
   }
 

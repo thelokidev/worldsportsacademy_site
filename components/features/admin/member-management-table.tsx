@@ -36,10 +36,7 @@ import Link from 'next/link'
 type Member = {
   id: string
   full_name: string | null
-  email: string
-  phone_number: string | null
   role: string
-  stripe_customer_id: string | null
   created_at: string
   updated_at: string
   memberships: Array<{
@@ -82,11 +79,7 @@ export function MemberManagementTable({
   const filteredMembers = members.filter(member => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
-    return (
-      member.full_name?.toLowerCase().includes(query) ||
-      member.email.toLowerCase().includes(query) ||
-      member.phone_number?.toLowerCase().includes(query)
-    )
+    return member.full_name?.toLowerCase().includes(query)
   })
 
   async function handleViewDetails(member: Member) {
@@ -140,7 +133,7 @@ export function MemberManagementTable({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search members by name, email, or phone..."
+            placeholder="Search members by name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -171,9 +164,7 @@ export function MemberManagementTable({
                   )}
                 </div>
                 <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <span>{member.email}</span>
-                  {member.phone_number && <span>• {member.phone_number}</span>}
-                  <span>• {member.bookingCount} bookings</span>
+                  <span>{member.bookingCount} bookings</span>
                 </div>
                 {member.memberships.length > 0 && (
                   <div className="mt-2 text-xs text-gray-500">
@@ -251,7 +242,7 @@ export function MemberManagementTable({
           <DialogHeader>
             <DialogTitle>{selectedMember?.full_name || 'Member Details'}</DialogTitle>
             <DialogDescription>
-              {selectedMember?.email}
+              Member ID: {selectedMember?.id}
             </DialogDescription>
           </DialogHeader>
 
@@ -267,12 +258,8 @@ export function MemberManagementTable({
                 </h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-gray-600">Email</p>
-                    <p className="font-medium">{memberDetails.profile.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Phone</p>
-                    <p className="font-medium">{memberDetails.profile.phone_number || 'N/A'}</p>
+                    <p className="text-gray-600">Full Name</p>
+                    <p className="font-medium">{memberDetails.profile.full_name || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-gray-600">Role</p>
@@ -281,6 +268,10 @@ export function MemberManagementTable({
                   <div>
                     <p className="text-gray-600">Stripe Customer</p>
                     <p className="font-medium">{memberDetails.profile.stripe_customer_id ? 'Yes' : 'No'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Joined</p>
+                    <p className="font-medium">{memberDetails.profile.created_at ? format(new Date(memberDetails.profile.created_at), 'MMM d, yyyy') : 'N/A'}</p>
                   </div>
                 </div>
               </div>
@@ -390,7 +381,7 @@ export function MemberManagementTable({
           <DialogHeader>
             <DialogTitle>Change Member Role</DialogTitle>
             <DialogDescription>
-              Update the role for {selectedMember?.full_name || selectedMember?.email}
+              Update the role for {selectedMember?.full_name || 'this member'}
             </DialogDescription>
           </DialogHeader>
 

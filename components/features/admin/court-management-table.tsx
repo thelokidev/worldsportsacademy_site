@@ -51,8 +51,7 @@ type CourtStats = {
     status: string
     profiles: {
       full_name: string | null
-      email: string
-    }
+    } | null
   }>
 }
 

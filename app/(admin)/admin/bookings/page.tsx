@@ -144,7 +144,7 @@ export default async function AdminBookingsPage({
                         </p>
                         {(booking.profiles as any) && (
                           <p className="text-xs text-gray-500 mt-1">
-                            {(booking.profiles as any).full_name || (booking.profiles as any).email}
+                            {(booking.profiles as any).full_name || 'Unknown User'}
                           </p>
                         )}
                       </div>
