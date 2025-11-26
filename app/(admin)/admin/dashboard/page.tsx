@@ -65,49 +65,70 @@ async function getDashboardStats() {
 async function getRecentActivity() {
   const supabase = await createClient()
 
-  // Recent bookings (last 5)
-  const { data: recentBookings } = await supabase
+  // Recent bookings (last 5) - fetch without profile join
+  const { data: recentBookingsRaw } = await supabase
     .from('bookings')
     .select(`
       id,
       start_time,
       status,
       created_at,
+      user_id,
       sports:sport_id (
         display_name
       ),
       courts:court_id (
         name
-      ),
-      profiles:user_id (
-        full_name,
-        email
       )
     `)
     .order('created_at', { ascending: false })
     .limit(5)
 
-  // Recent memberships (last 5)
-  const { data: recentMemberships } = await supabase
+  // Recent memberships (last 5) - fetch without profile join
+  const { data: recentMembershipsRaw } = await supabase
     .from('memberships')
     .select(`
       id,
       status,
       created_at,
+      user_id,
       membership_plans:plan_id (
         name
-      ),
-      profiles:user_id (
-        full_name,
-        email
       )
     `)
     .order('created_at', { ascending: false })
     .limit(5)
 
+  // Collect all unique user IDs from both queries
+  const bookingUserIds = recentBookingsRaw?.map(b => b.user_id).filter(Boolean) || []
+  const membershipUserIds = recentMembershipsRaw?.map(m => m.user_id).filter(Boolean) || []
+  const allUserIds = [...new Set([...bookingUserIds, ...membershipUserIds])]
+
+  // Fetch profiles for all users in one query
+  let profileMap = new Map<string, { full_name: string | null }>()
+  if (allUserIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', allUserIds)
+    
+    profileMap = new Map(profiles?.map(p => [p.id, { full_name: p.full_name }]) || [])
+  }
+
+  // Combine data with profiles
+  const recentBookings = (recentBookingsRaw || []).map(booking => ({
+    ...booking,
+    profiles: profileMap.get(booking.user_id) || null
+  }))
+
+  const recentMemberships = (recentMembershipsRaw || []).map(membership => ({
+    ...membership,
+    profiles: profileMap.get(membership.user_id) || null
+  }))
+
   return {
-    bookings: recentBookings || [],
-    memberships: recentMemberships || [],
+    bookings: recentBookings,
+    memberships: recentMemberships,
   }
 }
 
@@ -179,7 +200,7 @@ export default async function AdminDashboardPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate text-gray-200">
-                          {booking.profiles?.full_name || booking.profiles?.email}
+                          {booking.profiles?.full_name || 'Unknown User'}
                         </p>
                         <p className="text-xs text-gray-400">
                           Booked {booking.sports?.display_name} - {booking.courts?.name}
@@ -202,7 +223,7 @@ export default async function AdminDashboardPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate text-gray-200">
-                          {membership.profiles?.full_name || membership.profiles?.email}
+                          {membership.profiles?.full_name || 'Unknown User'}
                         </p>
                         <p className="text-xs text-gray-400">
                           Joined {membership.membership_plans?.name}

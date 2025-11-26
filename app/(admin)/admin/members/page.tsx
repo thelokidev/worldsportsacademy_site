@@ -16,56 +16,56 @@ export default async function AdminMembersPage({
   const withMembershipCount = members.filter(m => m.memberships && m.memberships.length > 0).length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Members Management</h1>
-        <p className="text-gray-600">View all members, manage roles, and access member details</p>
+        <h1 className="text-3xl font-bold mb-2 text-white">Members Management</h1>
+        <p className="text-gray-400">View all members, manage roles, and access member details</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Members</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-400">Total Members</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{total}</div>
+            <div className="text-3xl font-bold text-white">{total}</div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Active Memberships</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-400">Active Memberships</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">{withMembershipCount}</div>
+            <div className="text-3xl font-bold text-[#50C878]">{withMembershipCount}</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Administrators</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-400">Administrators</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">{adminCount}</div>
+            <div className="text-3xl font-bold text-blue-400">{adminCount}</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Regular Users</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-400">Regular Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-600">{userCount}</div>
+            <div className="text-3xl font-bold text-gray-300">{userCount}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Members Table */}
-      <Card>
+      <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle>All Members</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-white">All Members</CardTitle>
+          <CardDescription className="text-gray-400">
             Click on a member to view details or manage their role
           </CardDescription>
         </CardHeader>

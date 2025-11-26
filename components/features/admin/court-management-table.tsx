@@ -297,7 +297,7 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="font-medium">
-                              {booking.profiles?.full_name || booking.profiles?.email || 'Unknown User'}
+                              {booking.profiles?.full_name || 'Unknown User'}
                             </p>
                             <p className="text-gray-600">
                               {format(new Date(booking.start_time), 'MMM d, yyyy h:mm a')} - 

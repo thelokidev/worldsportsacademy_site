@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 async function getAllMemberships() {
   const supabase = await createClient()
 
+  // First, get all memberships with their plans
   const { data: memberships, error } = await supabase
     .from('memberships')
     .select(`
@@ -14,10 +15,6 @@ async function getAllMemberships() {
         id,
         name,
         price
-      ),
-      profiles:user_id (
-        id,
-        full_name
       )
     `)
     .order('created_at', { ascending: false })
@@ -26,7 +23,27 @@ async function getAllMemberships() {
     throw new Error(`Failed to fetch memberships: ${error.message}`)
   }
 
-  return memberships || []
+  if (!memberships || memberships.length === 0) {
+    return []
+  }
+
+  // Get unique user IDs and fetch profiles separately
+  // This works around the missing FK relationship between memberships.user_id and profiles.id
+  const userIds = [...new Set(memberships.map(m => m.user_id))]
+  
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, full_name')
+    .in('id', userIds)
+
+  // Create a map for quick lookup
+  const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])
+
+  // Combine memberships with profile data
+  return memberships.map(membership => ({
+    ...membership,
+    profiles: profileMap.get(membership.user_id) || null
+  }))
 }
 
 export default async function AdminMembershipsPage() {
@@ -101,7 +118,7 @@ export default async function AdminMembershipsPage() {
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-400">
-                      {(membership.profiles as any)?.full_name || (membership.profiles as any)?.email || 'Unknown User'}
+                      {(membership.profiles as any)?.full_name || 'Unknown User'}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Renews: {format(new Date(membership.current_period_end), 'MMM d, yyyy')}

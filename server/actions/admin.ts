@@ -118,17 +118,15 @@ export async function getCourtBookingStats(courtId: string) {
     .gte('start_time', startOfMonth)
     .eq('status', 'confirmed')
 
-  // Upcoming bookings
-  const { data: upcomingBookings } = await supabase
+  // Upcoming bookings - fetch without profile join, then fetch profiles separately
+  const { data: upcomingBookingsRaw } = await supabase
     .from('bookings')
     .select(`
       id,
       start_time,
       end_time,
       status,
-      profiles:user_id (
-        full_name
-      )
+      user_id
     `)
     .eq('court_id', courtId)
     .gte('start_time', new Date().toISOString())
@@ -136,10 +134,26 @@ export async function getCourtBookingStats(courtId: string) {
     .order('start_time', { ascending: true })
     .limit(5)
 
+  // Fetch profiles for the upcoming bookings
+  let upcomingBookings: any[] = []
+  if (upcomingBookingsRaw && upcomingBookingsRaw.length > 0) {
+    const userIds = [...new Set(upcomingBookingsRaw.map(b => b.user_id).filter(Boolean))]
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', userIds)
+    
+    const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])
+    upcomingBookings = upcomingBookingsRaw.map(booking => ({
+      ...booking,
+      profiles: profileMap.get(booking.user_id) || null
+    }))
+  }
+
   return {
     todayBookings: todayBookings || 0,
     monthlyBookings: monthlyBookings || 0,
-    upcomingBookings: upcomingBookings || [],
+    upcomingBookings,
   }
 }
 
