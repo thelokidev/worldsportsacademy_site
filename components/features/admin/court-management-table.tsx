@@ -3,22 +3,22 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { 
-  Lock, 
-  Unlock, 
-  Power, 
-  PowerOff, 
+import {
+  Lock,
+  Unlock,
+  Power,
+  PowerOff,
   Calendar,
   Edit2,
   TrendingUp
@@ -71,7 +71,7 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
     setSelectedCourt(court)
     setDialogOpen(true)
     setLoadingStats(true)
-    
+
     try {
       const stats = await getCourtBookingStats(court.id)
       setCourtStats(stats)
@@ -103,7 +103,7 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
 
   async function confirmBlock() {
     if (!selectedCourt) return
-    
+
     setLoading(true)
     try {
       await toggleCourtBlock(selectedCourt.id, true, blockReason)
@@ -138,7 +138,7 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
 
   async function confirmEditName() {
     if (!selectedCourt || !newName.trim()) return
-    
+
     setLoading(true)
     try {
       await updateCourtName(selectedCourt.id, newName)
@@ -171,13 +171,13 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
           courts.map((court) => (
             <div
               key={court.id}
-              className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between p-4 border border-gray-800 rounded-lg bg-black/20 hover:bg-black/40 transition-colors"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-lg">{court.name}</h3>
+                  <h3 className="font-semibold text-lg text-gray-200">{court.name}</h3>
                   {getStatusBadge(court)}
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="text-xs border-gray-700 text-gray-400">
                     {court.sports?.display_name || 'Unknown Sport'}
                   </Badge>
                 </div>
@@ -300,7 +300,7 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
                               {booking.profiles?.full_name || 'Unknown User'}
                             </p>
                             <p className="text-gray-600">
-                              {format(new Date(booking.start_time), 'MMM d, yyyy h:mm a')} - 
+                              {format(new Date(booking.start_time), 'MMM d, yyyy h:mm a')} -
                               {format(new Date(booking.end_time), 'h:mm a')}
                             </p>
                           </div>
@@ -343,8 +343,8 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
             <Button variant="outline" onClick={() => setBlockDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={confirmBlock}
               disabled={loading}
             >
@@ -380,7 +380,7 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={confirmEditName}
               disabled={loading || !newName.trim()}
             >

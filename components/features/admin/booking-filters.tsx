@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -48,9 +48,9 @@ export function BookingFilters({
   const hasActiveFilters = currentStatus || currentSportId
 
   return (
-    <div className="flex flex-wrap items-center gap-3 pb-4 border-b">
+    <div className="flex flex-wrap items-center gap-3 pb-4 border-b border-gray-800">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Filters:</span>
+        <span className="text-sm font-medium text-gray-400">Filters:</span>
       </div>
 
       {/* Status Filter */}
@@ -58,7 +58,7 @@ export function BookingFilters({
         value={currentStatus || 'all'}
         onValueChange={(value) => updateFilter('status', value)}
       >
-        <SelectTrigger className="w-[150px]">
+        <SelectTrigger className="w-[150px] bg-gray-900/50 border-gray-800 text-gray-300">
           <SelectValue placeholder="All Statuses" />
         </SelectTrigger>
         <SelectContent>
@@ -74,7 +74,7 @@ export function BookingFilters({
         value={currentSportId || 'all'}
         onValueChange={(value) => updateFilter('sportId', value)}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[180px] bg-gray-900/50 border-gray-800 text-gray-300">
           <SelectValue placeholder="All Sports" />
         </SelectTrigger>
         <SelectContent>
@@ -93,7 +93,7 @@ export function BookingFilters({
           variant="ghost"
           size="sm"
           onClick={clearFilters}
-          className="gap-1"
+          className="gap-1 text-gray-400 hover:text-white hover:bg-gray-800"
         >
           <X className="h-4 w-4" />
           Clear Filters
@@ -102,4 +102,3 @@ export function BookingFilters({
     </div>
   )
 }
-
