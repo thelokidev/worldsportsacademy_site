@@ -61,7 +61,7 @@ export async function getAllBookings(userId: string) {
 export async function getUpcomingBookings(userId: string) {
   const supabase = await createClient()
   const now = new Date().toISOString()
-  
+
   const { data, error } = await supabase
     .from('bookings')
     .select(`
@@ -115,7 +115,8 @@ export async function getAllBookingsForAdmin(
   }
 ) {
   const supabase = await createClient()
-  
+
+  // First fetch bookings without the profile join
   let query = supabase
     .from('bookings')
     .select(`
@@ -128,11 +129,6 @@ export async function getAllBookingsForAdmin(
       courts: court_id (
         id,
         name
-      ),
-      profiles: user_id (
-        id,
-        email,
-        full_name
       )
     `, { count: 'exact' })
 
@@ -160,14 +156,32 @@ export async function getAllBookingsForAdmin(
   query = query.order('start_time', { ascending: false })
     .range(offset, offset + pageSize - 1)
 
-  const { data, error, count } = await query
+  const { data: bookingsData, error, count } = await query
 
   if (error) {
     throw new Error(`Failed to fetch bookings: ${error.message}`)
   }
 
+  // Manually fetch profiles for the bookings
+  let bookingsWithProfiles = []
+  if (bookingsData && bookingsData.length > 0) {
+    const userIds = [...new Set(bookingsData.map((b: any) => b.user_id).filter(Boolean))]
+
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .in('id', userIds)
+
+    const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || [])
+
+    bookingsWithProfiles = bookingsData.map((booking: any) => ({
+      ...booking,
+      profiles: profileMap.get(booking.user_id) || { email: 'Unknown', full_name: 'Unknown User' }
+    }))
+  }
+
   return {
-    bookings: data || [],
+    bookings: bookingsWithProfiles,
     total: count || 0,
     page,
     pageSize,
@@ -177,7 +191,7 @@ export async function getAllBookingsForAdmin(
 
 export async function getBookingStats(startDate?: string, endDate?: string) {
   const supabase = await createClient()
-  
+
   let bookingsQuery = supabase
     .from('bookings')
     .select('status, start_time, sports!inner(price_per_hour)')
