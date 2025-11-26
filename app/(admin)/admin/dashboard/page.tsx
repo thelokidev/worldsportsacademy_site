@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import {
-  Calendar, 
-  Users, 
-  DollarSign, 
+  Calendar,
+  Users,
+  DollarSign,
   TrendingUp,
   MapPin,
   Shield,
@@ -119,10 +119,10 @@ export default async function AdminDashboardPage() {
   ])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Dashboard Overview</h1>
-        <p className="text-gray-600">Welcome to the admin dashboard</p>
+        <h1 className="text-3xl font-bold mb-2 text-white">Dashboard Overview</h1>
+        <p className="text-gray-400">Welcome to the admin dashboard</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -153,14 +153,14 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Activity className="h-5 w-5 text-[#50C878]" />
                 Recent Activity
               </CardTitle>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" className="text-[#50C878] hover:text-[#50C878] hover:bg-[#50C878]/10" asChild>
                 <Link href="/admin/bookings">View All</Link>
               </Button>
             </div>
@@ -173,45 +173,45 @@ export default async function AdminDashboardPage() {
                 <>
                   {/* Recent Bookings */}
                   {activity.bookings.slice(0, 3).map((booking: any) => (
-                    <div key={booking.id} className="flex items-start gap-3 pb-3 border-b last:border-0">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <Calendar className="h-4 w-4 text-blue-600" />
+                    <div key={booking.id} className="flex items-start gap-3 pb-3 border-b border-gray-800 last:border-0">
+                      <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="h-4 w-4 text-blue-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
+                        <p className="text-sm font-medium truncate text-gray-200">
                           {booking.profiles?.full_name || booking.profiles?.email}
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-gray-400">
                           Booked {booking.sports?.display_name} - {booking.courts?.name}
                         </p>
                         <p className="text-xs text-gray-500">
                           {format(new Date(booking.created_at), 'MMM d, h:mm a')}
                         </p>
                       </div>
-                      <Badge variant={booking.status === 'confirmed' ? 'default' : 'secondary'} className="text-xs">
+                      <Badge variant={booking.status === 'confirmed' ? 'default' : 'secondary'} className="text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border-0">
                         {booking.status}
                       </Badge>
                     </div>
                   ))}
-                  
+
                   {/* Recent Memberships */}
                   {activity.memberships.slice(0, 2).map((membership: any) => (
-                    <div key={membership.id} className="flex items-start gap-3 pb-3 border-b last:border-0">
-                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                        <Users className="h-4 w-4 text-green-600" />
+                    <div key={membership.id} className="flex items-start gap-3 pb-3 border-b border-gray-800 last:border-0">
+                      <div className="w-8 h-8 rounded-full bg-[#50C878]/10 flex items-center justify-center flex-shrink-0">
+                        <Users className="h-4 w-4 text-[#50C878]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
+                        <p className="text-sm font-medium truncate text-gray-200">
                           {membership.profiles?.full_name || membership.profiles?.email}
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-gray-400">
                           Joined {membership.membership_plans?.name}
                         </p>
                         <p className="text-xs text-gray-500">
                           {format(new Date(membership.created_at), 'MMM d, h:mm a')}
                         </p>
                       </div>
-                      <Badge variant="default" className="text-xs bg-green-600">
+                      <Badge variant="default" className="text-xs bg-[#50C878]/20 text-[#50C878] hover:bg-[#50C878]/30 border-0">
                         {membership.status}
                       </Badge>
                     </div>
@@ -222,45 +222,45 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-white">
+              <BarChart3 className="h-5 w-5 text-[#50C878]" />
               Quick Actions
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start" asChild>
+            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white" asChild>
               <Link href="/admin/bookings">
-                <Calendar className="h-4 w-4 mr-2" />
+                <Calendar className="h-4 w-4 mr-2 text-[#50C878]" />
                 Manage Bookings
               </Link>
             </Button>
-            
-            <Button variant="outline" className="w-full justify-start" asChild>
+
+            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white" asChild>
               <Link href="/admin/memberships">
-                <Users className="h-4 w-4 mr-2" />
+                <Users className="h-4 w-4 mr-2 text-[#50C878]" />
                 View Memberships
               </Link>
             </Button>
-            
-            <Button variant="outline" className="w-full justify-start" asChild>
+
+            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white" asChild>
               <Link href="/admin/courts">
-                <MapPin className="h-4 w-4 mr-2" />
+                <MapPin className="h-4 w-4 mr-2 text-[#50C878]" />
                 Manage Courts
               </Link>
             </Button>
-            
-            <Button variant="outline" className="w-full justify-start" asChild>
+
+            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white" asChild>
               <Link href="/admin/members">
-                <Shield className="h-4 w-4 mr-2" />
+                <Shield className="h-4 w-4 mr-2 text-[#50C878]" />
                 Manage Members
               </Link>
             </Button>
-            
-            <Button variant="outline" className="w-full justify-start" asChild>
+
+            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white" asChild>
               <Link href="/admin/revenue">
-                <DollarSign className="h-4 w-4 mr-2" />
+                <DollarSign className="h-4 w-4 mr-2 text-[#50C878]" />
                 Revenue Analytics
               </Link>
             </Button>
@@ -270,8 +270,8 @@ export default async function AdminDashboardPage() {
 
       <div className="space-y-4">
         <div>
-          <h2 className="text-xl font-semibold">Payments Monitoring</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-xl font-semibold text-white">Payments Monitoring</h2>
+          <p className="text-sm text-gray-400">
             Track payment reliability, processing time, and refund queue health.
           </p>
         </div>

@@ -67,40 +67,39 @@ export const PaymentMetricsGrid = ({ metrics }: PaymentMetricsGridProps) => {
         />
       </div>
 
-      <Card>
+      <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-base font-semibold">Recent Payment Events</CardTitle>
+          <CardTitle className="text-base font-semibold text-white">Recent Payment Events</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {metrics.events.length === 0 && (
-            <p className="text-sm text-muted-foreground">No payment events recorded.</p>
+            <p className="text-sm text-gray-500">No payment events recorded.</p>
           )}
           {metrics.events.map((event) => (
             <div
               key={event.id}
-              className="flex flex-col md:flex-row md:items-center md:justify-between border rounded-lg px-4 py-3"
+              className="flex flex-col md:flex-row md:items-center md:justify-between border border-gray-800 rounded-lg px-4 py-3 bg-black/20 hover:bg-black/40 transition-colors"
             >
               <div>
-                <p className="text-sm font-semibold capitalize">{event.type.replace(/\./g, ' ')}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm font-semibold capitalize text-gray-200">{event.type.replace(/\./g, ' ')}</p>
+                <p className="text-xs text-gray-500">
                   {new Date(event.created_at).toLocaleString()}
                 </p>
               </div>
               <div className="text-xs font-medium uppercase tracking-wide mt-2 md:mt-0">
                 <span
-                  className={`px-2 py-1 rounded-full ${
-                    event.status === 'processed'
-                      ? 'bg-green-100 text-green-700'
+                  className={`px-2 py-1 rounded-full ${event.status === 'processed'
+                      ? 'bg-[#50C878]/20 text-[#50C878]'
                       : event.status === 'failed'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}
+                        ? 'bg-red-500/20 text-red-400'
+                        : 'bg-amber-500/20 text-amber-400'
+                    }`}
                 >
                   {event.status}
                 </span>
               </div>
               {event.error_message && (
-                <p className="text-xs text-red-600 mt-2 md:mt-0 md:max-w-sm">{event.error_message}</p>
+                <p className="text-xs text-red-400 mt-2 md:mt-0 md:max-w-sm">{event.error_message}</p>
               )}
             </div>
           ))}

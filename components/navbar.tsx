@@ -181,23 +181,23 @@ export function Navbar() {
             {/* Right Side - Auth & Mobile Menu */}
             <div className="flex items-center gap-3">
               {loading ? (
-                <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 hidden md:block" />
+                <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-800 hidden md:block" />
               ) : user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="hidden md:flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-900 transition-colors group">
+                    <button className="hidden md:flex items-center gap-3 px-3 py-2 rounded-xl bg-transparent hover:bg-gray-900 transition-colors group outline-none">
                       <Avatar className="w-9 h-9 ring-2 ring-[#50C878]/20 group-hover:ring-[#50C878]/40 transition-all">
                         <AvatarFallback className="bg-gradient-to-br from-[#50C878] to-[#2D5B4A] text-white font-semibold">
                           {getInitials(user.email)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col items-start">
-                        <span className="text-sm font-semibold text-white dark:text-white">
+                        <span className="text-sm font-semibold text-white">
                           {user.email?.split("@")[0]}
                         </span>
-                        <span className="text-xs text-gray-400 dark:text-gray-400">Account</span>
+                        <span className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">Account</span>
                       </div>
-                      <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-400 group-hover:text-gray-300 transition-colors" />
+                      <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-gray-300 transition-colors" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
