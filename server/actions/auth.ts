@@ -84,9 +84,12 @@ export async function signOut(): Promise<void> {
   redirect('/')
 }
 
-export async function sendMagicLink(email: string, redirectTo?: string) {
+export async function sendMagicLink(email: string, redirectTo?: string, origin?: string) {
   const supabase = await createClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  
+  // Use provided origin, then env var, then fallback to localhost
+  // The origin should be passed from the client to ensure correct redirect domain
+  const appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   
   const callbackUrl = redirectTo 
     ? `${appUrl}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`

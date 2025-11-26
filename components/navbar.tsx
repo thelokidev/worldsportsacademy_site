@@ -41,47 +41,95 @@ export function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    const supabase = createClient()
+    let isMounted = true
+    let supabase: ReturnType<typeof createClient> | null = null
+    
+    // Safety timeout to prevent infinite loading state
+    const loadingTimeout = setTimeout(() => {
+      if (isMounted && loading) {
+        console.warn('[Navbar] Auth check timed out after 10s, clearing loading state')
+        setLoading(false)
+      }
+    }, 10000)
 
     const checkAdmin = async (userId: string) => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single()
-      setIsAdmin(profile?.role === 'admin')
+      if (!supabase || !isMounted) return
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single()
+        if (isMounted) {
+          setIsAdmin(profile?.role === 'admin')
+        }
+      } catch (err) {
+        console.error('[Navbar] checkAdmin error:', err)
+      }
     }
 
-    // Get initial session - optimized with caching
+    // Get initial session
     const initAuth = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        setUser(user)
-        if (user) {
-          await checkAdmin(user.id)
+        supabase = createClient()
+        const { data: { user }, error } = await supabase.auth.getUser()
+        
+        if (error) {
+          console.error('[Navbar] getUser error:', error.message)
+        }
+        
+        if (isMounted) {
+          setUser(user)
+          if (user) {
+            await checkAdmin(user.id)
+          }
         }
       } catch (error) {
-        console.error('Auth error:', error)
+        console.error('[Navbar] Auth initialization error:', error)
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+          clearTimeout(loadingTimeout)
+        }
       }
     }
 
     initAuth()
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        await checkAdmin(session.user.id)
-      } else {
-        setIsAdmin(false)
+    const setupSubscription = async () => {
+      if (!supabase) {
+        supabase = createClient()
       }
+      
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        if (!isMounted) return
+        
+        setUser(session?.user ?? null)
+        setLoading(false) // Ensure loading is cleared on any auth state change
+        
+        if (session?.user) {
+          await checkAdmin(session.user.id)
+        } else {
+          setIsAdmin(false)
+        }
+      })
+      
+      return subscription
+    }
+    
+    let subscription: { unsubscribe: () => void } | null = null
+    setupSubscription().then(sub => {
+      subscription = sub
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      clearTimeout(loadingTimeout)
+      subscription?.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {

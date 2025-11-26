@@ -41,7 +41,8 @@ export function UnifiedAuthForm() {
 
   async function handleMagicLink(data: FormData) {
     setIsLoading(true)
-    const result = await sendMagicLink(data.email, redirectTo)
+    // Pass the current origin to ensure magic links redirect to the same domain
+    const result = await sendMagicLink(data.email, redirectTo, window.location.origin)
     setIsLoading(false)
 
     if (result?.error) {
