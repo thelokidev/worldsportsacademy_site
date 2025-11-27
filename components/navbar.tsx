@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, Shield } from "lucide-react"
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useTransition, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -52,28 +52,23 @@ export function Navbar() {
       }
     }, 10000)
 
-    const checkAdmin = async (userId: string) => {
-      if (!supabase || !isMounted) return
+    const checkAdmin = async () => {
+      if (!isMounted) return
       try {
-        console.log('[Navbar] Checking admin status for user:', userId)
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', userId)
-          .single()
+        console.log('[Navbar] Checking admin status via API...')
+        const response = await fetch('/api/auth/check-admin')
+        const data = await response.json()
         
-        if (error) {
-          console.error('[Navbar] checkAdmin query error:', error.message, error)
-        }
-        
-        const adminStatus = profile?.role === 'admin'
-        console.log('[Navbar] checkAdmin result:', { userId, role: profile?.role, isAdmin: adminStatus, profile })
+        console.log('[Navbar] Admin check API response:', data)
         
         if (isMounted) {
-          setIsAdmin(adminStatus)
+          setIsAdmin(data.isAdmin === true)
         }
       } catch (err) {
         console.error('[Navbar] checkAdmin error:', err)
+        if (isMounted) {
+          setIsAdmin(false)
+        }
       }
     }
 
@@ -90,7 +85,7 @@ export function Navbar() {
         if (isMounted) {
           setUser(user)
           if (user) {
-            await checkAdmin(user.id)
+            await checkAdmin()
           }
         }
       } catch (error) {
@@ -120,7 +115,7 @@ export function Navbar() {
         setLoading(false) // Ensure loading is cleared on any auth state change
         
         if (session?.user) {
-          await checkAdmin(session.user.id)
+          await checkAdmin()
         } else {
           setIsAdmin(false)
         }
@@ -233,24 +228,7 @@ export function Navbar() {
                   </Link>
                 )
               })}
-              {/* Admin Tab - Only visible for admin users */}
-              {isAdmin && (
-                <Link
-                  href="/admin/dashboard"
-                  prefetch={true}
-                  className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150 flex items-center gap-2 ${pathname?.startsWith('/admin')
-                    ? "text-amber-400 bg-amber-400/10"
-                    : "text-amber-400/80 hover:text-amber-400 hover:bg-amber-400/10"
-                    } ${mounted && isPending ? "opacity-70" : ""}`}
-                >
-                  <Shield className="w-4 h-4" />
-                  Admin
-                  {pathname?.startsWith('/admin') && (
-                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-amber-400 rounded-full" />
-                  )}
-                </Link>
-              )}
-            </div>
+              </div>
 
             {/* Right Side - Auth & Mobile Menu */}
             <div className="flex items-center gap-3">
@@ -400,24 +378,6 @@ export function Navbar() {
                   </Link>
                 )
               })}
-              {/* Admin Tab - Mobile - Only visible for admin users */}
-              {isAdmin && (
-                <Link
-                  href="/admin/dashboard"
-                  prefetch={true}
-                  onClick={handleLinkClick}
-                  className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors duration-150 ${pathname?.startsWith('/admin')
-                    ? "text-amber-400 bg-amber-400/10"
-                    : "text-amber-400/80 hover:text-amber-400 hover:bg-amber-400/10"
-                    } ${mounted && isPending ? "opacity-70" : ""}`}
-                >
-                  <Shield className="w-5 h-5" />
-                  Admin
-                  {pathname?.startsWith('/admin') && (
-                    <span className="ml-auto w-2 h-2 bg-amber-400 rounded-full" />
-                  )}
-                </Link>
-              )}
               <div className="pt-4 mt-4 border-t border-gray-800/50 dark:border-gray-800/50 space-y-2">
                 {user ? (
                   <>
