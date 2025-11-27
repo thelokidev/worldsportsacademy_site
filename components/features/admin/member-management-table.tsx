@@ -151,16 +151,16 @@ export function MemberManagementTable({
       {/* Members List */}
       <div className="space-y-3 mb-4">
         {filteredMembers.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">No members found</p>
+          <p className="text-center text-gray-400 py-8">No members found</p>
         ) : (
           filteredMembers.map((member) => (
             <div
               key={member.id}
-              className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between p-4 border border-gray-800 rounded-lg hover:bg-gray-800/50 transition-colors bg-gray-900/30"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold">
+                  <h3 className="font-semibold text-white">
                     {member.full_name || 'No Name'}
                   </h3>
                   {getRoleBadge(member.role)}
@@ -170,13 +170,13 @@ export function MemberManagementTable({
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-4 text-sm text-gray-400">
                   <span>{member.email}</span>
                   {member.phone_number && <span>• {member.phone_number}</span>}
                   <span>• {member.bookingCount} bookings</span>
                 </div>
                 {member.memberships.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-500">
+                  <div className="mt-2 text-xs text-gray-400">
                     {member.memberships.map((m: any) => (
                       <span key={m.id} className="mr-3">
                         {m.membership_plans?.name} - ${m.membership_plans?.price}/mo
@@ -184,7 +184,7 @@ export function MemberManagementTable({
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-400 mt-1">
                   Joined: {format(new Date(member.created_at), 'MMM d, yyyy')}
                 </p>
               </div>
@@ -215,7 +215,7 @@ export function MemberManagementTable({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-400">
             Page {currentPage} of {totalPages}
           </p>
           <div className="flex gap-2">
@@ -256,7 +256,7 @@ export function MemberManagementTable({
           </DialogHeader>
 
           {loadingDetails ? (
-            <div className="py-8 text-center text-gray-500">Loading details...</div>
+            <div className="py-8 text-center text-gray-400">Loading details...</div>
           ) : memberDetails ? (
             <div className="space-y-6">
               {/* Profile Info */}
@@ -267,20 +267,20 @@ export function MemberManagementTable({
                 </h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-gray-600">Email</p>
-                    <p className="font-medium">{memberDetails.profile.email}</p>
+                    <p className="text-gray-400">Email</p>
+                    <p className="font-medium text-white">{memberDetails.profile.email}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Phone</p>
-                    <p className="font-medium">{memberDetails.profile.phone_number || 'N/A'}</p>
+                    <p className="text-gray-400">Phone</p>
+                    <p className="font-medium text-white">{memberDetails.profile.phone_number || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Role</p>
+                    <p className="text-gray-400">Role</p>
                     <p className="font-medium">{getRoleBadge(memberDetails.profile.role)}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Stripe Customer</p>
-                    <p className="font-medium">{memberDetails.profile.stripe_customer_id ? 'Yes' : 'No'}</p>
+                    <p className="text-gray-400">Stripe Customer</p>
+                    <p className="font-medium text-white">{memberDetails.profile.stripe_customer_id ? 'Yes' : 'No'}</p>
                   </div>
                 </div>
               </div>
@@ -292,21 +292,21 @@ export function MemberManagementTable({
                   Memberships ({memberDetails.memberships.length})
                 </h4>
                 {memberDetails.memberships.length === 0 ? (
-                  <p className="text-sm text-gray-500">No active memberships</p>
+                  <p className="text-sm text-gray-400">No active memberships</p>
                 ) : (
                   <div className="space-y-2">
                     {memberDetails.memberships.map((membership: any) => (
-                      <div key={membership.id} className="border rounded p-3 text-sm">
+                      <div key={membership.id} className="border border-gray-800 rounded p-3 text-sm bg-gray-900/50">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <p className="font-medium">{membership.membership_plans?.name}</p>
-                            <p className="text-gray-600">${membership.membership_plans?.price}/month</p>
+                            <p className="font-medium text-white">{membership.membership_plans?.name}</p>
+                            <p className="text-gray-400">${membership.membership_plans?.price}/month</p>
                           </div>
                           <Badge variant={membership.status === 'active' ? 'default' : 'secondary'}>
                             {membership.status}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-400">
                           Current period: {format(new Date(membership.current_period_start), 'MMM d')} - 
                           {format(new Date(membership.current_period_end), 'MMM d, yyyy')}
                         </p>
@@ -323,23 +323,23 @@ export function MemberManagementTable({
                   Recent Bookings (Last 10)
                 </h4>
                 {memberDetails.bookings.length === 0 ? (
-                  <p className="text-sm text-gray-500">No bookings found</p>
+                  <p className="text-sm text-gray-400">No bookings found</p>
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {memberDetails.bookings.map((booking: any) => (
-                      <div key={booking.id} className="border rounded p-3 text-sm">
+                      <div key={booking.id} className="border border-gray-800 rounded p-3 text-sm bg-gray-900/50">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-white">
                               {booking.sports?.display_name} - {booking.courts?.name}
                             </p>
-                            <p className="text-gray-600">
+                            <p className="text-gray-400">
                               {format(new Date(booking.start_time), 'MMM d, yyyy h:mm a')}
                             </p>
                           </div>
                           <div className="text-right">
                             <Badge variant="outline">{booking.status}</Badge>
-                            <p className="text-xs text-gray-500 mt-1">{booking.booking_type}</p>
+                            <p className="text-xs text-gray-400 mt-1">{booking.booking_type}</p>
                           </div>
                         </div>
                       </div>
@@ -355,21 +355,21 @@ export function MemberManagementTable({
                   Recent Payments (Last 10)
                 </h4>
                 {memberDetails.payments.length === 0 ? (
-                  <p className="text-sm text-gray-500">No payments found</p>
+                  <p className="text-sm text-gray-400">No payments found</p>
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {memberDetails.payments.map((payment: any) => (
-                      <div key={payment.id} className="border rounded p-3 text-sm">
+                      <div key={payment.id} className="border border-gray-800 rounded p-3 text-sm bg-gray-900/50">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium">${payment.amount}</p>
-                            <p className="text-gray-600 capitalize">{payment.payment_type}</p>
+                            <p className="font-medium text-white">${payment.amount}</p>
+                            <p className="text-gray-400 capitalize">{payment.payment_type}</p>
                           </div>
                           <div className="text-right">
                             <Badge variant={payment.status === 'succeeded' ? 'default' : 'secondary'}>
                               {payment.status}
                             </Badge>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-400 mt-1">
                               {format(new Date(payment.created_at), 'MMM d, yyyy')}
                             </p>
                           </div>
