@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard } from "lucide-react"
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useTransition, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -224,6 +224,23 @@ export function Navbar() {
                   </Link>
                 )
               })}
+              {/* Admin Tab - Only visible for admin users */}
+              {isAdmin && (
+                <Link
+                  href="/admin/dashboard"
+                  prefetch={true}
+                  className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150 flex items-center gap-2 ${pathname?.startsWith('/admin')
+                    ? "text-amber-400 bg-amber-400/10"
+                    : "text-amber-400/80 hover:text-amber-400 hover:bg-amber-400/10"
+                    } ${mounted && isPending ? "opacity-70" : ""}`}
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin
+                  {pathname?.startsWith('/admin') && (
+                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-amber-400 rounded-full" />
+                  )}
+                </Link>
+              )}
             </div>
 
             {/* Right Side - Auth & Mobile Menu */}
@@ -374,6 +391,24 @@ export function Navbar() {
                   </Link>
                 )
               })}
+              {/* Admin Tab - Mobile - Only visible for admin users */}
+              {isAdmin && (
+                <Link
+                  href="/admin/dashboard"
+                  prefetch={true}
+                  onClick={handleLinkClick}
+                  className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors duration-150 ${pathname?.startsWith('/admin')
+                    ? "text-amber-400 bg-amber-400/10"
+                    : "text-amber-400/80 hover:text-amber-400 hover:bg-amber-400/10"
+                    } ${mounted && isPending ? "opacity-70" : ""}`}
+                >
+                  <Shield className="w-5 h-5" />
+                  Admin
+                  {pathname?.startsWith('/admin') && (
+                    <span className="ml-auto w-2 h-2 bg-amber-400 rounded-full" />
+                  )}
+                </Link>
+              )}
               <div className="pt-4 mt-4 border-t border-gray-800/50 dark:border-gray-800/50 space-y-2">
                 {user ? (
                   <>
