@@ -297,9 +297,9 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedCourt?.name}</DialogTitle>
+            <DialogTitle>{selectedCourt?.name || 'Court Details'}</DialogTitle>
             <DialogDescription>
-              {selectedCourt?.sports?.display_name} • {getStatusBadge(selectedCourt!)}
+              {selectedCourt?.sports?.display_name || 'Unknown Sport'} {selectedCourt && `• `}{selectedCourt && getStatusBadge(selectedCourt)}
             </DialogDescription>
           </DialogHeader>
 

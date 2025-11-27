@@ -29,6 +29,18 @@ CREATE POLICY "Admin can view all profiles" ON public.profiles
     auth.uid() = id OR public.is_admin()
   );
 
+-- Admin can update all profiles (including changing roles)
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admin can update all profiles" ON public.profiles;
+CREATE POLICY "Admin can update all profiles" ON public.profiles
+  FOR UPDATE
+  USING (
+    auth.uid() = id OR public.is_admin()
+  )
+  WITH CHECK (
+    auth.uid() = id OR public.is_admin()
+  );
+
 -- ============================================
 -- COURTS TABLE POLICIES
 -- ============================================
