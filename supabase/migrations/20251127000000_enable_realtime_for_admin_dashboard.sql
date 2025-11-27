@@ -82,84 +82,67 @@ BEGIN
   END IF;
 END $$;
 
--- Admin RLS policies for viewing all data via realtime
+-- Create a security definer function to check admin status (bypasses RLS to avoid infinite recursion)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid()
+    AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+
+-- Grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+
+-- Admin RLS policies using the security definer function to avoid infinite recursion
+-- Note: These policies allow users to see their own data OR admins to see all data
 
 -- Admin can view all bookings
 DO $$ 
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'bookings' 
-    AND policyname = 'Admin can view all bookings'
-  ) THEN
-    CREATE POLICY "Admin can view all bookings" ON public.bookings
-      FOR SELECT
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.profiles
-          WHERE profiles.id = auth.uid()
-          AND profiles.role = 'admin'
-        )
-      );
-  END IF;
+  -- Drop existing policy if it exists (to avoid conflicts)
+  DROP POLICY IF EXISTS "Admin can view all bookings" ON public.bookings;
+  
+  CREATE POLICY "Admin can view all bookings" ON public.bookings
+    FOR SELECT
+    USING (
+      user_id = auth.uid() OR public.is_admin()
+    );
+EXCEPTION WHEN duplicate_object THEN
+  NULL; -- Policy already exists
 END $$;
 
 -- Admin can view all memberships
 DO $$ 
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'memberships' 
-    AND policyname = 'Admin can view all memberships'
-  ) THEN
-    CREATE POLICY "Admin can view all memberships" ON public.memberships
-      FOR SELECT
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.profiles
-          WHERE profiles.id = auth.uid()
-          AND profiles.role = 'admin'
-        )
-      );
-  END IF;
+  DROP POLICY IF EXISTS "Admin can view all memberships" ON public.memberships;
+  
+  CREATE POLICY "Admin can view all memberships" ON public.memberships
+    FOR SELECT
+    USING (
+      user_id = auth.uid() OR public.is_admin()
+    );
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
 END $$;
 
 -- Admin can view all payments
 DO $$ 
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'payments' 
-    AND policyname = 'Admin can view all payments'
-  ) THEN
-    CREATE POLICY "Admin can view all payments" ON public.payments
-      FOR SELECT
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.profiles
-          WHERE profiles.id = auth.uid()
-          AND profiles.role = 'admin'
-        )
-      );
-  END IF;
+  DROP POLICY IF EXISTS "Admin can view all payments" ON public.payments;
+  
+  CREATE POLICY "Admin can view all payments" ON public.payments
+    FOR SELECT
+    USING (
+      user_id = auth.uid() OR public.is_admin()
+    );
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
 END $$;
 
--- Admin can view all profiles
-DO $$ 
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'profiles' 
-    AND policyname = 'Admin can view all profiles'
-  ) THEN
-    CREATE POLICY "Admin can view all profiles" ON public.profiles
-      FOR SELECT
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.profiles p
-          WHERE p.id = auth.uid()
-          AND p.role = 'admin'
-        )
-      );
-  END IF;
-END $$;
+-- Note: We do NOT create "Admin can view all profiles" policy on profiles table
+-- because it would cause infinite recursion. The is_admin() function handles admin checks
+-- and existing "Users can view own profile" policy handles normal user access.
