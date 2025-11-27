@@ -55,11 +55,18 @@ export function Navbar() {
     const checkAdmin = async (userId: string) => {
       if (!supabase || !isMounted) return
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', userId)
           .single()
+        
+        if (error) {
+          console.error('[Navbar] checkAdmin query error:', error.message)
+        }
+        
+        console.log('[Navbar] checkAdmin result:', { userId, role: profile?.role, isAdmin: profile?.role === 'admin' })
+        
         if (isMounted) {
           setIsAdmin(profile?.role === 'admin')
         }
