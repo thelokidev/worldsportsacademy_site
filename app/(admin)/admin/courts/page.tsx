@@ -15,6 +15,8 @@ type CourtWithSport = {
     name: string
     display_name: string
   }
+  currentBooking?: any
+  nextBooking?: any
 }
 
 export default async function AdminCourtsPage() {
@@ -29,7 +31,9 @@ export default async function AdminCourtsPage() {
       is_blocked: court.is_blocked ?? false,
       blocked_reason: court.blocked_reason || null,
       created_at: court.created_at,
-      sports: court.sports || { id: '', name: 'unknown', display_name: 'Unknown Sport' }
+      sports: court.sports || { id: '', name: 'unknown', display_name: 'Unknown Sport' },
+      currentBooking: court.currentBooking,
+      nextBooking: court.nextBooking
     }))
 
     const activeCourts = courts.filter(c => c.is_active && !c.is_blocked)

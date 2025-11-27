@@ -39,6 +39,22 @@ type Court = {
     name: string
     display_name: string
   }
+  currentBooking?: {
+    id: string
+    start_time: string
+    end_time: string
+    user?: {
+      full_name: string | null
+    }
+  } | null
+  nextBooking?: {
+    id: string
+    start_time: string
+    end_time: string
+    user?: {
+      full_name: string | null
+    }
+  } | null
 }
 
 type CourtStats = {
@@ -181,6 +197,31 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
                     {court.sports?.display_name || 'Unknown Sport'}
                   </Badge>
                 </div>
+
+                {/* Booking Status */}
+                <div className="mt-2 space-y-1 mb-2">
+                  {court.currentBooking ? (
+                    <div className="flex items-center gap-2 text-sm text-green-400">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span>Occupied by {court.currentBooking.user?.full_name || 'Unknown'}</span>
+                      <span className="text-gray-500 text-xs">
+                        ({format(new Date(court.currentBooking.start_time), 'h:mm a')} - {format(new Date(court.currentBooking.end_time), 'h:mm a')})
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className="w-2 h-2 rounded-full bg-gray-600" />
+                      <span>Available Now</span>
+                    </div>
+                  )}
+
+                  {court.nextBooking && (
+                    <div className="text-xs text-gray-400 ml-4">
+                      Next: {court.nextBooking.user?.full_name || 'Unknown'} at {format(new Date(court.nextBooking.start_time), 'h:mm a')}
+                    </div>
+                  )}
+                </div>
+
                 {court.is_blocked && court.blocked_reason && (
                   <p className="text-sm text-red-600 mb-1">
                     Reason: {court.blocked_reason}

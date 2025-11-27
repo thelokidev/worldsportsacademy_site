@@ -31,7 +31,78 @@ export async function getAllCourts() {
     throw new Error(`Failed to fetch courts: ${error.message}`)
   }
 
-  return courts || []
+  // Fetch current and next bookings for all courts
+  const now = new Date().toISOString()
+
+  // Fetch active bookings (overlapping with now)
+  const { data: activeBookings } = await supabase
+    .from('bookings')
+    .select(`
+      id,
+      court_id,
+      start_time,
+      end_time,
+      user_id,
+      status
+    `)
+    .eq('status', 'confirmed')
+    .lte('start_time', now)
+    .gte('end_time', now)
+
+  // Fetch next upcoming booking for each court (within next 24 hours)
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+  const { data: upcomingBookings } = await supabase
+    .from('bookings')
+    .select(`
+      id,
+      court_id,
+      start_time,
+      end_time,
+      user_id,
+      status
+    `)
+    .eq('status', 'confirmed')
+    .gt('start_time', now)
+    .lte('start_time', tomorrow)
+    .order('start_time', { ascending: true })
+
+  // Fetch user profiles for these bookings
+  const userIds = new Set<string>()
+  activeBookings?.forEach(b => {
+    if (b.user_id) userIds.add(b.user_id)
+  })
+  upcomingBookings?.forEach(b => {
+    if (b.user_id) userIds.add(b.user_id)
+  })
+
+  let profileMap = new Map()
+  if (userIds.size > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', Array.from(userIds))
+
+    profileMap = new Map(profiles?.map(p => [p.id, p]) || [])
+  }
+
+  // Combine data
+  return (courts || []).map(court => {
+    const activeBooking = activeBookings?.find(b => b.court_id === court.id)
+    // Find the first upcoming booking for this court
+    const nextBooking = upcomingBookings?.find(b => b.court_id === court.id)
+
+    return {
+      ...court,
+      currentBooking: activeBooking ? {
+        ...activeBooking,
+        user: profileMap.get(activeBooking.user_id)
+      } : null,
+      nextBooking: nextBooking ? {
+        ...nextBooking,
+        user: profileMap.get(nextBooking.user_id)
+      } : null
+    }
+  })
 }
 
 export async function toggleCourtBlock(courtId: string, isBlocked: boolean, reason?: string) {
@@ -137,16 +208,16 @@ export async function getCourtBookingStats(courtId: string) {
   // Fetch profiles for the upcoming bookings
   let upcomingBookings: any[] = []
   if (upcomingBookingsRaw && upcomingBookingsRaw.length > 0) {
-    const userIds = [...new Set(upcomingBookingsRaw.map(b => b.user_id).filter(Boolean))]
+    const userIds = [...new Set(upcomingBookingsRaw.map(b => b.user_id).filter((id): id is string => !!id))]
     const { data: profiles } = await supabase
       .from('profiles')
       .select('id, full_name')
       .in('id', userIds)
-    
+
     const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])
     upcomingBookings = upcomingBookingsRaw.map(booking => ({
       ...booking,
-      profiles: profileMap.get(booking.user_id) || null
+      profiles: booking.user_id ? profileMap.get(booking.user_id) : null
     }))
   }
 
