@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getServiceSupabaseClient } from '@/lib/supabase/service'
 import { requireAdmin } from '@/lib/auth/admin'
 import { revalidatePath } from 'next/cache'
 
@@ -233,6 +234,7 @@ export async function getCourtBookingStats(courtId: string) {
 export async function getAllMembers(page = 1, limit = 50) {
   await requireAdmin()
   const supabase = await createClient()
+  const serviceSupabase = getServiceSupabaseClient()
 
   const offset = (page - 1) * limit
 
@@ -241,12 +243,14 @@ export async function getAllMembers(page = 1, limit = 50) {
     .from('profiles')
     .select('*', { count: 'exact', head: true })
 
-  // Get paginated members with their membership info
+  // Get paginated members with their membership info (including phone_number and stripe_customer_id)
   const { data: members, error } = await supabase
     .from('profiles')
     .select(`
       id,
       full_name,
+      phone_number,
+      stripe_customer_id,
       role,
       created_at,
       updated_at
@@ -257,6 +261,24 @@ export async function getAllMembers(page = 1, limit = 50) {
   if (error) {
     throw new Error(`Failed to fetch members: ${error.message}`)
   }
+
+  // Get all auth users to get emails (using service role client)
+  const { data: authUsersData, error: authError } = await serviceSupabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000, // Fetch up to 1000 users to cover all members
+  })
+
+  if (authError) {
+    console.error('Failed to fetch auth users:', authError)
+  }
+
+  // Create a map of user IDs to emails
+  const emailMap = new Map<string, string>()
+  authUsersData?.users?.forEach((user) => {
+    if (user.email) {
+      emailMap.set(user.id, user.email)
+    }
+  })
 
   // Get membership info for each member
   const membersWithMemberships = await Promise.all(
@@ -282,6 +304,7 @@ export async function getAllMembers(page = 1, limit = 50) {
 
       return {
         ...member,
+        email: emailMap.get(member.id) || 'Unknown',
         memberships: memberships || [],
         bookingCount: bookingCount || 0,
       }
@@ -319,6 +342,7 @@ export async function updateMemberRole(userId: string, role: 'user' | 'admin') {
 export async function getMemberDetails(userId: string) {
   await requireAdmin()
   const supabase = await createClient()
+  const serviceSupabase = getServiceSupabaseClient()
 
   // Get user profile
   const { data: profile, error: profileError } = await supabase
@@ -329,6 +353,15 @@ export async function getMemberDetails(userId: string) {
 
   if (profileError) {
     throw new Error(`Failed to fetch member: ${profileError.message}`)
+  }
+
+  // Get auth user to get email (using service role client)
+  const { data: authUser, error: authError } = await serviceSupabase.auth.admin.getUserById(userId)
+  
+  // Merge email into profile
+  const profileWithEmail = {
+    ...profile,
+    email: authUser?.user?.email || 'Unknown',
   }
 
   // Get memberships
@@ -377,7 +410,7 @@ export async function getMemberDetails(userId: string) {
     .limit(10)
 
   return {
-    profile,
+    profile: profileWithEmail,
     memberships: memberships || [],
     bookings: bookings || [],
     payments: payments || [],
@@ -387,6 +420,7 @@ export async function getMemberDetails(userId: string) {
 export async function searchMembers(query: string) {
   await requireAdmin()
   const supabase = await createClient()
+  const serviceSupabase = getServiceSupabaseClient()
 
   if (!query || query.trim().length === 0) {
     return []
@@ -397,6 +431,8 @@ export async function searchMembers(query: string) {
     .select(`
       id,
       full_name,
+      phone_number,
+      stripe_customer_id,
       role,
       created_at
     `)
@@ -407,7 +443,24 @@ export async function searchMembers(query: string) {
     throw new Error(`Failed to search members: ${error.message}`)
   }
 
-  return members || []
+  // Get auth users to get emails
+  const { data: authUsersData } = await serviceSupabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  })
+
+  const emailMap = new Map<string, string>()
+  authUsersData?.users?.forEach((user) => {
+    if (user.email) {
+      emailMap.set(user.id, user.email)
+    }
+  })
+
+  // Merge email into results
+  return (members || []).map(member => ({
+    ...member,
+    email: emailMap.get(member.id) || 'Unknown',
+  }))
 }
 
 // Additional Analytics Actions
