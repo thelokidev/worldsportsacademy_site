@@ -3,6 +3,7 @@
 import { ThemeProvider } from "next-themes"
 
 import { WaiverSync } from "@/components/features/auth/waiver-sync"
+import { PWAInstallPrompt, PWAUpdateNotification, OnlineStatusIndicator } from "@/components/features/pwa"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       <WaiverSync />
       {children}
+      <PWAInstallPrompt />
+      <PWAUpdateNotification />
+      <OnlineStatusIndicator />
     </ThemeProvider>
   )
 }
