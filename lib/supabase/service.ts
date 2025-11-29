@@ -30,3 +30,28 @@ export const getServiceSupabaseClient = () => {
   return serviceClient
 }
 
+/**
+ * Safely get the service client, returns null if not configured
+ */
+export const getServiceSupabaseClientSafe = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !serviceKey) {
+    console.warn('Service role key not configured - some admin features may be limited')
+    return null
+  }
+
+  if (serviceClient) {
+    return serviceClient
+  }
+
+  serviceClient = createClient<Database>(url, serviceKey, {
+    auth: {
+      persistSession: false,
+    },
+  })
+
+  return serviceClient
+}
+

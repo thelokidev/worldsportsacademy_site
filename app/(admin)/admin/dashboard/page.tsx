@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getServiceSupabaseClientSafe } from '@/lib/supabase/service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -15,6 +16,42 @@ import { LiveActivityFeed } from '@/components/features/admin/live-activity-feed
 import { LiveCourtStatus } from '@/components/features/admin/live-court-status'
 import { LivePaymentMetrics } from '@/components/features/admin/live-payment-metrics'
 import { getPaymentMetrics } from '@/lib/payments/metrics'
+
+/**
+ * Fetch user emails from auth.users for dashboard display
+ */
+async function fetchUserEmailsForDashboard(userIds: string[]): Promise<Map<string, string>> {
+  const emailMap = new Map<string, string>()
+  
+  if (userIds.length === 0) return emailMap
+  
+  try {
+    const serviceSupabase = getServiceSupabaseClientSafe()
+    if (!serviceSupabase) {
+      return emailMap
+    }
+
+    const { data: authUsersData, error } = await serviceSupabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    })
+
+    if (error) {
+      console.error('Failed to fetch auth users:', error)
+      return emailMap
+    }
+
+    authUsersData?.users?.forEach((user) => {
+      if (user.email && userIds.includes(user.id)) {
+        emailMap.set(user.id, user.email)
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching user emails:', error)
+  }
+
+  return emailMap
+}
 
 async function getInitialDashboardData() {
   const supabase = await createClient()
@@ -93,8 +130,9 @@ async function getInitialDashboardData() {
   // Fetch profiles for recent activity
   const bookingUserIds = recentBookingsRaw?.map(b => b.user_id).filter(Boolean) || []
   const membershipUserIds = recentMembershipsRaw?.map(m => m.user_id).filter(Boolean) || []
-  const allUserIds = [...new Set([...bookingUserIds, ...membershipUserIds])]
+  const allUserIds = [...new Set([...bookingUserIds, ...membershipUserIds])] as string[]
 
+  // Fetch profiles (full_name)
   let profileMap = new Map<string, { full_name: string | null }>()
   if (allUserIds.length > 0) {
     const { data: profiles } = await supabase
@@ -105,15 +143,30 @@ async function getInitialDashboardData() {
     profileMap = new Map(profiles?.map(p => [p.id, { full_name: p.full_name }]) || [])
   }
 
-  const recentBookings = (recentBookingsRaw || []).map(booking => ({
-    ...booking,
-    profiles: profileMap.get(booking.user_id!) || null
-  }))
+  // Fetch emails from auth.users
+  const emailMap = await fetchUserEmailsForDashboard(allUserIds)
 
-  const recentMemberships = (recentMembershipsRaw || []).map(membership => ({
-    ...membership,
-    profiles: profileMap.get(membership.user_id!) || null
-  }))
+  const recentBookings = (recentBookingsRaw || []).map(booking => {
+    const profile = profileMap.get(booking.user_id!)
+    const email = emailMap.get(booking.user_id!) || 'No email'
+    return {
+      ...booking,
+      profiles: {
+        full_name: profile?.full_name || email, // Use email as fallback
+      }
+    }
+  })
+
+  const recentMemberships = (recentMembershipsRaw || []).map(membership => {
+    const profile = profileMap.get(membership.user_id!)
+    const email = emailMap.get(membership.user_id!) || 'No email'
+    return {
+      ...membership,
+      profiles: {
+        full_name: profile?.full_name || email, // Use email as fallback
+      }
+    }
+  })
 
   return {
     stats: {

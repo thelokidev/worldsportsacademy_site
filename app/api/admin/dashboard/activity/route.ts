@@ -1,6 +1,43 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getServiceSupabaseClientSafe } from '@/lib/supabase/service'
 import { requireAdmin } from '@/lib/auth/admin'
+
+/**
+ * Fetch user emails from auth.users
+ */
+async function fetchUserEmails(userIds: string[]): Promise<Map<string, string>> {
+  const emailMap = new Map<string, string>()
+  
+  if (userIds.length === 0) return emailMap
+  
+  try {
+    const serviceSupabase = getServiceSupabaseClientSafe()
+    if (!serviceSupabase) {
+      return emailMap
+    }
+
+    const { data: authUsersData, error } = await serviceSupabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    })
+
+    if (error) {
+      console.error('Failed to fetch auth users:', error)
+      return emailMap
+    }
+
+    authUsersData?.users?.forEach((user) => {
+      if (user.email && userIds.includes(user.id)) {
+        emailMap.set(user.id, user.email)
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching user emails:', error)
+  }
+
+  return emailMap
+}
 
 export async function GET() {
   try {
@@ -62,7 +99,7 @@ export async function GET() {
     const bookingUserIds = recentBookingsRaw?.map(b => b.user_id).filter(Boolean) || []
     const membershipUserIds = recentMembershipsRaw?.map(m => m.user_id).filter(Boolean) || []
     const paymentUserIds = recentPayments?.map(p => p.user_id).filter(Boolean) || []
-    const allUserIds = [...new Set([...bookingUserIds, ...membershipUserIds, ...paymentUserIds])]
+    const allUserIds = [...new Set([...bookingUserIds, ...membershipUserIds, ...paymentUserIds])] as string[]
 
     // Fetch profiles for all users in one query
     let profileMap = new Map<string, { full_name: string | null }>()
@@ -75,21 +112,42 @@ export async function GET() {
       profileMap = new Map(profiles?.map(p => [p.id, { full_name: p.full_name }]) || [])
     }
 
-    // Combine data with profiles
-    const recentBookings = (recentBookingsRaw || []).map(booking => ({
-      ...booking,
-      profiles: profileMap.get(booking.user_id!) || null
-    }))
+    // Fetch emails from auth.users
+    const emailMap = await fetchUserEmails(allUserIds)
 
-    const recentMemberships = (recentMembershipsRaw || []).map(membership => ({
-      ...membership,
-      profiles: profileMap.get(membership.user_id!) || null
-    }))
+    // Combine data with profiles (using email as fallback for name)
+    const recentBookings = (recentBookingsRaw || []).map(booking => {
+      const profile = profileMap.get(booking.user_id!)
+      const email = emailMap.get(booking.user_id!) || 'No email'
+      return {
+        ...booking,
+        profiles: {
+          full_name: profile?.full_name || email,
+        }
+      }
+    })
 
-    const paymentsWithProfiles = (recentPayments || []).map(payment => ({
-      ...payment,
-      profiles: profileMap.get(payment.user_id!) || null
-    }))
+    const recentMemberships = (recentMembershipsRaw || []).map(membership => {
+      const profile = profileMap.get(membership.user_id!)
+      const email = emailMap.get(membership.user_id!) || 'No email'
+      return {
+        ...membership,
+        profiles: {
+          full_name: profile?.full_name || email,
+        }
+      }
+    })
+
+    const paymentsWithProfiles = (recentPayments || []).map(payment => {
+      const profile = profileMap.get(payment.user_id!)
+      const email = emailMap.get(payment.user_id!) || 'No email'
+      return {
+        ...payment,
+        profiles: {
+          full_name: profile?.full_name || email,
+        }
+      }
+    })
 
     return NextResponse.json({
       bookings: recentBookings,

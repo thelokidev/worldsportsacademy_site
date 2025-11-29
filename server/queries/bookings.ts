@@ -1,6 +1,43 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getServiceSupabaseClientSafe } from '@/lib/supabase/service'
+
+/**
+ * Helper to fetch user emails from auth.users
+ */
+async function fetchUserEmailsForBookings(userIds: string[]): Promise<Map<string, string>> {
+  const emailMap = new Map<string, string>()
+  
+  if (userIds.length === 0) return emailMap
+  
+  try {
+    const serviceSupabase = getServiceSupabaseClientSafe()
+    if (!serviceSupabase) {
+      return emailMap
+    }
+
+    const { data: authUsersData, error } = await serviceSupabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    })
+
+    if (error) {
+      console.error('Failed to fetch auth users for bookings:', error)
+      return emailMap
+    }
+
+    authUsersData?.users?.forEach((user) => {
+      if (user.email && userIds.includes(user.id)) {
+        emailMap.set(user.id, user.email)
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching user emails for bookings:', error)
+  }
+
+  return emailMap
+}
 
 export async function getSports() {
   const supabase = await createClient()
@@ -165,19 +202,30 @@ export async function getAllBookingsForAdmin(
   // Manually fetch profiles for the bookings
   let bookingsWithProfiles = []
   if (bookingsData && bookingsData.length > 0) {
-    const userIds = [...new Set(bookingsData.map((b: any) => b.user_id).filter(Boolean))]
+    const userIds = [...new Set(bookingsData.map((b: any) => b.user_id).filter(Boolean))] as string[]
 
+    // Fetch profiles (full_name only - email is not in profiles table)
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, email, full_name')
+      .select('id, full_name')
       .in('id', userIds)
+
+    // Fetch emails from auth.users via service client
+    const emailMap = await fetchUserEmailsForBookings(userIds)
 
     const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || [])
 
-    bookingsWithProfiles = bookingsData.map((booking: any) => ({
-      ...booking,
-      profiles: profileMap.get(booking.user_id) || { email: 'Unknown', full_name: 'Unknown User' }
-    }))
+    bookingsWithProfiles = bookingsData.map((booking: any) => {
+      const profile = profileMap.get(booking.user_id)
+      const email = emailMap.get(booking.user_id) || 'No email'
+      return {
+        ...booking,
+        profiles: {
+          full_name: profile?.full_name || email, // Use email as fallback for name
+          email: email,
+        }
+      }
+    })
   }
 
   return {

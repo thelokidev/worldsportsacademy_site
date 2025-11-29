@@ -1,7 +1,44 @@
 import { createClient } from '@/lib/supabase/server'
+import { getServiceSupabaseClientSafe } from '@/lib/supabase/service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
+
+/**
+ * Fetch user emails from auth.users for memberships display
+ */
+async function fetchUserEmails(userIds: string[]): Promise<Map<string, string>> {
+  const emailMap = new Map<string, string>()
+  
+  if (userIds.length === 0) return emailMap
+  
+  try {
+    const serviceSupabase = getServiceSupabaseClientSafe()
+    if (!serviceSupabase) {
+      return emailMap
+    }
+
+    const { data: authUsersData, error } = await serviceSupabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    })
+
+    if (error) {
+      console.error('Failed to fetch auth users:', error)
+      return emailMap
+    }
+
+    authUsersData?.users?.forEach((user) => {
+      if (user.email && userIds.includes(user.id)) {
+        emailMap.set(user.id, user.email)
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching user emails:', error)
+  }
+
+  return emailMap
+}
 
 async function getAllMemberships() {
   const supabase = await createClient()
@@ -28,22 +65,32 @@ async function getAllMemberships() {
   }
 
   // Get unique user IDs and fetch profiles separately
-  // This works around the missing FK relationship between memberships.user_id and profiles.id
-  const userIds = [...new Set(memberships.map(m => m.user_id))]
+  const userIds = [...new Set(memberships.map(m => m.user_id))] as string[]
   
+  // Fetch profiles (full_name)
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, full_name')
     .in('id', userIds)
 
+  // Fetch emails from auth.users via service client
+  const emailMap = await fetchUserEmails(userIds)
+
   // Create a map for quick lookup
   const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])
 
-  // Combine memberships with profile data
-  return memberships.map(membership => ({
-    ...membership,
-    profiles: profileMap.get(membership.user_id) || null
-  }))
+  // Combine memberships with profile data and email
+  return memberships.map(membership => {
+    const profile = profileMap.get(membership.user_id)
+    const email = emailMap.get(membership.user_id) || 'No email'
+    return {
+      ...membership,
+      profiles: {
+        full_name: profile?.full_name || email, // Use email as fallback for name
+        email: email,
+      }
+    }
+  })
 }
 
 export default async function AdminMembershipsPage() {

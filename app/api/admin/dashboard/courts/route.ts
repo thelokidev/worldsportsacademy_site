@@ -1,6 +1,43 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getServiceSupabaseClientSafe } from '@/lib/supabase/service'
 import { requireAdmin } from '@/lib/auth/admin'
+
+/**
+ * Fetch user emails from auth.users
+ */
+async function fetchUserEmails(userIds: string[]): Promise<Map<string, string>> {
+  const emailMap = new Map<string, string>()
+  
+  if (userIds.length === 0) return emailMap
+  
+  try {
+    const serviceSupabase = getServiceSupabaseClientSafe()
+    if (!serviceSupabase) {
+      return emailMap
+    }
+
+    const { data: authUsersData, error } = await serviceSupabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    })
+
+    if (error) {
+      console.error('Failed to fetch auth users:', error)
+      return emailMap
+    }
+
+    authUsersData?.users?.forEach((user) => {
+      if (user.email && userIds.includes(user.id)) {
+        emailMap.set(user.id, user.email)
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching user emails:', error)
+  }
+
+  return emailMap
+}
 
 export async function GET() {
   try {
@@ -61,15 +98,20 @@ export async function GET() {
     activeBookings?.forEach(b => { if (b.user_id) userIds.add(b.user_id) })
     upcomingBookings?.forEach(b => { if (b.user_id) userIds.add(b.user_id) })
 
+    const userIdsArray = Array.from(userIds)
+
     let profileMap = new Map<string, { full_name: string | null }>()
-    if (userIds.size > 0) {
+    if (userIdsArray.length > 0) {
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, full_name')
-        .in('id', Array.from(userIds))
+        .in('id', userIdsArray)
       
       profileMap = new Map(profiles?.map(p => [p.id, { full_name: p.full_name }]) || [])
     }
+
+    // Fetch emails from auth.users
+    const emailMap = await fetchUserEmails(userIdsArray)
 
     // Combine court data with booking info
     const courtsWithStatus = (courts || []).map(court => {
@@ -81,16 +123,26 @@ export async function GET() {
       else if (court.is_blocked) status = 'blocked'
       else if (activeBooking) status = 'occupied'
 
+      // Get user info with email fallback
+      const getUser = (userId: string | null) => {
+        if (!userId) return null
+        const profile = profileMap.get(userId)
+        const email = emailMap.get(userId)
+        return {
+          full_name: profile?.full_name || email || 'No email',
+        }
+      }
+
       return {
         ...court,
         status,
         currentBooking: activeBooking ? {
           ...activeBooking,
-          user: profileMap.get(activeBooking.user_id!) || null
+          user: getUser(activeBooking.user_id)
         } : null,
         nextBooking: nextBooking ? {
           ...nextBooking,
-          user: profileMap.get(nextBooking.user_id!) || null
+          user: getUser(nextBooking.user_id)
         } : null,
       }
     })

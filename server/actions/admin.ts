@@ -1,9 +1,71 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getServiceSupabaseClient } from '@/lib/supabase/service'
+import { getServiceSupabaseClientSafe } from '@/lib/supabase/service'
 import { requireAdmin } from '@/lib/auth/admin'
 import { revalidatePath } from 'next/cache'
+
+/**
+ * Helper to fetch user emails from auth.users using service role client
+ * Returns a Map of userId -> email, or empty map if service client unavailable
+ */
+async function fetchUserEmails(userIds?: string[]): Promise<Map<string, string>> {
+  const emailMap = new Map<string, string>()
+  
+  try {
+    const serviceSupabase = getServiceSupabaseClientSafe()
+    if (!serviceSupabase) {
+      return emailMap
+    }
+
+    const { data: authUsersData, error } = await serviceSupabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    })
+
+    if (error) {
+      console.error('Failed to fetch auth users:', error)
+      return emailMap
+    }
+
+    authUsersData?.users?.forEach((user) => {
+      if (user.email) {
+        // Only include if no filter provided, or if user is in the filter list
+        if (!userIds || userIds.includes(user.id)) {
+          emailMap.set(user.id, user.email)
+        }
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching user emails:', error)
+  }
+
+  return emailMap
+}
+
+/**
+ * Helper to fetch single user email from auth.users
+ */
+async function fetchUserEmail(userId: string): Promise<string | null> {
+  try {
+    const serviceSupabase = getServiceSupabaseClientSafe()
+    if (!serviceSupabase) {
+      return null
+    }
+
+    const { data: authUser, error } = await serviceSupabase.auth.admin.getUserById(userId)
+    
+    if (error) {
+      console.error('Failed to fetch auth user:', error)
+      return null
+    }
+
+    return authUser?.user?.email || null
+  } catch (error) {
+    console.error('Error fetching user email:', error)
+    return null
+  }
+}
 
 // Court Management Actions
 
@@ -234,7 +296,6 @@ export async function getCourtBookingStats(courtId: string) {
 export async function getAllMembers(page = 1, limit = 50) {
   await requireAdmin()
   const supabase = await createClient()
-  const serviceSupabase = getServiceSupabaseClient()
 
   const offset = (page - 1) * limit
 
@@ -262,23 +323,9 @@ export async function getAllMembers(page = 1, limit = 50) {
     throw new Error(`Failed to fetch members: ${error.message}`)
   }
 
-  // Get all auth users to get emails (using service role client)
-  const { data: authUsersData, error: authError } = await serviceSupabase.auth.admin.listUsers({
-    page: 1,
-    perPage: 1000, // Fetch up to 1000 users to cover all members
-  })
-
-  if (authError) {
-    console.error('Failed to fetch auth users:', authError)
-  }
-
-  // Create a map of user IDs to emails
-  const emailMap = new Map<string, string>()
-  authUsersData?.users?.forEach((user) => {
-    if (user.email) {
-      emailMap.set(user.id, user.email)
-    }
-  })
+  // Get all auth users to get emails (using service role client with safe fallback)
+  const memberIds = (members || []).map(m => m.id)
+  const emailMap = await fetchUserEmails(memberIds)
 
   // Get membership info for each member
   const membersWithMemberships = await Promise.all(
@@ -304,7 +351,7 @@ export async function getAllMembers(page = 1, limit = 50) {
 
       return {
         ...member,
-        email: emailMap.get(member.id) || 'Unknown',
+        email: emailMap.get(member.id) || 'No email available',
         memberships: memberships || [],
         bookingCount: bookingCount || 0,
       }
@@ -342,7 +389,6 @@ export async function updateMemberRole(userId: string, role: 'user' | 'admin') {
 export async function getMemberDetails(userId: string) {
   await requireAdmin()
   const supabase = await createClient()
-  const serviceSupabase = getServiceSupabaseClient()
 
   // Get user profile
   const { data: profile, error: profileError } = await supabase
@@ -355,13 +401,13 @@ export async function getMemberDetails(userId: string) {
     throw new Error(`Failed to fetch member: ${profileError.message}`)
   }
 
-  // Get auth user to get email (using service role client)
-  const { data: authUser, error: authError } = await serviceSupabase.auth.admin.getUserById(userId)
+  // Get auth user to get email (using service role client with safe fallback)
+  const email = await fetchUserEmail(userId)
   
   // Merge email into profile
   const profileWithEmail = {
     ...profile,
-    email: authUser?.user?.email || 'Unknown',
+    email: email || 'No email available',
   }
 
   // Get memberships
@@ -420,7 +466,6 @@ export async function getMemberDetails(userId: string) {
 export async function searchMembers(query: string) {
   await requireAdmin()
   const supabase = await createClient()
-  const serviceSupabase = getServiceSupabaseClient()
 
   if (!query || query.trim().length === 0) {
     return []
@@ -443,23 +488,14 @@ export async function searchMembers(query: string) {
     throw new Error(`Failed to search members: ${error.message}`)
   }
 
-  // Get auth users to get emails
-  const { data: authUsersData } = await serviceSupabase.auth.admin.listUsers({
-    page: 1,
-    perPage: 1000,
-  })
-
-  const emailMap = new Map<string, string>()
-  authUsersData?.users?.forEach((user) => {
-    if (user.email) {
-      emailMap.set(user.id, user.email)
-    }
-  })
+  // Get auth users to get emails (with safe fallback)
+  const memberIds = (members || []).map(m => m.id)
+  const emailMap = await fetchUserEmails(memberIds)
 
   // Merge email into results
   return (members || []).map(member => ({
     ...member,
-    email: emailMap.get(member.id) || 'Unknown',
+    email: emailMap.get(member.id) || 'No email available',
   }))
 }
 
