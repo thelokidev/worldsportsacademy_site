@@ -313,14 +313,12 @@ export async function getAllMembers(page = 1, limit = 50) {
     console.error('Error fetching member count:', countError)
   }
 
-  // Get paginated members with their membership info (including phone_number and stripe_customer_id)
+  // Get paginated members - only select columns that are guaranteed to exist
   const { data: members, error } = await serviceSupabase
     .from('profiles')
     .select(`
       id,
       full_name,
-      phone_number,
-      stripe_customer_id,
       role,
       created_at,
       updated_at
@@ -500,8 +498,6 @@ export async function searchMembers(query: string) {
     .select(`
       id,
       full_name,
-      phone_number,
-      stripe_customer_id,
       role,
       created_at
     `)

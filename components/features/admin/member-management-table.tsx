@@ -37,11 +37,11 @@ type Member = {
   id: string
   full_name: string | null
   email: string
-  phone_number: string | null
+  phone_number?: string | null
   role: string
-  stripe_customer_id: string | null
+  stripe_customer_id?: string | null
   created_at: string
-  updated_at: string
+  updated_at?: string
   memberships: Array<{
     id: string
     status: string
