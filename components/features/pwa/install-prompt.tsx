@@ -149,8 +149,8 @@ export function PWAInstallPrompt() {
 
           <div className="p-6 pb-8">
             <div className="flex justify-center mb-6">
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20">
-                <Smartphone className="w-10 h-10 text-orange-500" />
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-[#50C878]/20 to-[#3DA860]/10 border border-[#50C878]/20">
+                <Smartphone className="w-10 h-10 text-[#50C878]" />
               </div>
             </div>
 
@@ -184,7 +184,7 @@ export function PWAInstallPrompt() {
 
             <Button
               onClick={() => setShowIOSInstructions(false)}
-              className="w-full mt-6 h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl"
+              className="w-full mt-6 h-12 bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white font-semibold rounded-xl"
             >
               Got it!
             </Button>
@@ -199,7 +199,7 @@ export function PWAInstallPrompt() {
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-in slide-in-from-bottom duration-300">
       <div className="relative bg-neutral-900/95 backdrop-blur-xl border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Gradient accent */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-orange-600" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#2D5B4A] to-[#50C878]" />
 
         <button
           onClick={handleDismiss}
@@ -227,7 +227,7 @@ export function PWAInstallPrompt() {
                 Install World Sports Academy
               </h3>
               <p className="text-neutral-400 text-xs leading-relaxed">
-                Get quick access, offline support, and a native app experience
+                Get quick access and a native app experience
               </p>
             </div>
           </div>
@@ -235,15 +235,11 @@ export function PWAInstallPrompt() {
           {/* Features */}
           <div className="flex items-center gap-4 mt-4 text-xs text-neutral-500">
             <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              Works offline
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#50C878]" />
               Faster loading
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#50C878]" />
               Push notifications
             </span>
           </div>
@@ -253,7 +249,7 @@ export function PWAInstallPrompt() {
             {isIOS ? (
               <Button
                 onClick={() => setShowIOSInstructions(true)}
-                className="w-full h-10 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium text-sm rounded-xl"
+                className="w-full h-10 bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white font-medium text-sm rounded-xl"
               >
                 <Share className="w-4 h-4 mr-2" />
                 How to Install
@@ -262,7 +258,7 @@ export function PWAInstallPrompt() {
               <Button
                 onClick={handleInstallClick}
                 disabled={!deferredPrompt}
-                className="w-full h-10 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium text-sm rounded-xl disabled:opacity-50"
+                className="w-full h-10 bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white font-medium text-sm rounded-xl disabled:opacity-50"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Install App
@@ -285,12 +281,12 @@ interface InstallStepProps {
 function InstallStep({ step, icon, title, description }: InstallStepProps) {
   return (
     <div className="flex items-start gap-4 p-3 rounded-xl bg-neutral-800/50">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 font-semibold text-sm">
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#50C878]/20 flex items-center justify-center text-[#50C878] font-semibold text-sm">
         {step}
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-orange-500">{icon}</span>
+          <span className="text-[#50C878]">{icon}</span>
           <span className="font-medium text-white text-sm">{title}</span>
         </div>
         <p className="text-neutral-400 text-xs">{description}</p>
