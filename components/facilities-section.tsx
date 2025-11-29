@@ -10,29 +10,30 @@ const facilities = [
     icon: Target,
     name: "Squash",
     description: "Professional squash courts with world-class facilities for competitive play and training.",
-    image: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=400&auto=format&fit=crop",
+    image: "/explore/squash.jpg",
     features: ["4 Professional Courts", "Glass Back Walls", "Tournament Ready"]
   },
   {
     icon: Circle,
     name: "Table Tennis",
     description: "Premium table tennis tables with professional-grade equipment for all skill levels.",
-    image: "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?q=80&w=400&auto=format&fit=crop",
+    image: "/explore/TT.jpg",
     features: ["6 Competition Tables", "Pro Equipment", "Training Areas"]
   },
   {
     icon: Activity,
-    name: "High Performance Gym",
-    description: "State-of-the-art fitness equipment and training spaces designed for peak athletic performance.",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=400&auto=format&fit=crop",
-    features: ["Modern Equipment", "Personal Training", "Recovery Zone"]
+    name: "Pilates Studio",
+    description: "Modern pilates equipment and spacious studio designed for holistic wellness and core training.",
+    image: "/explore/pilates.jpg",
+    features: ["Reformer Machines", "Mat Classes", "Private Sessions"]
   },
   {
     icon: Grid,
     name: "Chess",
     description: "Dedicated chess areas with professional boards for strategic training and competitive matches.",
-    image: "https://images.unsplash.com/photo-1580541631950-7282082b53ce?q=80&w=400&auto=format&fit=crop",
-    features: ["Quiet Study Areas", "Digital Boards", "Master Coaching"]
+    image: "/explore/chess.jpg",
+    features: ["Quiet Study Areas", "Digital Boards", "Master Coaching"],
+    comingSoon: true
   }
 ]
 
@@ -41,7 +42,7 @@ export function FacilitiesSection() {
     <section className="px-4 sm:px-6 lg:px-8 py-12 md:py-16 bg-black relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#50C878]/10 rounded-full blur-3xl" />
-      
+
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
         <div className="text-center mb-10">
@@ -76,6 +77,13 @@ export function FacilitiesSection() {
                     sizes="(max-width: 768px) 100vw, 25vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  {facility.comingSoon && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <span className="px-2 py-1 bg-[#50C878] text-black text-[10px] font-bold uppercase tracking-wider rounded-md">
+                        Coming Soon
+                      </span>
+                    </div>
+                  )}
                   <div className="absolute bottom-2 left-2">
                     <div className="w-8 h-8 rounded-lg bg-[#50C878]/90 backdrop-blur-sm flex items-center justify-center">
                       <Icon className="w-4 h-4 text-white" />

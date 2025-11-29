@@ -45,11 +45,11 @@ const testimonials: Testimonial[] = [
   {
     id: "4",
     name: "James Anderson",
-    role: "Fitness Athlete",
+    role: "Pilates Practitioner",
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=256&auto=format&fit=crop",
     rating: 5,
-    quote: "The high-performance gym and personalized training plans have taken my fitness to the next level. This place is a game-changer for serious athletes.",
-    sport: "Fitness"
+    quote: "The pilates studio and personalized training plans have taken my core strength to the next level. This place is a game-changer for serious athletes.",
+    sport: "Pilates"
   },
   {
     id: "5",
@@ -66,9 +66,8 @@ const renderStars = (rating: number) => {
   return Array.from({ length: 5 }).map((_, index) => (
     <Star
       key={index}
-      className={`w-3 h-3 ${
-        index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-700 dark:text-gray-700"
-      }`}
+      className={`w-3 h-3 ${index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-700 dark:text-gray-700"
+        }`}
     />
   ))
 }
@@ -79,7 +78,7 @@ export function TestimonialsSection() {
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#50C878]/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#2D5B4A]/10 rounded-full blur-3xl" />
-      
+
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12">

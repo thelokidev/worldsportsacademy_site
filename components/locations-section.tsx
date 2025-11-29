@@ -25,7 +25,7 @@ export function LocationsSection() {
                 Burlington, Ontario
               </h3>
               <p className="text-gray-300 dark:text-gray-300 text-base leading-relaxed mb-6 max-w-md">
-                Our state-of-the-art facility in Burlington, Ontario offers world-class sports facilities including squash courts, table tennis tables, chess areas, and a high-performance gym. Visit us to experience premium athletic training and competition spaces.
+                Our state-of-the-art facility in Burlington, Ontario offers world-class sports facilities including squash courts, table tennis tables, chess areas, and a pilates studio. Visit us to experience premium athletic training and competition spaces.
               </p>
               <div className="flex flex-col gap-4">
                 <a

@@ -45,7 +45,7 @@ type MembershipCardProps = {
 export function MembershipCard({ plan, currentMembership, hasActiveMembership = false }: MembershipCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  
+
   const isCurrentPlan = !!currentMembership
 
   const handlePurchase = async () => {
@@ -113,13 +113,12 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
   const hasBadge = isPopular || isCurrentPlan
 
   return (
-    <Card className={`relative flex flex-col h-full transition-all duration-300 ${
-      isCurrentPlan
+    <Card className={`relative flex flex-col h-full transition-all duration-300 ${isCurrentPlan
         ? 'border-2 border-[#50C878] bg-black/60 shadow-lg shadow-[#50C878]/20 hover:border-[#50C878]'
-        : isPopular 
-        ? 'border-2 border-[#50C878] bg-black shadow-lg shadow-[#50C878]/10 hover:border-[#50C878]/80'
-        : 'border border-[#50C878]/40 bg-black hover:border-[#50C878]/60 hover:shadow-md hover:shadow-[#50C878]/5'
-    }`}>
+        : isPopular
+          ? 'border-2 border-[#50C878] bg-black shadow-lg shadow-[#50C878]/10 hover:border-[#50C878]/80'
+          : 'border border-[#50C878]/40 bg-black hover:border-[#50C878]/60 hover:shadow-md hover:shadow-[#50C878]/5'
+      }`}>
       {/* Current Plan Badge */}
       {isCurrentPlan && (
         <div className="absolute top-4 right-4 z-10">
@@ -129,7 +128,7 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
           </div>
         </div>
       )}
-      
+
       {/* Popular Badge */}
       {isPopular && !isCurrentPlan && (
         <div className="absolute top-4 right-4 z-10">
@@ -141,7 +140,7 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
 
       <CardHeader className={`pt-6 pb-4 px-6 ${hasBadge ? 'pt-14' : ''}`}>
         <CardTitle className="text-xl font-bold text-white mb-4">{plan.name}</CardTitle>
-        
+
         {/* Price Section */}
         <div className="mb-6">
           <div className="flex items-baseline gap-2">
@@ -173,7 +172,7 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
           {features.gym_access && (
             <li className="flex items-center gap-3">
               <Check className="w-5 h-5 text-[#50C878] flex-shrink-0" />
-              <span className="text-sm text-gray-300">Gym access included</span>
+              <span className="text-sm text-gray-300">Pilates access included</span>
             </li>
           )}
           <li className="flex items-center gap-3">
@@ -192,8 +191,8 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
             <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Includes Sports</p>
             <div className="flex flex-wrap gap-2">
               {sports.map((sport) => (
-                <Badge 
-                  key={sport.id} 
+                <Badge
+                  key={sport.id}
                   className="bg-[#50C878]/10 text-[#50C878] border-[#50C878]/20 text-xs px-2 py-1"
                   variant="outline"
                 >
@@ -220,11 +219,10 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
           <Button
             onClick={handlePurchase}
             disabled={isLoading}
-            className={`w-full h-11 font-semibold rounded-lg transition-colors ${
-              hasActiveMembership
+            className={`w-full h-11 font-semibold rounded-lg transition-colors ${hasActiveMembership
                 ? 'bg-gradient-to-r from-[#50C878] to-[#3DA860] text-white hover:from-[#3DA860] hover:to-[#50C878]'
                 : 'bg-white text-gray-900 hover:bg-gray-100'
-            }`}
+              }`}
           >
             {isLoading ? (
               <>

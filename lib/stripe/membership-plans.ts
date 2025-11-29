@@ -17,7 +17,7 @@ export const MEMBERSHIP_PRICE_MAP: Record<string, PlanMapping> = {
     productId: 'prod_TR0IPewTnDWYGI',
   },
   price_1SU8J6DrcV6C4UxVLHTPsSTb: {
-    name: 'Squash + Gym Monthly Membership',
+    name: 'Squash + Pilates Monthly Membership',
     productId: 'prod_TR0Jm3UW2QuvHu',
   },
   price_1SU8KqDrcV6C4UxVCCuNwOaE: {

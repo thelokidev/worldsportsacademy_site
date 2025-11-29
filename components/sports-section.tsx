@@ -10,6 +10,7 @@ interface Sport {
   image: string;
   days: string;
   time: string;
+  comingSoon?: boolean;
 }
 
 const sports: Sport[] = [
@@ -28,18 +29,19 @@ const sports: Sport[] = [
     time: "4:00PM - 7:00 PM",
   },
   {
-    id: "gym",
-    name: "Gym",
-    image: "/explore/Gym.jpg",
+    id: "pilates",
+    name: "Pilates",
+    image: "/explore/pilates.jpg",
     days: "Daily",
-    time: "6:00AM - 11:00 PM",
+    time: "6:00AM - 9:00 PM",
   },
   {
     id: "chess",
     name: "Chess",
     image: "/explore/chess.jpg",
-    days: "Tue and Thu",
-    time: "1:00PM - 3:00 PM",
+    days: "Coming Soon",
+    time: "Coming Soon",
+    comingSoon: true,
   },
 ];
 
@@ -49,7 +51,7 @@ export function SportsSection() {
       {/* Background decoration */}
       <div className="absolute top-20 left-0 w-72 h-72 bg-[#50C878]/10 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-0 w-96 h-96 bg-[#2D5B4A]/10 rounded-full blur-3xl" />
-      
+
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Header Section */}
         <div className="mb-16">
@@ -81,39 +83,39 @@ export function SportsSection() {
           <div>
             <Link href="/bookings">
               <div className="group relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer h-[440px] border border-gray-800 dark:border-gray-800">
-              <div className="absolute inset-0">
-                <Image
-                  src={sports[0].image}
-                  alt={sports[0].name}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700"
-                  sizes="(max-width: 1024px) 100vw, 33vw"
-                  priority
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/70 group-hover:from-black/30 group-hover:to-black/80 transition-all duration-500 z-10" />
-              
-              {/* Animated gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/0 to-transparent group-hover:from-[#50C878]/30 transition-all duration-500 z-10" />
-              
-              <div className="absolute top-6 left-6 z-20">
-                <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight group-hover:text-[#CFEA6C] transition-colors duration-300">{sports[0].name}</h3>
-              </div>
-              <div className="absolute top-6 right-6 z-20 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 group-hover:bg-[#50C878] group-hover:border-[#50C878] transition-all duration-300 group-hover:scale-110">
-                <ArrowRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" />
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-md p-5 z-20 group-hover:bg-black/80 transition-all duration-300">
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-2 transition-all duration-300">
-                    <Calendar className="w-4 h-4 text-black group-hover:text-white transition-colors" />
-                    <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sports[0].days}</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-2 transition-all duration-300">
-                    <Clock className="w-4 h-4 text-black group-hover:text-white transition-colors" />
-                    <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sports[0].time}</span>
+                <div className="absolute inset-0">
+                  <Image
+                    src={sports[0].image}
+                    alt={sports[0].name}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                    priority
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/70 group-hover:from-black/30 group-hover:to-black/80 transition-all duration-500 z-10" />
+
+                {/* Animated gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/0 to-transparent group-hover:from-[#50C878]/30 transition-all duration-500 z-10" />
+
+                <div className="absolute top-6 left-6 z-20">
+                  <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight group-hover:text-[#CFEA6C] transition-colors duration-300">{sports[0].name}</h3>
+                </div>
+                <div className="absolute top-6 right-6 z-20 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 group-hover:bg-[#50C878] group-hover:border-[#50C878] transition-all duration-300 group-hover:scale-110">
+                  <ArrowRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-md p-5 z-20 group-hover:bg-black/80 transition-all duration-300">
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-2 transition-all duration-300">
+                      <Calendar className="w-4 h-4 text-black group-hover:text-white transition-colors" />
+                      <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sports[0].days}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-2 transition-all duration-300">
+                      <Clock className="w-4 h-4 text-black group-hover:text-white transition-colors" />
+                      <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sports[0].time}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
               </div>
             </Link>
           </div>
@@ -123,38 +125,38 @@ export function SportsSection() {
             {[sports[1], sports[2]].map((sport) => (
               <Link key={sport.id} href="/bookings">
                 <div className="group relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer h-[210px] border border-gray-800 dark:border-gray-800">
-                <div className="absolute inset-0">
-                  <Image
-                    src={sport.image}
-                    alt={sport.name}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    sizes="(max-width: 1024px) 100vw, 33vw"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/70 group-hover:from-black/30 group-hover:to-black/80 transition-all duration-500 z-10" />
-                
-                {/* Animated gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/0 to-transparent group-hover:from-[#50C878]/30 transition-all duration-500 z-10" />
-                
-                <div className="absolute top-4 left-4 z-20">
-                  <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight group-hover:text-[#CFEA6C] transition-colors duration-300">{sport.name}</h3>
-                </div>
-                <div className="absolute top-4 right-4 z-20 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 group-hover:bg-[#50C878] group-hover:border-[#50C878] transition-all duration-300 group-hover:scale-110">
-                  <ArrowRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" />
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-md p-3 z-20 group-hover:bg-black/80 transition-all duration-300">
-                  <div className="flex flex-wrap gap-2">
-                    <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-1.5 transition-all duration-300">
-                      <Calendar className="w-4 h-4 text-black group-hover:text-white transition-colors" />
-                      <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sport.days}</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-1.5 transition-all duration-300">
-                      <Clock className="w-4 h-4 text-black group-hover:text-white transition-colors" />
-                      <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sport.time}</span>
+                  <div className="absolute inset-0">
+                    <Image
+                      src={sport.image}
+                      alt={sport.name}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/70 group-hover:from-black/30 group-hover:to-black/80 transition-all duration-500 z-10" />
+
+                  {/* Animated gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/0 to-transparent group-hover:from-[#50C878]/30 transition-all duration-500 z-10" />
+
+                  <div className="absolute top-4 left-4 z-20">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight group-hover:text-[#CFEA6C] transition-colors duration-300">{sport.name}</h3>
+                  </div>
+                  <div className="absolute top-4 right-4 z-20 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 group-hover:bg-[#50C878] group-hover:border-[#50C878] transition-all duration-300 group-hover:scale-110">
+                    <ArrowRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" />
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-md p-3 z-20 group-hover:bg-black/80 transition-all duration-300">
+                    <div className="flex flex-wrap gap-2">
+                      <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-1.5 transition-all duration-300">
+                        <Calendar className="w-4 h-4 text-black group-hover:text-white transition-colors" />
+                        <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sport.days}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-1.5 transition-all duration-300">
+                        <Clock className="w-4 h-4 text-black group-hover:text-white transition-colors" />
+                        <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sport.time}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </div>
               </Link>
             ))}
@@ -162,41 +164,48 @@ export function SportsSection() {
 
           {/* Right column: tall card */}
           <div>
-            <Link href="/bookings">
-              <div className="group relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer h-[440px] border border-gray-800 dark:border-gray-800">
-              <div className="absolute inset-0">
-                <Image
-                  src={sports[3].image}
-                  alt={sports[3].name}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-700"
-                  sizes="(max-width: 1024px) 100vw, 33vw"
-                  priority
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/70 group-hover:from-black/30 group-hover:to-black/80 transition-all duration-500 z-10" />
-              
-              {/* Animated gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/0 to-transparent group-hover:from-[#50C878]/30 transition-all duration-500 z-10" />
-              
-              <div className="absolute top-6 left-6 z-20">
-                <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight group-hover:text-[#CFEA6C] transition-colors duration-300">{sports[3].name}</h3>
-              </div>
-              <div className="absolute top-6 right-6 z-20 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 group-hover:bg-[#50C878] group-hover:border-[#50C878] transition-all duration-300 group-hover:scale-110">
-                <ArrowRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" />
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-md p-5 z-20 group-hover:bg-black/80 transition-all duration-300">
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-2 transition-all duration-300">
-                    <Calendar className="w-4 h-4 text-black group-hover:text-white transition-colors" />
-                    <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sports[3].days}</span>
+            <Link href={sports[3].comingSoon ? "#" : "/bookings"} className={sports[3].comingSoon ? "cursor-default" : ""}>
+              <div className={`group relative rounded-3xl overflow-hidden shadow-xl ${!sports[3].comingSoon && 'hover:shadow-2xl hover:shadow-[#50C878]/20'} transition-all duration-500 h-[440px] border border-gray-800 dark:border-gray-800`}>
+                <div className="absolute inset-0">
+                  <Image
+                    src={sports[3].image}
+                    alt={sports[3].name}
+                    fill
+                    className={`object-cover ${!sports[3].comingSoon && 'group-hover:scale-110'} transition-transform duration-700`}
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                    priority
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/70 group-hover:from-black/30 group-hover:to-black/80 transition-all duration-500 z-10" />
+
+                {/* Animated gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/0 to-transparent group-hover:from-[#50C878]/30 transition-all duration-500 z-10" />
+
+                <div className="absolute top-6 left-6 z-20">
+                  <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight group-hover:text-[#CFEA6C] transition-colors duration-300">{sports[3].name}</h3>
+                  {sports[3].comingSoon && (
+                    <span className="inline-block mt-2 px-3 py-1 bg-[#50C878] text-black text-xs font-bold uppercase tracking-wider rounded-full">
+                      Coming Soon
+                    </span>
+                  )}
+                </div>
+                {!sports[3].comingSoon && (
+                  <div className="absolute top-6 right-6 z-20 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 group-hover:bg-[#50C878] group-hover:border-[#50C878] transition-all duration-300 group-hover:scale-110">
+                    <ArrowRight className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" />
                   </div>
-                  <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-2 transition-all duration-300">
-                    <Clock className="w-4 h-4 text-black group-hover:text-white transition-colors" />
-                    <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sports[3].time}</span>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-md p-5 z-20 group-hover:bg-black/80 transition-all duration-300">
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-2 transition-all duration-300">
+                      <Calendar className="w-4 h-4 text-black group-hover:text-white transition-colors" />
+                      <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sports[3].days}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white group-hover:bg-[#50C878] rounded-lg px-3 py-2 transition-all duration-300">
+                      <Clock className="w-4 h-4 text-black group-hover:text-white transition-colors" />
+                      <span className="text-black group-hover:text-white text-sm font-medium whitespace-nowrap transition-colors">{sports[3].time}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
               </div>
             </Link>
           </div>

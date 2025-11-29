@@ -1,6 +1,6 @@
 "use client"
 
-import { Target, Circle, Grid3x3, Dumbbell, Clock, Users, TrendingUp, Award } from "lucide-react"
+import { Target, Circle, Grid3x3, Activity, Clock, Users, TrendingUp, Award } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
@@ -11,7 +11,7 @@ const programs = [
     name: 'Squash Training',
     icon: Target,
     description: 'Master the court with professional squash coaching for all skill levels.',
-    image: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3',
+    image: '/explore/squash.jpg',
     duration: '60 min sessions',
     level: 'Beginner to Advanced',
     features: [
@@ -27,7 +27,7 @@ const programs = [
     name: 'Table Tennis Program',
     icon: Circle,
     description: 'Develop lightning-fast reflexes and precision with expert table tennis training.',
-    image: 'https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3',
+    image: '/explore/TT.jpg',
     duration: '60 min sessions',
     level: 'All Levels',
     features: [
@@ -43,7 +43,7 @@ const programs = [
     name: 'Chess Academy',
     icon: Grid3x3,
     description: 'Sharpen your strategic thinking with comprehensive chess instruction.',
-    image: 'https://images.unsplash.com/photo-1580541631950-7282082b53ce?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3',
+    image: '/explore/chess.jpg',
     duration: '90 min sessions',
     level: 'Beginner to Master',
     features: [
@@ -53,20 +53,21 @@ const programs = [
       'Game analysis with coaches',
     ],
     color: 'from-purple-500 to-pink-500',
+    comingSoon: true,
   },
   {
-    id: 'fitness',
-    name: 'High Performance Gym',
-    icon: Dumbbell,
-    description: 'Achieve peak physical condition with personalized strength and conditioning programs.',
-    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3',
-    duration: 'Flexible sessions',
-    level: 'All Fitness Levels',
+    id: 'pilates',
+    name: 'Pilates Studio',
+    icon: Activity,
+    description: 'Strengthen your core and improve flexibility with our comprehensive pilates programs.',
+    image: '/explore/pilates.jpg',
+    duration: '60 min sessions',
+    level: 'All Levels',
     features: [
-      'Personalized training plans',
-      'Strength and power development',
-      'Sport-specific conditioning',
-      'Recovery and nutrition guidance',
+      'Core strength training',
+      'Flexibility improvement',
+      'Posture correction',
+      'Mind-body connection',
     ],
     color: 'from-green-500 to-emerald-500',
   },
@@ -78,7 +79,7 @@ export function ProgramsGrid() {
       {/* Background decoration */}
       <div className="absolute top-20 left-0 w-96 h-96 bg-[#50C878]/10 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-0 w-96 h-96 bg-[#2D5B4A]/10 rounded-full blur-3xl" />
-      
+
       <div className="mx-auto max-w-7xl relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
@@ -102,10 +103,10 @@ export function ProgramsGrid() {
             return (
               <div
                 key={program.id}
-                className="group bg-black rounded-3xl border border-gray-800 overflow-hidden hover:shadow-2xl hover:border-[#50C878]/30 transition-all duration-500 hover:-translate-y-1"
+                className="group bg-black rounded-3xl border border-gray-800 overflow-hidden hover:shadow-2xl hover:border-[#50C878]/30 transition-all duration-500 hover:-translate-y-1 flex flex-col"
               >
                 {/* Image Section */}
-                <div className="relative h-72 overflow-hidden">
+                <div className="relative h-72 overflow-hidden flex-shrink-0">
                   <Image
                     src={program.image}
                     alt={program.name}
@@ -114,10 +115,19 @@ export function ProgramsGrid() {
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-black/90 transition-all duration-500" />
-                  
+
                   {/* Animated gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/0 to-transparent group-hover:from-[#50C878]/20 transition-all duration-500" />
-                  
+
+                  {/* Coming Soon Badge */}
+                  {program.comingSoon && (
+                    <div className="absolute top-5 left-5 z-20">
+                      <span className="px-3 py-1 bg-[#50C878] text-black text-xs font-bold uppercase tracking-wider rounded-full shadow-lg">
+                        Coming Soon
+                      </span>
+                    </div>
+                  )}
+
                   {/* Icon Badge */}
                   <div className={`absolute top-5 right-5 w-16 h-16 rounded-2xl bg-gradient-to-br ${program.color} flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className="w-8 h-8 text-white" />
@@ -140,11 +150,11 @@ export function ProgramsGrid() {
                 </div>
 
                 {/* Content Section */}
-                <div className="p-8">
+                <div className="p-8 flex flex-col flex-1">
                   <p className="text-gray-300 dark:text-gray-300 leading-relaxed mb-6 text-base">{program.description}</p>
 
                   {/* Features List */}
-                  <div className="space-y-3 mb-8">
+                  <div className="space-y-3 mb-8 flex-1">
                     {program.features.map((feature, idx) => (
                       <div key={idx} className="flex items-start gap-3 group/item">
                         <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#E6F5EC] to-[#D0F0E0] flex items-center justify-center flex-shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform">
@@ -155,16 +165,26 @@ export function ProgramsGrid() {
                     ))}
                   </div>
 
-                  {/* CTA Button */}
-                  <Button
-                    asChild
-                    className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white rounded-xl h-12 font-semibold shadow-lg hover:shadow-xl transition-all group/btn"
-                  >
-                    <Link href="/bookings" className="flex items-center justify-center gap-2">
-                      Start Training
-                      <Users className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                    </Link>
-                  </Button>
+                  {/* CTA Button - Pushed to bottom */}
+                  <div className="mt-auto">
+                    <Button
+                      asChild={!program.comingSoon}
+                      disabled={program.comingSoon}
+                      className={`w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white rounded-xl h-12 font-semibold shadow-lg hover:shadow-xl transition-all group/btn ${program.comingSoon ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    >
+                      {program.comingSoon ? (
+                        <span className="flex items-center justify-center gap-2">
+                          Coming Soon
+                          <Clock className="w-4 h-4" />
+                        </span>
+                      ) : (
+                        <Link href="/bookings" className="flex items-center justify-center gap-2">
+                          Start Training
+                          <Users className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                        </Link>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             )
