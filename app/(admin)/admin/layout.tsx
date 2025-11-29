@@ -1,14 +1,13 @@
 import { requireAdmin } from '@/lib/auth/admin'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import {
   LayoutDashboard,
   Calendar,
   Users,
   DollarSign,
   MapPin,
-  BarChart3
 } from 'lucide-react'
+import { AdminHeader } from '@/components/features/admin/admin-header'
 
 export default async function AdminLayout({
   children,
@@ -28,27 +27,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-sm border-b border-gray-800">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#50C878] to-[#2D5B4A] rounded-lg flex items-center justify-center">
-                <LayoutDashboard className="h-6 w-6 text-white" />
-              </div>
-              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                Admin Portal
-              </h1>
-            </div>
-            <Button
-              variant="outline"
-              className="border-gray-800 text-gray-300 hover:text-[#50C878] hover:bg-gray-900 hover:border-[#50C878]/50 transition-all duration-300"
-              asChild
-            >
-              <Link href="/dashboard">User Dashboard</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+      <AdminHeader />
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className="w-full lg:w-64 flex-shrink-0">
