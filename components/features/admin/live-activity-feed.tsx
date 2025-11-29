@@ -23,6 +23,8 @@ interface LiveActivityFeedProps {
     bookings: RecentBooking[]
     memberships: RecentMembership[]
   }
+  periodLabel?: string
+  disableLiveUpdates?: boolean
 }
 
 function ActivitySkeleton() {
@@ -145,7 +147,7 @@ function PaymentItem({ payment }: { payment: RecentPayment }) {
   )
 }
 
-export function LiveActivityFeed({ initialActivity }: LiveActivityFeedProps) {
+export function LiveActivityFeed({ initialActivity, periodLabel = 'Recent', disableLiveUpdates = false }: LiveActivityFeedProps) {
   const { activity, isLoading, error, refetch } = useDashboardActivity(
     initialActivity ? {
       ...initialActivity,
@@ -154,7 +156,14 @@ export function LiveActivityFeed({ initialActivity }: LiveActivityFeedProps) {
     } : undefined
   )
 
-  if (error) {
+  // Use initialActivity directly when live updates are disabled (filtered mode)
+  const displayActivity = disableLiveUpdates ? {
+    ...initialActivity,
+    payments: [],
+    lastUpdated: new Date().toISOString(),
+  } : activity
+
+  if (error && !disableLiveUpdates) {
     return (
       <Card className="bg-red-900/20 border-red-800">
         <CardContent className="flex items-center gap-3 py-4">
@@ -171,31 +180,33 @@ export function LiveActivityFeed({ initialActivity }: LiveActivityFeedProps) {
     )
   }
 
-  const hasActivity = activity && (
-    activity.bookings.length > 0 || 
-    activity.memberships.length > 0 || 
-    activity.payments.length > 0
+  const hasActivity = displayActivity && (
+    (displayActivity.bookings?.length || 0) > 0 || 
+    (displayActivity.memberships?.length || 0) > 0 || 
+    (displayActivity.payments?.length || 0) > 0
   )
+
+  const isFiltered = periodLabel !== 'Recent'
 
   return (
     <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-white">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-white text-base sm:text-lg">
             <Activity className="h-5 w-5 text-[#50C878]" />
-            Live Activity Feed
-            <div className="h-2 w-2 rounded-full bg-[#50C878] animate-pulse ml-1" />
+            {isFiltered ? 'Activity' : 'Live Activity Feed'}
+            {!isFiltered && <div className="h-2 w-2 rounded-full bg-[#50C878] animate-pulse ml-1" />}
           </CardTitle>
           <div className="flex items-center gap-2">
-            {activity?.lastUpdated && (
-              <span className="text-xs text-gray-500">
-                {formatDistanceToNow(new Date(activity.lastUpdated), { addSuffix: true })}
+            {isFiltered && (
+              <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+                {periodLabel}
               </span>
             )}
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-[#50C878] hover:text-[#50C878] hover:bg-[#50C878]/10" 
+              className="text-[#50C878] hover:text-[#50C878] hover:bg-[#50C878]/10 text-xs sm:text-sm" 
               asChild
             >
               <Link href="/admin/bookings">View All</Link>
@@ -204,17 +215,19 @@ export function LiveActivityFeed({ initialActivity }: LiveActivityFeedProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {isLoading && !disableLiveUpdates ? (
           <ActivitySkeleton />
         ) : !hasActivity ? (
-          <p className="text-sm text-gray-500 text-center py-8">No recent activity</p>
+          <p className="text-sm text-gray-500 text-center py-8">
+            {isFiltered ? `No activity in ${periodLabel}` : 'No recent activity'}
+          </p>
         ) : (
           <div className="space-y-1">
             {/* Interleave bookings, memberships, and payments by time */}
             {[
-              ...(activity?.bookings || []).map(b => ({ type: 'booking' as const, data: b, time: new Date(b.created_at) })),
-              ...(activity?.memberships || []).map(m => ({ type: 'membership' as const, data: m, time: new Date(m.created_at) })),
-              ...(activity?.payments || []).map(p => ({ type: 'payment' as const, data: p, time: new Date(p.created_at) })),
+              ...(displayActivity?.bookings || []).map(b => ({ type: 'booking' as const, data: b, time: new Date(b.created_at) })),
+              ...(displayActivity?.memberships || []).map(m => ({ type: 'membership' as const, data: m, time: new Date(m.created_at) })),
+              ...(displayActivity?.payments || []).map(p => ({ type: 'payment' as const, data: p, time: new Date(p.created_at) })),
             ]
               .sort((a, b) => b.time.getTime() - a.time.getTime())
               .slice(0, 8)

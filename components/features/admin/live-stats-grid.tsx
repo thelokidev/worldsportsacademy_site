@@ -71,9 +71,11 @@ interface LiveStatsGridProps {
     monthlyRevenue: number
     monthlyBookings: number
   }
+  periodLabel?: string
+  disableLiveUpdates?: boolean
 }
 
-export function LiveStatsGrid({ initialStats }: LiveStatsGridProps) {
+export function LiveStatsGrid({ initialStats, periodLabel = 'This Month', disableLiveUpdates = false }: LiveStatsGridProps) {
   const { stats, isLoading, error, refetch } = useDashboardStats(
     initialStats ? {
       ...initialStats,
@@ -83,9 +85,12 @@ export function LiveStatsGrid({ initialStats }: LiveStatsGridProps) {
     } : undefined
   )
 
-  if (error) {
+  // Use initialStats directly when live updates are disabled (filtered mode)
+  const displayStats = disableLiveUpdates ? initialStats : stats
+
+  if (error && !disableLiveUpdates) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card className="col-span-full bg-red-900/20 border-red-800">
           <CardContent className="flex items-center gap-3 py-4">
             <AlertCircle className="h-5 w-5 text-red-400" />
@@ -102,51 +107,55 @@ export function LiveStatsGrid({ initialStats }: LiveStatsGridProps) {
     )
   }
 
+  const isFiltered = periodLabel !== 'This Month'
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-[#50C878] animate-pulse" />
-          <span className="text-xs text-gray-500">Live</span>
+          <div className={`h-2 w-2 rounded-full ${isFiltered ? 'bg-blue-400' : 'bg-[#50C878] animate-pulse'}`} />
+          <span className="text-xs text-gray-500">
+            {isFiltered ? `Filtered: ${periodLabel}` : 'Live'}
+          </span>
         </div>
-        {stats?.lastUpdated && (
+        {displayStats && !isFiltered && (
           <span className="text-xs text-gray-500 flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            Updated {formatDistanceToNow(new Date(stats.lastUpdated), { addSuffix: true })}
+            Updated {formatDistanceToNow(new Date(), { addSuffix: true })}
           </span>
         )}
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <LiveStatCard
           title="Today's Bookings"
-          value={stats?.todayBookings?.toString() || '0'}
+          value={displayStats?.todayBookings?.toString() || '0'}
           icon={Calendar}
           description="Confirmed bookings today"
-          isLoading={isLoading}
+          isLoading={isLoading && !disableLiveUpdates}
         />
         <LiveStatCard
           title="Active Members"
-          value={stats?.activeMembers?.toString() || '0'}
+          value={displayStats?.activeMembers?.toString() || '0'}
           icon={Users}
           description="With active subscriptions"
-          trend={stats && stats.activeMembers > 0 ? 'up' : 'neutral'}
-          isLoading={isLoading}
+          trend={displayStats && displayStats.activeMembers > 0 ? 'up' : 'neutral'}
+          isLoading={isLoading && !disableLiveUpdates}
         />
         <LiveStatCard
-          title="Monthly Revenue"
-          value={`$${(stats?.monthlyRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          title={isFiltered ? 'Period Revenue' : 'Monthly Revenue'}
+          value={`$${(displayStats?.monthlyRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={DollarSign}
-          description="This month's earnings"
-          trend={stats && stats.monthlyRevenue > 0 ? 'up' : 'neutral'}
-          isLoading={isLoading}
+          description={isFiltered ? periodLabel : "This month's earnings"}
+          trend={displayStats && displayStats.monthlyRevenue > 0 ? 'up' : 'neutral'}
+          isLoading={isLoading && !disableLiveUpdates}
         />
         <LiveStatCard
-          title="Monthly Bookings"
-          value={stats?.monthlyBookings?.toString() || '0'}
+          title={isFiltered ? 'Period Bookings' : 'Monthly Bookings'}
+          value={displayStats?.monthlyBookings?.toString() || '0'}
           icon={TrendingUp}
-          description="Total this month"
-          isLoading={isLoading}
+          description={isFiltered ? periodLabel : 'Total this month'}
+          isLoading={isLoading && !disableLiveUpdates}
         />
       </div>
     </div>

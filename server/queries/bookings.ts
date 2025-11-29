@@ -149,6 +149,8 @@ export async function getAllBookingsForAdmin(
     status?: string
     dateFrom?: string
     dateTo?: string
+    startDate?: string
+    endDate?: string
   }
 ) {
   const supabase = await createClient()
@@ -181,12 +183,16 @@ export async function getAllBookingsForAdmin(
     query = query.eq('status', filters.status)
   }
 
-  if (filters?.dateFrom) {
-    query = query.gte('start_time', filters.dateFrom)
+  // Support both dateFrom/dateTo and startDate/endDate
+  const fromDate = filters?.dateFrom || filters?.startDate
+  const toDate = filters?.dateTo || filters?.endDate
+
+  if (fromDate) {
+    query = query.gte('start_time', fromDate)
   }
 
-  if (filters?.dateTo) {
-    query = query.lte('start_time', filters.dateTo)
+  if (toDate) {
+    query = query.lte('start_time', toDate)
   }
 
   const offset = (page - 1) * pageSize

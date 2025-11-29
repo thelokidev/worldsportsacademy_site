@@ -156,44 +156,52 @@ export function MemberManagementTable({
           filteredMembers.map((member) => (
             <div
               key={member.id}
-              className="flex items-center justify-between p-4 border border-gray-800 rounded-lg hover:bg-gray-800/50 transition-colors bg-gray-900/30"
+              className="p-4 border border-gray-800 rounded-lg hover:bg-gray-800/50 transition-colors bg-gray-900/30"
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-white">
-                    {member.full_name || 'No Name'}
-                  </h3>
-                  {getRoleBadge(member.role)}
-                  {member.memberships.length > 0 && (
-                    <Badge variant="default" className="bg-green-600">
-                      Active Member
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-4 text-sm text-gray-400">
-                  <span>{member.email}</span>
-                  {member.phone_number && <span>• {member.phone_number}</span>}
-                  <span>• {member.bookingCount} bookings</span>
-                </div>
+              {/* Header with name and badges */}
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <h3 className="font-semibold text-white">
+                  {member.full_name || 'No Name'}
+                </h3>
+                {getRoleBadge(member.role)}
                 {member.memberships.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-400">
-                    {member.memberships.map((m: any) => (
-                      <span key={m.id} className="mr-3">
-                        {m.membership_plans?.name} - ${m.membership_plans?.price}/mo
-                      </span>
-                    ))}
-                  </div>
+                  <Badge variant="default" className="bg-green-600">
+                    Active Member
+                  </Badge>
                 )}
-                <p className="text-xs text-gray-400 mt-1">
-                  Joined: {format(new Date(member.created_at), 'MMM d, yyyy')}
-                </p>
               </div>
+              
+              {/* Contact info - stacked on mobile */}
+              <div className="text-sm text-gray-400 space-y-1 sm:space-y-0">
+                <p className="break-all">{member.email}</p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {member.phone_number && <span>{member.phone_number}</span>}
+                  <span className="text-[#50C878]">+{member.bookingCount} bookings</span>
+                </div>
+              </div>
+              
+              {/* Membership info */}
+              {member.memberships.length > 0 && (
+                <div className="mt-2 text-xs text-gray-400">
+                  {member.memberships.map((m: any) => (
+                    <span key={m.id} className="mr-3">
+                      {m.membership_plans?.name} - ${m.membership_plans?.price}/mo
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-500 mt-2">
+                Joined: {format(new Date(member.created_at), 'MMM d, yyyy')}
+              </p>
 
-              <div className="flex items-center gap-2">
+              {/* Action buttons - stack on mobile */}
+              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-800/50">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleViewDetails(member)}
+                  className="flex-1 sm:flex-none min-w-[100px]"
                 >
                   View Details
                 </Button>
@@ -202,9 +210,10 @@ export function MemberManagementTable({
                   variant="outline"
                   size="sm"
                   onClick={() => handleChangeRole(member)}
+                  className="flex-1 sm:flex-none min-w-[100px]"
                 >
                   <Shield className="h-4 w-4 mr-1" />
-                  Change Role
+                  Change
                 </Button>
               </div>
             </div>

@@ -20,7 +20,7 @@ type Sport = {
 export default async function AdminBookingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; status?: string; sportId?: string }>
+  searchParams: Promise<{ page?: string; status?: string; sportId?: string; startDate?: string; endDate?: string }>
 }) {
   try {
     const params = await searchParams
@@ -29,6 +29,8 @@ export default async function AdminBookingsPage({
     const { bookings, total, totalPages } = await getAllBookingsForAdmin(page, 20, {
       status: params.status || undefined,
       sportId: params.sportId || undefined,
+      startDate: params.startDate || undefined,
+      endDate: params.endDate || undefined,
     })
 
     const sportsData = await getSports()
@@ -102,6 +104,8 @@ export default async function AdminBookingsPage({
               sports={sports}
               currentStatus={params.status}
               currentSportId={params.sportId}
+              currentStartDate={params.startDate}
+              currentEndDate={params.endDate}
             />
 
             {/* Bookings List */}

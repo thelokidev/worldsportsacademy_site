@@ -17,14 +17,14 @@ export default async function AdminMembersPage({
     const withMembershipCount = members.filter(m => m.memberships && m.memberships.length > 0).length
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8 overflow-hidden">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-white">Members Management</h1>
-          <p className="text-gray-400">View all members, manage roles, and access member details</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white">Members Management</h1>
+          <p className="text-sm sm:text-base text-gray-400">View all members, manage roles, and access member details</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-400">Total Members</CardTitle>
@@ -63,14 +63,14 @@ export default async function AdminMembersPage({
         </div>
 
         {/* Members Table */}
-        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm overflow-hidden">
           <CardHeader>
             <CardTitle className="text-white">All Members</CardTitle>
             <CardDescription className="text-gray-400">
               Click on a member to view details or manage their role
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             <MemberManagementTable 
               members={members} 
               currentPage={page}

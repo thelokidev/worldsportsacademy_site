@@ -41,14 +41,14 @@ export default async function AdminCourtsPage() {
     const inactiveCourts = courts.filter(c => !c.is_active)
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 overflow-hidden">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-white">Courts Management</h1>
-          <p className="text-gray-400">Manage court availability, block courts, and view utilization</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white">Courts Management</h1>
+          <p className="text-sm sm:text-base text-gray-400">Manage court availability, block courts, and view utilization</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-400">Total Courts</CardTitle>
@@ -87,14 +87,14 @@ export default async function AdminCourtsPage() {
         </div>
 
         {/* Courts Table */}
-        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm overflow-hidden">
           <CardHeader>
             <CardTitle className="text-white">All Courts</CardTitle>
             <CardDescription className="text-gray-400">
               Click on a court to view details, block/unblock, or change status
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             <CourtManagementTable courts={courts} />
           </CardContent>
         </Card>

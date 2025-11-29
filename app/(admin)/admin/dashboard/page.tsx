@@ -1,21 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getServiceSupabaseClientSafe } from '@/lib/supabase/service'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import {
-  Calendar,
-  Users,
-  MapPin,
-  Shield,
-  DollarSign,
-  BarChart3,
-} from 'lucide-react'
-import { LiveStatsGrid } from '@/components/features/admin/live-stats-grid'
-import { LiveActivityFeed } from '@/components/features/admin/live-activity-feed'
-import { LiveCourtStatus } from '@/components/features/admin/live-court-status'
-import { LivePaymentMetrics } from '@/components/features/admin/live-payment-metrics'
 import { getPaymentMetrics } from '@/lib/payments/metrics'
+import { DashboardWithFilter } from '@/components/features/admin/dashboard-with-filter'
 
 /**
  * Fetch user emails from auth.users for dashboard display
@@ -186,81 +172,20 @@ async function getInitialDashboardData() {
 export default async function AdminDashboardPage() {
   const initialData = await getInitialDashboardData()
 
+  // Transform payment metrics for filtered view
+  const initialPaymentMetrics = {
+    totalRevenue: initialData.stats.monthlyRevenue,
+    dropInRevenue: initialData.paymentMetrics?.dropInRevenue || 0,
+    membershipRevenue: initialData.paymentMetrics?.membershipRevenue || 0,
+    totalTransactions: initialData.paymentMetrics?.totalTransactions || 0,
+    newMemberships: initialData.paymentMetrics?.newMemberships || 0,
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 text-white">Dashboard Overview</h1>
-          <p className="text-gray-400">Real-time insights into your sports academy</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#50C878]/10 border border-[#50C878]/30">
-            <div className="h-2 w-2 rounded-full bg-[#50C878] animate-pulse" />
-            <span className="text-xs text-[#50C878] font-medium">Live Data</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Live Stats Grid */}
-      <LiveStatsGrid initialStats={initialData.stats} />
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Live Activity Feed */}
-        <LiveActivityFeed initialActivity={initialData.activity} />
-
-        {/* Quick Actions */}
-        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
-              <BarChart3 className="h-5 w-5 text-[#50C878]" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" asChild>
-              <Link href="/admin/bookings">
-                <Calendar className="h-4 w-4 mr-2 text-[#50C878]" />
-                Manage Bookings
-              </Link>
-            </Button>
-
-            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" asChild>
-              <Link href="/admin/memberships">
-                <Users className="h-4 w-4 mr-2 text-[#50C878]" />
-                View Memberships
-              </Link>
-            </Button>
-
-            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" asChild>
-              <Link href="/admin/courts">
-                <MapPin className="h-4 w-4 mr-2 text-[#50C878]" />
-                Manage Courts
-              </Link>
-            </Button>
-
-            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" asChild>
-              <Link href="/admin/members">
-                <Shield className="h-4 w-4 mr-2 text-[#50C878]" />
-                Manage Members
-              </Link>
-            </Button>
-
-            <Button variant="outline" className="w-full justify-start border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors" asChild>
-              <Link href="/admin/revenue">
-                <DollarSign className="h-4 w-4 mr-2 text-[#50C878]" />
-                Revenue Analytics
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Live Court Status */}
-      <LiveCourtStatus />
-
-      {/* Live Payment Metrics */}
-      <LivePaymentMetrics initialMetrics={initialData.paymentMetrics} />
-    </div>
+    <DashboardWithFilter
+      initialStats={initialData.stats}
+      initialActivity={initialData.activity}
+      initialPaymentMetrics={initialPaymentMetrics}
+    />
   )
 }

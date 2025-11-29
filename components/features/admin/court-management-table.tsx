@@ -187,59 +187,60 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
           courts.map((court) => (
             <div
               key={court.id}
-              className="flex items-center justify-between p-4 border border-gray-800 rounded-lg bg-black/20 hover:bg-black/40 transition-colors"
+              className="p-4 border border-gray-800 rounded-lg bg-black/20 hover:bg-black/40 transition-colors"
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-lg text-gray-200">{court.name}</h3>
-                  {getStatusBadge(court)}
-                  <Badge variant="outline" className="text-xs border-gray-700 text-gray-400">
-                    {court.sports?.display_name || 'Unknown Sport'}
-                  </Badge>
-                </div>
-
-                {/* Booking Status */}
-                <div className="mt-2 space-y-1 mb-2">
-                  {court.currentBooking ? (
-                    <div className="flex items-center gap-2 text-sm text-green-400">
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      <span>Occupied by {court.currentBooking.user?.full_name || 'Unknown'}</span>
-                      <span className="text-gray-500 text-xs">
-                        ({format(new Date(court.currentBooking.start_time), 'h:mm a')} - {format(new Date(court.currentBooking.end_time), 'h:mm a')})
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <div className="w-2 h-2 rounded-full bg-gray-600" />
-                      <span>Available Now</span>
-                    </div>
-                  )}
-
-                  {court.nextBooking && (
-                    <div className="text-xs text-gray-400 ml-4">
-                      Next: {court.nextBooking.user?.full_name || 'Unknown'} at {format(new Date(court.nextBooking.start_time), 'h:mm a')}
-                    </div>
-                  )}
-                </div>
-
-                {court.is_blocked && court.blocked_reason && (
-                  <p className="text-sm text-red-600 mb-1">
-                    Reason: {court.blocked_reason}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500">
-                  Created: {format(new Date(court.created_at), 'MMM d, yyyy')}
-                </p>
+              {/* Header with name and badges */}
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <h3 className="font-semibold text-base sm:text-lg text-gray-200">{court.name}</h3>
+                {getStatusBadge(court)}
+                <Badge variant="outline" className="text-xs border-gray-700 text-gray-400">
+                  {court.sports?.display_name || 'Unknown Sport'}
+                </Badge>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Booking Status */}
+              <div className="mt-2 space-y-1 mb-2">
+                {court.currentBooking ? (
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-green-400">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
+                    <span className="break-words">Occupied by {court.currentBooking.user?.full_name || 'Unknown'}</span>
+                    <span className="text-gray-500 text-xs">
+                      ({format(new Date(court.currentBooking.start_time), 'h:mm a')} - {format(new Date(court.currentBooking.end_time), 'h:mm a')})
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="w-2 h-2 rounded-full bg-gray-600 flex-shrink-0" />
+                    <span>Available Now</span>
+                  </div>
+                )}
+
+                {court.nextBooking && (
+                  <div className="text-xs text-gray-400 ml-4">
+                    Next: {court.nextBooking.user?.full_name || 'Unknown'} at {format(new Date(court.nextBooking.start_time), 'h:mm a')}
+                  </div>
+                )}
+              </div>
+
+              {court.is_blocked && court.blocked_reason && (
+                <p className="text-sm text-red-600 mb-1 break-words">
+                  Reason: {court.blocked_reason}
+                </p>
+              )}
+              <p className="text-xs text-gray-500">
+                Created: {format(new Date(court.created_at), 'MMM d, yyyy')}
+              </p>
+
+              {/* Action buttons - responsive grid */}
+              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-800/50">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleViewDetails(court)}
+                  className="flex-1 sm:flex-none min-w-[90px]"
                 >
-                  <Calendar className="h-4 w-4 mr-1" />
-                  View Details
+                  <Calendar className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">View Details</span>
                 </Button>
 
                 <Button
@@ -247,6 +248,7 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
                   size="sm"
                   onClick={() => handleEditName(court)}
                   disabled={loading}
+                  className="p-2"
                 >
                   <Edit2 className="h-4 w-4" />
                 </Button>
@@ -257,10 +259,10 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
                     size="sm"
                     onClick={() => handleBlockUnblock(court, false)}
                     disabled={loading}
-                    className="text-green-600 hover:text-green-700"
+                    className="text-green-600 hover:text-green-700 flex-1 sm:flex-none"
                   >
-                    <Unlock className="h-4 w-4 mr-1" />
-                    Unblock
+                    <Unlock className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Unblock</span>
                   </Button>
                 ) : (
                   <Button
@@ -268,10 +270,10 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
                     size="sm"
                     onClick={() => handleBlockUnblock(court, true)}
                     disabled={loading}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
                   >
-                    <Lock className="h-4 w-4 mr-1" />
-                    Block
+                    <Lock className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Block</span>
                   </Button>
                 )}
 
@@ -280,6 +282,7 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
                   size="sm"
                   onClick={() => handleToggleActive(court)}
                   disabled={loading}
+                  className="p-2"
                 >
                   {court.is_active ? (
                     <PowerOff className="h-4 w-4" />
