@@ -176,7 +176,7 @@ export default function TermsOfServicePage() {
                                 <div className="mt-4 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
                                     <p><strong className="text-white">World Sports Academy</strong></p>
                                     <p>Burlington, Ontario, Canada</p>
-                                    <p>Email: <a href="mailto:info@worldsportsacademy.com" className="text-[#50C878] hover:text-[#CFEA6C]">info@worldsportsacademy.com</a></p>
+                                    <p>Email: <a href="mailto:Info@wsateam.com" className="text-[#50C878] hover:text-[#CFEA6C]">Info@wsateam.com</a></p>
                                 </div>
                             </div>
                         </section>

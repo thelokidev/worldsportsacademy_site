@@ -201,7 +201,7 @@ export function ProgramsGrid() {
             variant="outline"
             className="border-2 border-[#50C878] text-[#50C878] hover:bg-[#50C878] hover:text-white rounded-lg px-8 py-3 h-auto font-semibold"
           >
-            <Link href="mailto:info@worldsportsacademy.com">Contact Our Coaches</Link>
+            <Link href="mailto:Info@wsateam.com">Contact Our Coaches</Link>
           </Button>
         </div>
       </div>

@@ -29,7 +29,7 @@ export function LocationsSection() {
               </p>
               <div className="flex flex-col gap-4">
                 <a
-                  href="mailto:info@worldsportsacademy.com"
+                  href="mailto:Info@wsateam.com"
                   className="inline-flex items-center gap-3 text-[#50C878] dark:text-[#50C878] hover:opacity-80 transition-opacity group"
                 >
                   <div className="w-10 h-10 rounded-full bg-[#50C878]/20 dark:bg-[#50C878]/20 flex items-center justify-center">
@@ -37,7 +37,7 @@ export function LocationsSection() {
                   </div>
                   <div>
                     <span className="text-sm text-gray-400 dark:text-gray-400 block">Email</span>
-                    <span className="text-base font-medium text-white dark:text-white">info@worldsportsacademy.com</span>
+                    <span className="text-base font-medium text-white dark:text-white">Info@wsateam.com</span>
                   </div>
                   <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-[#50C878] dark:text-[#50C878]" />
                 </a>

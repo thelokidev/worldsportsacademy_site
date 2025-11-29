@@ -42,7 +42,7 @@ export function Footer() {
                   <li><Link href="/" className="hover:opacity-80">Home</Link></li>
                   <li><Link href="/bookings" className="hover:opacity-80">Book a Session</Link></li>
                   <li><Link href="/memberships" className="hover:opacity-80">Memberships</Link></li>
-                  <li><a href="mailto:info@worldsportsacademy.com" className="hover:opacity-80">Contact</a></li>
+                  <li><a href="mailto:Info@wsateam.com" className="hover:opacity-80">Contact</a></li>
                 </ul>
               </div>
             </div>
