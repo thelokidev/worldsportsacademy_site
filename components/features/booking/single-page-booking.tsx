@@ -576,15 +576,30 @@ export function SinglePageBooking() {
                           onChange={(e) => {
                             const value = e.target.value
                             const sport = sports.find((s) => s.id === value) || null
+                            // Block chess bookings
+                            if (sport) {
+                              const name = sport.display_name?.toLowerCase() || sport.name?.toLowerCase() || ''
+                              if (name.includes('chess')) {
+                                toast.info('Chess bookings are coming soon!', {
+                                  duration: 3000,
+                                })
+                                return
+                              }
+                            }
                             setSelectedSport(sport)
                             setSelectedTime(null)
                           }}
                           className="w-full h-10 sm:h-11 rounded-md border border-gray-300 bg-white px-3 text-sm text-[#2D5B4A] focus:outline-none focus:ring-2 focus:ring-[#50C878] focus:border-[#50C878]"
                         >
                           <option value="">Choose a sport</option>
-                          {sports.map((sport) => (
-                            <option key={sport.id} value={sport.id}>{sport.display_name}</option>
-                          ))}
+                          {sports
+                            .filter((sport) => {
+                              const name = sport.display_name?.toLowerCase() || sport.name?.toLowerCase() || ''
+                              return !name.includes('chess')
+                            })
+                            .map((sport) => (
+                              <option key={sport.id} value={sport.id}>{sport.display_name}</option>
+                            ))}
                         </select>
                       </div>
                     )}

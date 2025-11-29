@@ -303,8 +303,21 @@ export function RedesignedBooking() {
       .sort((a: any, b: any) => new Date(a.time).getTime() - new Date(b.time).getTime())
   }, [selectedDate, slots])
 
+  // Check if sport is coming soon (chess)
+  const isComingSoon = (sport: any) => {
+    const name = sport.display_name?.toLowerCase() || sport.name?.toLowerCase() || ''
+    return name.includes('chess')
+  }
+
   // Handle sport selection
   const handleSportSelect = (sport: any) => {
+    // Block chess bookings
+    if (isComingSoon(sport)) {
+      toast.info('Chess bookings are coming soon!', {
+        duration: 3000,
+      })
+      return
+    }
     setSelectedSport(sport)
     setSelectedCourt(null)
     setSelectedTime(null)
@@ -540,18 +553,33 @@ export function RedesignedBooking() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {sports.map((sport) => {
                       const Icon = getSportIcon(sport.display_name)
+                      const comingSoon = isComingSoon(sport)
                       return (
                         <button
                           key={sport.id}
                           onClick={() => handleSportSelect(sport)}
-                          className={`relative group p-6 rounded-xl border-2 transition-all text-left ${selectedSport?.id === sport.id
+                          disabled={comingSoon}
+                          className={`relative group p-6 rounded-xl border-2 transition-all text-left ${
+                            comingSoon
+                              ? 'border-gray-700 bg-gray-800/50 opacity-60 cursor-not-allowed'
+                              : selectedSport?.id === sport.id
                               ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
                               : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
                             }`}
                         >
+                          {comingSoon && (
+                            <div className="absolute top-2 right-2 z-10">
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-semibold">
+                                Coming Soon
+                              </span>
+                            </div>
+                          )}
                           <div className="flex items-start gap-4">
                             <div
-                              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${selectedSport?.id === sport.id
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                                comingSoon
+                                  ? 'bg-gray-700 text-gray-500'
+                                  : selectedSport?.id === sport.id
                                   ? 'bg-[#50C878] text-white'
                                   : 'bg-gray-900 text-white group-hover:bg-[#50C878]/20'
                                 }`}
@@ -559,12 +587,18 @@ export function RedesignedBooking() {
                               <Icon className="w-6 h-6" />
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-bold text-lg text-white dark:text-white mb-1">{sport.display_name}</h3>
-                              <p className="text-sm text-gray-300 dark:text-gray-300">
-                                {sport.duration_minutes} min session
+                              <h3 className={`font-bold text-lg mb-1 ${
+                                comingSoon ? 'text-gray-500' : 'text-white dark:text-white'
+                              }`}>
+                                {sport.display_name}
+                              </h3>
+                              <p className={`text-sm ${
+                                comingSoon ? 'text-gray-600' : 'text-gray-300 dark:text-gray-300'
+                              }`}>
+                                {comingSoon ? 'Available soon' : `${sport.duration_minutes} min session`}
                               </p>
                             </div>
-                            {selectedSport?.id === sport.id && (
+                            {selectedSport?.id === sport.id && !comingSoon && (
                               <Check className="w-6 h-6 text-[#50C878] absolute top-4 right-4" />
                             )}
                           </div>

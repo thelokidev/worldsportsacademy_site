@@ -51,10 +51,16 @@ export function SportSelector({ onSelect }: SportSelectorProps) {
     )
   }
 
+  // Check if sport is chess (coming soon)
+  const isChessComingSoon = (sport: Sport) => {
+    const name = sport.display_name?.toLowerCase() || sport.name?.toLowerCase() || ''
+    return name.includes('chess')
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {sports.map((sport) => {
-        const isComingSoon = sport.status === 'coming_soon'
+        const isComingSoon = sport.status === 'coming_soon' || isChessComingSoon(sport)
         const isInactive = sport.status === 'inactive'
         
         return (
