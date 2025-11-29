@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard } from "lucide-react"
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, ChevronRight, Home, Dumbbell, CalendarCheck, Crown, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState, useEffect, useTransition, useMemo } from "react"
+import { useState, useEffect, useTransition, useMemo, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter, usePathname } from "next/navigation"
 import {
@@ -18,10 +18,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import Image from "next/image"
 
 const navigation = [
-  { name: "Home", href: "/" },
-  { name: "Programs", href: "/programs" },
-  { name: "Book Now", href: "/bookings" },
-  { name: "Memberships", href: "/memberships" },
+  { name: "Home", href: "/", icon: Home },
+  { name: "Programs", href: "/programs", icon: Dumbbell },
+  { name: "Book Now", href: "/bookings", icon: CalendarCheck },
+  { name: "Memberships", href: "/memberships", icon: Crown },
 ]
 
 export function Navbar() {
@@ -174,9 +174,21 @@ export function Navbar() {
     }
   }, [pathname])
 
-  const handleLinkClick = () => {
+  const handleLinkClick = useCallback(() => {
     setMobileMenuOpen(false)
-  }
+  }, [])
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileMenuOpen])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -233,11 +245,11 @@ export function Navbar() {
             {/* Right Side - Auth & Mobile Menu */}
             <div className="flex items-center gap-3">
               {loading ? (
-                <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-800 hidden md:block" />
+                <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-800 hidden lg:block" />
               ) : user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="hidden md:flex items-center gap-3 px-3 py-2 rounded-xl bg-transparent hover:bg-gray-900 transition-colors group outline-none">
+                    <button className="hidden lg:flex items-center gap-3 px-3 py-2 rounded-xl bg-transparent hover:bg-gray-900 transition-colors group outline-none">
                       <Avatar className="w-9 h-9 ring-2 ring-[#50C878]/20 group-hover:ring-[#50C878]/40 transition-all">
                         <AvatarFallback className="bg-gradient-to-br from-[#50C878] to-[#2D5B4A] text-white font-semibold">
                           {getInitials(user.email)}
@@ -320,7 +332,7 @@ export function Navbar() {
                 </DropdownMenu>
               ) : (
                 mounted && (
-                  <div className="hidden md:flex items-center gap-2">
+                  <div className="hidden lg:flex items-center gap-2">
                     <Button
                       size="sm"
                       className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg hover:shadow-xl transition-all duration-200"
@@ -335,99 +347,253 @@ export function Navbar() {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2.5 rounded-xl hover:bg-gray-900 transition-colors relative"
+                className="lg:hidden p-2.5 rounded-xl hover:bg-gray-800/50 active:bg-gray-800/70 transition-all duration-200 relative z-[60]"
                 aria-label="Toggle menu"
+                aria-expanded={mobileMenuOpen}
               >
                 <div className="relative w-6 h-6">
                   <Menu
-                    className={`absolute inset-0 w-6 h-6 text-gray-300 dark:text-gray-300 transition-all duration-300 ${mobileMenuOpen ? "opacity-0 rotate-90" : "opacity-100 rotate-0"
-                      }`}
+                    className={`absolute inset-0 w-6 h-6 text-gray-200 transition-all duration-300 ease-out ${
+                      mobileMenuOpen ? "opacity-0 rotate-180 scale-50" : "opacity-100 rotate-0 scale-100"
+                    }`}
                   />
                   <X
-                    className={`absolute inset-0 w-6 h-6 text-gray-300 dark:text-gray-300 transition-all duration-300 ${mobileMenuOpen ? "opacity-100 rotate-0" : "opacity-0 -rotate-90"
-                      }`}
+                    className={`absolute inset-0 w-6 h-6 text-gray-200 transition-all duration-300 ease-out ${
+                      mobileMenuOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-180 scale-50"
+                    }`}
                   />
                 </div>
               </button>
             </div>
           </div>
+        </div>
+      </nav>
 
-          {/* Mobile Menu - Slide Animation */}
-          <div
-            className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-              }`}
-          >
-            <div className="py-4 space-y-1 border-t border-gray-800/50 dark:border-gray-800/50 mt-2">
-              {navigation.map((item) => {
-                const active = isActive(item.href)
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    prefetch={true}
-                    onClick={handleLinkClick}
-                    className={`flex items-center px-4 py-3 text-base font-medium rounded-xl transition-colors duration-150 ${active
-                      ? "text-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10"
-                      : "text-gray-300 hover:text-[#50C878] hover:bg-gray-900"
-                      } ${mounted && isPending ? "opacity-70" : ""}`}
-                  >
-                    {item.name}
-                    {active && (
-                      <span className="ml-auto w-2 h-2 bg-[#50C878] rounded-full" />
-                    )}
-                  </Link>
-                )
-              })}
-              <div className="pt-4 mt-4 border-t border-gray-800/50 dark:border-gray-800/50 space-y-2">
-                {user ? (
-                  <>
+      {/* Mobile Menu - Full Screen Overlay */}
+      <div
+        className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 ${
+          mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
+            mobileMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={handleLinkClick}
+          aria-hidden="true"
+        />
+
+        {/* Menu Panel */}
+        <div
+          className={`absolute top-0 right-0 h-full w-full max-w-sm bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 shadow-2xl transform transition-transform duration-300 ease-out ${
+            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Menu Header */}
+          <div className="flex items-center justify-between p-5 pt-6 border-b border-gray-800/50">
+            <Link
+              href="/"
+              prefetch={true}
+              onClick={handleLinkClick}
+              className="flex items-center gap-3"
+            >
+              <div className="relative w-10 h-10">
+                <Image
+                  src="/logo.png"
+                  alt="World Sports Academy"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-lg font-bold text-white">WSA</span>
+            </Link>
+            <button
+              onClick={handleLinkClick}
+              className="p-2 rounded-xl hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="w-6 h-6 text-gray-400" />
+            </button>
+          </div>
+
+          {/* Scrollable Menu Content */}
+          <div className="h-[calc(100%-80px)] overflow-y-auto overscroll-contain">
+            {/* User Section (if logged in) */}
+            {user && (
+              <div className="p-5 border-b border-gray-800/50">
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-800/30 border border-gray-700/50">
+                  <Avatar className="w-12 h-12 ring-2 ring-[#50C878]/30">
+                    <AvatarFallback className="bg-gradient-to-br from-[#50C878] to-[#2D5B4A] text-white text-lg font-semibold">
+                      {getInitials(user.email)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-semibold text-white truncate">
+                      {user.email?.split("@")[0]}
+                    </p>
+                    <p className="text-sm text-gray-400 truncate">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Main Navigation */}
+            <div className="p-5">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">
+                Navigation
+              </p>
+              <nav className="space-y-1">
+                {navigation.map((item, index) => {
+                  const active = isActive(item.href)
+                  const Icon = item.icon
+                  return (
                     <Link
-                      href="/dashboard"
+                      key={item.name}
+                      href={item.href}
                       prefetch={true}
                       onClick={handleLinkClick}
-                      className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800 rounded-xl transition-colors"
-                    >
-                      <LayoutDashboard className="w-5 h-5" />
-                      Dashboard
-                    </Link>
-                    <Link
-                      href="/dashboard/bookings"
-                      prefetch={true}
-                      onClick={handleLinkClick}
-                      className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-300 dark:text-gray-300 hover:text-[#50C878] hover:bg-gray-800 dark:hover:bg-gray-800 rounded-xl transition-colors"
-                    >
-                      <Calendar className="w-5 h-5" />
-                      My Bookings
-                    </Link>
-                    <Button
-                      variant="outline"
-                      className="w-full mt-2 border-red-800 text-red-400 hover:bg-red-900/20 hover:text-red-300 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                      onClick={() => {
-                        handleSignOut()
-                        setMobileMenuOpen(false)
+                      className={`group flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+                        active
+                          ? "bg-[#50C878]/15 border border-[#50C878]/30"
+                          : "hover:bg-gray-800/50 border border-transparent"
+                      }`}
+                      style={{
+                        animationDelay: `${index * 50}ms`,
                       }}
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
-                    </Button>
-                  </>
-                ) : (
-                  mounted && (
-                    <>
-                      <Button
-                        className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white shadow-lg"
-                        asChild
-                      >
-                        <Link href="/auth" prefetch={true} onClick={() => setMobileMenuOpen(false)}>Login</Link>
-                      </Button>
-                    </>
+                      <div className={`p-2 rounded-lg transition-colors ${
+                        active 
+                          ? "bg-[#50C878]/20 text-[#50C878]" 
+                          : "bg-gray-800 text-gray-400 group-hover:text-[#50C878] group-hover:bg-gray-700"
+                      }`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className={`flex-1 text-base font-medium transition-colors ${
+                        active ? "text-[#50C878]" : "text-gray-200 group-hover:text-white"
+                      }`}>
+                        {item.name}
+                      </span>
+                      <ChevronRight className={`w-5 h-5 transition-all ${
+                        active 
+                          ? "text-[#50C878] translate-x-0 opacity-100" 
+                          : "text-gray-600 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
+                      }`} />
+                    </Link>
                   )
-                )}
+                })}
+              </nav>
+            </div>
+
+            {/* User Actions Section */}
+            {user && (
+              <div className="p-5 border-t border-gray-800/50">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">
+                  Account
+                </p>
+                <nav className="space-y-1">
+                  {isAdmin && (
+                    <Link
+                      href="/admin/dashboard"
+                      prefetch={true}
+                      onClick={handleLinkClick}
+                      className="group flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-[#50C878]/10 border border-transparent hover:border-[#50C878]/30 transition-all duration-200"
+                    >
+                      <div className="p-2 rounded-lg bg-[#50C878]/20 text-[#50C878]">
+                        <Shield className="w-5 h-5" />
+                      </div>
+                      <span className="flex-1 text-base font-medium text-[#50C878]">
+                        Admin Dashboard
+                      </span>
+                      <ChevronRight className="w-5 h-5 text-[#50C878]/50 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+                    </Link>
+                  )}
+                  <Link
+                    href="/dashboard"
+                    prefetch={true}
+                    onClick={handleLinkClick}
+                    className="group flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-gray-800/50 border border-transparent transition-all duration-200"
+                  >
+                    <div className="p-2 rounded-lg bg-gray-800 text-gray-400 group-hover:text-[#50C878] group-hover:bg-gray-700 transition-colors">
+                      <LayoutDashboard className="w-5 h-5" />
+                    </div>
+                    <span className="flex-1 text-base font-medium text-gray-200 group-hover:text-white transition-colors">
+                      User Dashboard
+                    </span>
+                    <ChevronRight className="w-5 h-5 text-gray-600 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+                  </Link>
+                  <Link
+                    href="/dashboard/bookings"
+                    prefetch={true}
+                    onClick={handleLinkClick}
+                    className="group flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-gray-800/50 border border-transparent transition-all duration-200"
+                  >
+                    <div className="p-2 rounded-lg bg-gray-800 text-gray-400 group-hover:text-[#50C878] group-hover:bg-gray-700 transition-colors">
+                      <Calendar className="w-5 h-5" />
+                    </div>
+                    <span className="flex-1 text-base font-medium text-gray-200 group-hover:text-white transition-colors">
+                      My Bookings
+                    </span>
+                    <ChevronRight className="w-5 h-5 text-gray-600 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+                  </Link>
+                  <Link
+                    href="/dashboard/membership"
+                    prefetch={true}
+                    onClick={handleLinkClick}
+                    className="group flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-gray-800/50 border border-transparent transition-all duration-200"
+                  >
+                    <div className="p-2 rounded-lg bg-gray-800 text-gray-400 group-hover:text-[#50C878] group-hover:bg-gray-700 transition-colors">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <span className="flex-1 text-base font-medium text-gray-200 group-hover:text-white transition-colors">
+                      My Membership
+                    </span>
+                    <ChevronRight className="w-5 h-5 text-gray-600 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+                  </Link>
+                </nav>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="p-5 pt-2">
+              {user ? (
+                <Button
+                  variant="outline"
+                  className="w-full h-12 border-red-900/50 bg-red-950/20 text-red-400 hover:bg-red-900/30 hover:text-red-300 hover:border-red-800/50 rounded-xl font-medium transition-all duration-200"
+                  onClick={() => {
+                    handleSignOut()
+                    setMobileMenuOpen(false)
+                  }}
+                >
+                  <LogOut className="w-5 h-5 mr-3" />
+                  Sign Out
+                </Button>
+              ) : (
+                mounted && (
+                  <Button
+                    className="w-full h-12 bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#45B86B] hover:to-[#38A058] text-white shadow-lg shadow-[#50C878]/25 rounded-xl font-semibold transition-all duration-200"
+                    asChild
+                  >
+                    <Link href="/auth" prefetch={true} onClick={handleLinkClick}>
+                      Login / Sign Up
+                    </Link>
+                  </Button>
+                )
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-5 pt-0 pb-8">
+              <div className="p-4 rounded-xl bg-gray-800/30 border border-gray-800/50">
+                <p className="text-xs text-gray-500 text-center">
+                  World Sports Academy © {new Date().getFullYear()}
+                </p>
               </div>
             </div>
           </div>
         </div>
-      </nav>
+      </div>
     </header>
   )
 }
