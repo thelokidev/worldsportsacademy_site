@@ -295,17 +295,26 @@ export async function getCourtBookingStats(courtId: string) {
 
 export async function getAllMembers(page = 1, limit = 50) {
   await requireAdmin()
-  const supabase = await createClient()
+  
+  // Use service role client to bypass RLS for admin queries
+  const serviceSupabase = getServiceSupabaseClientSafe()
+  if (!serviceSupabase) {
+    throw new Error('Service role client not available. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured.')
+  }
 
   const offset = (page - 1) * limit
 
   // Get total count
-  const { count: totalCount } = await supabase
+  const { count: totalCount, error: countError } = await serviceSupabase
     .from('profiles')
     .select('*', { count: 'exact', head: true })
 
+  if (countError) {
+    console.error('Error fetching member count:', countError)
+  }
+
   // Get paginated members with their membership info (including phone_number and stripe_customer_id)
-  const { data: members, error } = await supabase
+  const { data: members, error } = await serviceSupabase
     .from('profiles')
     .select(`
       id,
@@ -330,7 +339,7 @@ export async function getAllMembers(page = 1, limit = 50) {
   // Get membership info for each member
   const membersWithMemberships = await Promise.all(
     (members || []).map(async (member) => {
-      const { data: memberships } = await supabase
+      const { data: memberships } = await serviceSupabase
         .from('memberships')
         .select(`
           id,
@@ -344,7 +353,7 @@ export async function getAllMembers(page = 1, limit = 50) {
         .eq('user_id', member.id)
         .eq('status', 'active')
 
-      const { count: bookingCount } = await supabase
+      const { count: bookingCount } = await serviceSupabase
         .from('bookings')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', member.id)
@@ -367,13 +376,18 @@ export async function getAllMembers(page = 1, limit = 50) {
 
 export async function updateMemberRole(userId: string, role: 'user' | 'admin') {
   await requireAdmin()
-  const supabase = await createClient()
+  
+  // Use service role client to bypass RLS for admin updates
+  const serviceSupabase = getServiceSupabaseClientSafe()
+  if (!serviceSupabase) {
+    throw new Error('Service role client not available')
+  }
 
   if (!['user', 'admin'].includes(role)) {
     throw new Error('Invalid role')
   }
 
-  const { error } = await supabase
+  const { error } = await serviceSupabase
     .from('profiles')
     .update({ role })
     .eq('id', userId)
@@ -388,10 +402,15 @@ export async function updateMemberRole(userId: string, role: 'user' | 'admin') {
 
 export async function getMemberDetails(userId: string) {
   await requireAdmin()
-  const supabase = await createClient()
+  
+  // Use service role client to bypass RLS for admin queries
+  const serviceSupabase = getServiceSupabaseClientSafe()
+  if (!serviceSupabase) {
+    throw new Error('Service role client not available')
+  }
 
   // Get user profile
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = await serviceSupabase
     .from('profiles')
     .select('*')
     .eq('id', userId)
@@ -411,7 +430,7 @@ export async function getMemberDetails(userId: string) {
   }
 
   // Get memberships
-  const { data: memberships } = await supabase
+  const { data: memberships } = await serviceSupabase
     .from('memberships')
     .select(`
       id,
@@ -428,7 +447,7 @@ export async function getMemberDetails(userId: string) {
     .order('created_at', { ascending: false })
 
   // Get bookings
-  const { data: bookings } = await supabase
+  const { data: bookings } = await serviceSupabase
     .from('bookings')
     .select(`
       id,
@@ -448,7 +467,7 @@ export async function getMemberDetails(userId: string) {
     .limit(10)
 
   // Get payments
-  const { data: payments } = await supabase
+  const { data: payments } = await serviceSupabase
     .from('payments')
     .select('id, amount, payment_type, status, created_at')
     .eq('user_id', userId)
@@ -465,13 +484,18 @@ export async function getMemberDetails(userId: string) {
 
 export async function searchMembers(query: string) {
   await requireAdmin()
-  const supabase = await createClient()
+  
+  // Use service role client to bypass RLS for admin queries
+  const serviceSupabase = getServiceSupabaseClientSafe()
+  if (!serviceSupabase) {
+    throw new Error('Service role client not available')
+  }
 
   if (!query || query.trim().length === 0) {
     return []
   }
 
-  const { data: members, error } = await supabase
+  const { data: members, error } = await serviceSupabase
     .from('profiles')
     .select(`
       id,
