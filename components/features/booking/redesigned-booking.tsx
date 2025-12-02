@@ -303,17 +303,18 @@ export function RedesignedBooking() {
       .sort((a: any, b: any) => new Date(a.time).getTime() - new Date(b.time).getTime())
   }, [selectedDate, slots])
 
-  // Check if sport is coming soon (chess)
+  // Check if sport is coming soon (chess, pilates)
   const isComingSoon = (sport: any) => {
     const name = sport.display_name?.toLowerCase() || sport.name?.toLowerCase() || ''
-    return name.includes('chess')
+    return name.includes('chess') || name.includes('pilates')
   }
 
   // Handle sport selection
   const handleSportSelect = (sport: any) => {
-    // Block chess bookings
+    // Block chess and pilates bookings
     if (isComingSoon(sport)) {
-      toast.info('Chess bookings are coming soon!', {
+      const sportName = sport.display_name || sport.name || 'This sport'
+      toast.info(`${sportName} bookings are coming soon!`, {
         duration: 3000,
       })
       return
