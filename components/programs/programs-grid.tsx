@@ -70,6 +70,7 @@ const programs = [
       'Mind-body connection',
     ],
     color: 'from-green-500 to-emerald-500',
+    comingSoon: true,
   },
 ]
 
