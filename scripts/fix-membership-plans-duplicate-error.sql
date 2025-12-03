@@ -1,14 +1,33 @@
--- Script: Update Stripe Product/Price IDs for Membership Plans
--- Run this in Supabase SQL Editor to update your membership plans with the new Stripe IDs.
+-- Script: Fix Duplicate Key Error and Update Membership Plans
+-- This script resolves the unique constraint violation by:
+-- 1. Clearing Stripe IDs from legacy plans (Squash, Table Tennis, etc.) and marking them inactive.
+-- 2. Updating the main generic plans (Monthly, Yearly, etc.) with the new Stripe IDs.
 
 BEGIN;
 
--- 1. Update Generic Plans (New Structure)
+-- 1. Archive Legacy Plans
+-- We set their Stripe IDs to NULL to free up the unique constraint.
+-- If your schema doesn't allow NULLs, we'll append '_old' to the IDs instead.
+UPDATE public.membership_plans
+SET 
+    is_active = false,
+    stripe_price_id = NULL, 
+    stripe_product_id = NULL,
+    updated_at = NOW()
+WHERE name IN (
+    'Squash Monthly Membership', 
+    'Table Tennis Monthly Membership', 
+    'Squash + Gym Monthly Membership'
+);
+
+-- 2. Update Main Plans with New IDs
+
 -- Monthly Membership
 UPDATE public.membership_plans
 SET
   stripe_product_id = 'prod_TX8Nj6SfIe7Pif',
   stripe_price_id = 'price_1Sa46pC2I88MOqJ1K8iEy1NH',
+  is_active = true,
   updated_at = NOW()
 WHERE name = 'Monthly Membership';
 
@@ -17,6 +36,7 @@ UPDATE public.membership_plans
 SET
   stripe_product_id = 'prod_TX8NDRIaXUjNl6',
   stripe_price_id = 'price_1Sa46pC2I88MOqJ1yd0uZ1Lj',
+  is_active = true,
   updated_at = NOW()
 WHERE name = 'Half-Yearly Membership';
 
@@ -25,6 +45,7 @@ UPDATE public.membership_plans
 SET
   stripe_product_id = 'prod_TX8Nc4iWv8q7QM',
   stripe_price_id = 'price_1Sa46qC2I88MOqJ1iDaWEf0o',
+  is_active = true,
   updated_at = NOW()
 WHERE name = 'Yearly Membership';
 
@@ -36,17 +57,6 @@ SET
   updated_at = NOW()
 WHERE name = 'Initiation Fee';
 
-
--- 2. Update Legacy Sport-Specific Plans (Map to new Monthly Membership)
--- This ensures that if your DB still has old plan names, they get updated to the new pricing.
-UPDATE public.membership_plans
-SET
-  stripe_product_id = 'prod_TX8Nj6SfIe7Pif',
-  stripe_price_id = 'price_1Sa46pC2I88MOqJ1K8iEy1NH',
-  updated_at = NOW()
-WHERE name IN ('Squash Monthly Membership', 'Table Tennis Monthly Membership', 'Squash + Gym Monthly Membership');
-
-
 -- 3. Update Drop-In Pricing
 UPDATE public.drop_in_pricing
 SET
@@ -57,8 +67,5 @@ WHERE is_active = true;
 
 COMMIT;
 
--- Verification Query
-SELECT name, stripe_product_id, stripe_price_id, updated_at 
-FROM public.membership_plans 
-ORDER BY name;
-
+-- Verification
+SELECT name, is_active, stripe_price_id FROM public.membership_plans ORDER BY name;

@@ -2,8 +2,6 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Check, Loader2, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -122,137 +120,153 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
   const hasBadge = isPopular || isCurrentPlan
 
   return (
-    <Card className={`relative flex flex-col h-full transition-all duration-300 ${isCurrentPlan
-      ? 'border-2 border-[#50C878] bg-black/60 shadow-lg shadow-[#50C878]/20 hover:border-[#50C878]'
+    <div className={`group relative flex flex-col h-full overflow-hidden rounded-3xl transition-all duration-500 ${isCurrentPlan
+      ? 'bg-zinc-900/80 ring-2 ring-[#50C878] shadow-[0_0_40px_-10px_rgba(80,200,120,0.3)]'
       : isPopular
-        ? 'border-2 border-[#50C878] bg-black shadow-lg shadow-[#50C878]/10 hover:border-[#50C878]/80'
-        : 'border border-[#50C878]/40 bg-black hover:border-[#50C878]/60 hover:shadow-md hover:shadow-[#50C878]/5'
+        ? 'bg-zinc-900/60 hover:bg-zinc-900/80 ring-1 ring-[#50C878]/50 hover:ring-[#50C878] shadow-xl hover:shadow-[0_0_30px_-10px_rgba(80,200,120,0.2)]'
+        : 'bg-zinc-900/40 hover:bg-zinc-900/60 ring-1 ring-white/10 hover:ring-white/20 hover:shadow-lg'
       }`}>
-      {/* Current Plan Badge */}
+
+      {/* Background Gradients */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      {isPopular && (
+        <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#50C878]/20 blur-[60px] rounded-full pointer-events-none" />
+      )}
+
+      {/* Badges */}
       {isCurrentPlan && (
-        <div className="absolute top-4 right-4 z-10">
-          <div className="bg-gradient-to-r from-[#50C878] to-[#3DA860] text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md">
-            <CheckCircle2 className="w-3 h-3" />
-            Current Plan
+        <div className="absolute top-0 inset-x-0 flex justify-center -mt-3 z-20">
+          <div className="bg-[#50C878] text-black text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-[#50C878]/20">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            CURRENT PLAN
           </div>
         </div>
       )}
 
-      {/* Best Value Badge */}
       {isBestValue && !isCurrentPlan && (
-        <div className="absolute top-4 right-4 z-10">
-          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-            ⭐ Best Value
+        <div className="absolute top-5 right-5 z-20">
+          <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-black text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg shadow-orange-500/20">
+            Best Value
           </div>
         </div>
       )}
 
-      <CardHeader className={`pt-6 pb-4 px-6 ${hasBadge ? 'pt-14' : ''}`}>
-        <CardTitle className="text-xl font-bold text-white mb-4">{plan.name}</CardTitle>
-
-        {/* Price Section */}
-        <div className="mb-6">
-          <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-5xl font-bold text-white">
+      <div className={`relative p-8 flex flex-col h-full z-10 ${hasBadge ? 'pt-12' : ''}`}>
+        {/* Header */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium text-gray-400 mb-4 uppercase tracking-widest">{plan.name}</h3>
+          <div className="flex items-baseline gap-1 mb-2">
+            <span className="text-5xl font-bold text-white tracking-tight">
               {formatPrice(plan.price)}
             </span>
-            <span className="text-gray-400 text-base">
-              {billingPeriod ? `/${billingPeriod.toLowerCase()}` : `/${plan.billing_interval}`}
+            <span className="text-gray-500 font-medium">
+              /{billingPeriod ? billingPeriod.toLowerCase() : plan.billing_interval}
             </span>
           </div>
+
           {savings && (
-            <p className="text-[#50C878] text-sm font-semibold">
-              Save {savings}
-            </p>
-          )}
-          <p className="text-gray-400 text-xs mt-1">+ 13% HST</p>
-        </div>
-      </CardHeader>
-
-      <CardContent className="flex-grow pt-0 pb-6 px-6">
-        {/* Features List */}
-        <ul className="space-y-3 mb-6">
-          {hasAllSportsAccess && (
-            <li className="flex items-center gap-3">
-              <div className="w-5 h-5 rounded-full bg-gradient-to-r from-[#50C878] to-[#3DA860] flex items-center justify-center flex-shrink-0">
-                <Check className="w-3 h-3 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-[#CFEA6C]">All Sports Access</span>
-            </li>
-          )}
-          {features.unlimited_bookings && (
-            <li className="flex items-center gap-3">
-              <Check className="w-5 h-5 text-[#50C878] flex-shrink-0" />
-              <span className="text-sm text-gray-300">Unlimited bookings</span>
-            </li>
-          )}
-          {features.cancel_anytime && (
-            <li className="flex items-center gap-3">
-              <Check className="w-5 h-5 text-[#50C878] flex-shrink-0" />
-              <span className="text-sm text-gray-300">Cancel anytime</span>
-            </li>
-          )}
-          {!isCurrentPlan && new Date() < new Date('2026-01-01T00:00:00-05:00') && (
-            <li className="flex items-center gap-3">
-              <span className="text-xl flex-shrink-0">🎉</span>
-              <span className="text-sm text-[#CFEA6C] font-semibold">FREE Registration (Save $25)</span>
-            </li>
-          )}
-        </ul>
-
-        {/* Sports Badges */}
-        {sports.length > 0 && (
-          <div className="pt-4 border-t border-gray-700/30">
-            <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Includes Sports</p>
-            <div className="flex flex-wrap gap-2">
-              {sports.map((sport) => (
-                <Badge
-                  key={sport.id}
-                  className="bg-[#50C878]/10 text-[#50C878] border-[#50C878]/20 text-xs px-2 py-1"
-                  variant="outline"
-                >
-                  {sport.display_name}
-                </Badge>
-              ))}
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#50C878]/10 border border-[#50C878]/20">
+              <span className="text-[#50C878] text-xs font-bold uppercase tracking-wide">Save {savings}</span>
             </div>
-          </div>
-        )}
-      </CardContent>
+          )}
 
-      <CardFooter className="pt-0 pb-6 px-6">
-        {isCurrentPlan ? (
-          <Button
-            asChild
-            className="w-full h-11 bg-gray-700 text-gray-300 hover:bg-gray-600 font-semibold rounded-lg transition-colors"
-            aria-label="Manage current membership plan"
-          >
-            <Link href="/dashboard/membership">
-              Manage Membership
-            </Link>
-          </Button>
-        ) : (
-          <Button
-            onClick={handlePurchase}
-            disabled={isLoading}
-            className={`w-full h-11 font-semibold rounded-lg transition-colors ${hasActiveMembership
-              ? 'bg-gradient-to-r from-[#50C878] to-[#3DA860] text-white hover:from-[#3DA860] hover:to-[#50C878]'
-              : 'bg-white text-gray-900 hover:bg-gray-100'
-              }`}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : hasActiveMembership ? (
-              'Switch Plan'
-            ) : (
-              'Get Started'
+          <p className="text-gray-500 text-xs mt-3 font-medium">+ 13% HST</p>
+        </div>
+
+        {/* Divider */}
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-8" />
+
+        {/* Features */}
+        <div className="flex-grow space-y-6">
+          <ul className="space-y-4">
+            {hasAllSportsAccess && (
+              <li className="flex items-start gap-3 group/item">
+                <div className="mt-0.5 w-5 h-5 rounded-full bg-[#50C878]/20 flex items-center justify-center flex-shrink-0 group-hover/item:bg-[#50C878] transition-colors duration-300">
+                  <Check className="w-3 h-3 text-[#50C878] group-hover/item:text-black transition-colors duration-300" />
+                </div>
+                <span className="text-sm font-medium text-white">All Sports Access</span>
+              </li>
             )}
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+            {features.unlimited_bookings && (
+              <li className="flex items-start gap-3 group/item">
+                <div className="mt-0.5 w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 group-hover/item:bg-gray-700 transition-colors">
+                  <Check className="w-3 h-3 text-gray-400 group-hover/item:text-white transition-colors" />
+                </div>
+                <span className="text-sm text-gray-300 group-hover/item:text-white transition-colors">Unlimited bookings</span>
+              </li>
+            )}
+            {features.cancel_anytime && (
+              <li className="flex items-start gap-3 group/item">
+                <div className="mt-0.5 w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 group-hover/item:bg-gray-700 transition-colors">
+                  <Check className="w-3 h-3 text-gray-400 group-hover/item:text-white transition-colors" />
+                </div>
+                <span className="text-sm text-gray-300 group-hover/item:text-white transition-colors">Cancel anytime</span>
+              </li>
+            )}
+            {!isCurrentPlan && new Date() < new Date('2026-01-01T00:00:00-05:00') && (
+              <li className="flex items-start gap-3 group/item">
+                <div className="mt-0.5 w-5 h-5 flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm">🎉</span>
+                </div>
+                <span className="text-sm font-bold text-[#CFEA6C] animate-pulse">FREE Registration (Save $25)</span>
+              </li>
+            )}
+          </ul>
+
+          {/* Sports Badges */}
+          {sports.length > 0 && (
+            <div className="pt-2">
+              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-3">Includes Access To</p>
+              <div className="flex flex-wrap gap-2">
+                {sports.map((sport) => (
+                  <div
+                    key={sport.id}
+                    className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-colors duration-300"
+                  >
+                    {sport.display_name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Action Button */}
+        <div className="mt-8 pt-6 border-t border-white/5">
+          {isCurrentPlan ? (
+            <Button
+              asChild
+              variant="outline"
+              className="w-full h-12 bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white hover:border-gray-600 transition-all duration-300 rounded-xl"
+            >
+              <Link href="/dashboard/membership">
+                Manage Membership
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              onClick={handlePurchase}
+              disabled={isLoading}
+              className={`w-full h-12 text-sm font-bold tracking-wide rounded-xl transition-all duration-300 shadow-lg ${hasActiveMembership
+                ? 'bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#45b069] hover:to-[#359253] text-white shadow-[#50C878]/20 hover:shadow-[#50C878]/40 hover:-translate-y-0.5'
+                : 'bg-white text-black hover:bg-gray-100 shadow-white/10 hover:shadow-white/20 hover:-translate-y-0.5'
+                }`}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  PROCESSING...
+                </>
+              ) : hasActiveMembership ? (
+                'SWITCH PLAN'
+              ) : (
+                'GET STARTED'
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 

@@ -86,11 +86,14 @@ export default async function MembershipsPage() {
       <section className="py-10 px-4 sm:px-6 lg:px-8 -mt-4 relative z-10">
         <div className="max-w-7xl mx-auto">
           {plans.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-black mb-4">
-                <span className="text-2xl">📋</span>
+            <div className="text-center py-20 bg-zinc-900/20 rounded-3xl border border-white/5 backdrop-blur-sm">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-zinc-900/50 mb-6 ring-1 ring-white/10">
+                <span className="text-4xl">📋</span>
               </div>
-              <p className="text-gray-400 text-lg">No membership plans available at this time.</p>
+              <h3 className="text-xl font-bold text-white mb-2">No Plans Available</h3>
+              <p className="text-gray-400 text-base max-w-md mx-auto">
+                We're currently updating our membership options. Please check back soon or contact us for more information.
+              </p>
             </div>
           ) : (
             <>
@@ -115,38 +118,36 @@ export default async function MembershipsPage() {
               </div>
 
               {/* Compact Drop-in CTA Section */}
-              <div className="relative group">
+              <div className="relative group mt-8">
                 {/* Glassmorphism Card */}
-                <div className="relative bg-black/80 backdrop-blur-xl border border-gray-800/50 rounded-xl p-4 md:p-5 overflow-hidden shadow-lg">
+                <div className="relative bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8 overflow-hidden transition-all duration-500 hover:border-white/20 hover:bg-zinc-900/60">
                   {/* Animated Background Gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#50C878]/1 via-[#2D5B4A]/1 to-[#50C878]/1 opacity-5 group-hover:opacity-8 transition-opacity duration-500" />
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-[#50C878]/5 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
-                  <div className="absolute bottom-0 left-0 w-20 h-20 bg-[#2D5B4A]/5 rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#50C878]/5 via-transparent to-[#50C878]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-[#50C878]/20 rounded-lg blur-lg" />
-                        <div className="relative inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-[#50C878] to-[#2D5B4A] shadow-md">
-                          <ArrowRight className="w-4 h-4 text-white" />
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-5 flex-1">
+                      <div className="relative flex-shrink-0">
+                        <div className="absolute inset-0 bg-[#50C878]/20 rounded-xl blur-lg group-hover:blur-xl transition-all duration-500" />
+                        <div className="relative inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-[#50C878] to-[#2D5B4A] shadow-lg group-hover:scale-105 transition-transform duration-500">
+                          <ArrowRight className="w-6 h-6 text-white" />
                         </div>
                       </div>
-                      <div className="text-left">
-                        <h2 className="text-base md:text-lg font-bold text-white mb-0.5">
+                      <div className="text-center md:text-left">
+                        <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
                           Not ready for a membership?
                         </h2>
-                        <p className="text-xs md:text-sm text-gray-300">
-                          Try our drop-in rates for flexible access
+                        <p className="text-sm md:text-base text-gray-400 group-hover:text-gray-300 transition-colors">
+                          Try our drop-in rates for flexible access to our facilities.
                         </p>
                       </div>
                     </div>
                     <Button
                       asChild
-                      className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white text-sm font-semibold rounded-lg px-5 py-2.5 h-auto shadow-md hover:shadow-lg transition-all duration-300 group/btn flex-shrink-0 border-0"
+                      className="w-full md:w-auto bg-white text-black hover:bg-gray-100 font-bold rounded-xl px-8 py-6 h-auto shadow-lg shadow-white/5 hover:shadow-white/10 hover:-translate-y-0.5 transition-all duration-300 group/btn border-0"
                     >
-                      <Link href="/bookings" className="inline-flex items-center gap-2">
+                      <Link href="/bookings" className="inline-flex items-center gap-2 text-base">
                         View Drop-In Rates
-                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                       </Link>
                     </Button>
                   </div>
