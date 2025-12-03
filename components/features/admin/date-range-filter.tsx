@@ -141,7 +141,7 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[calc(100vw-32px)] sm:w-auto p-0 bg-gray-900 border-gray-700 max-h-[85vh] overflow-y-auto"
+        className="w-[calc(100vw-32px)] sm:w-auto p-0 bg-gray-900 border-gray-700"
         align="start"
         sideOffset={4}
       >
@@ -196,8 +196,8 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
 
           {/* Custom Calendar */}
           {showCustom && (
-            <div className="p-3 w-full sm:w-auto">
-              <div className="flex items-center justify-between mb-2 px-2 sm:hidden">
+            <div className="flex flex-col w-full sm:w-auto max-h-[calc(100vh-120px)] sm:max-h-none">
+              <div className="flex items-center justify-between p-3 border-b border-gray-700 sm:hidden">
                 <button
                   onClick={() => setShowCustom(false)}
                   className="text-sm text-gray-400 hover:text-white flex items-center gap-1"
@@ -208,48 +208,50 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
                   Select Range
                 </p>
               </div>
-              <p className="hidden sm:block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
-                Select Range
-              </p>
-              <Calendar
-                mode="range"
-                selected={{
-                  from: customRange.from,
-                  to: customRange.to,
-                }}
-                onSelect={(range) => {
-                  setCustomRange({
-                    from: range?.from,
-                    to: range?.to,
-                  })
-                }}
-                numberOfMonths={1}
-                className="rounded-lg border border-gray-700 w-full"
-                classNames={{
-                  months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                  month: "space-y-4 w-full",
-                  caption: "flex justify-center pt-1 relative items-center",
-                  caption_label: "text-sm font-medium text-gray-200",
-                  nav: "space-x-1 flex items-center",
-                  nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 text-gray-400 hover:text-white",
-                  nav_button_previous: "absolute left-1",
-                  nav_button_next: "absolute right-1",
-                  table: "w-full border-collapse space-y-1",
-                  head_row: "flex justify-between",
-                  head_cell: "text-gray-500 rounded-md w-9 font-normal text-[0.8rem]",
-                  row: "flex w-full mt-2 justify-between",
-                  cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                  day: "h-9 w-9 p-0 font-normal text-gray-300 hover:bg-gray-800 rounded-md transition-colors",
-                  day_range_end: "day-range-end",
-                  day_selected: "bg-[#50C878] text-white hover:bg-[#50C878] hover:text-white focus:bg-[#50C878] focus:text-white",
-                  day_today: "bg-gray-800 text-white",
-                  day_outside: "text-gray-600 opacity-50",
-                  day_disabled: "text-gray-600 opacity-50",
-                  day_range_middle: "bg-[#50C878]/20 text-[#50C878]",
-                  day_hidden: "invisible",
-                }}
-              />
-              <div className="mt-3 flex justify-end gap-2">
+              <div className="flex-1 overflow-y-auto p-3">
+                <p className="hidden sm:block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
+                  Select Range
+                </p>
+                <Calendar
+                  mode="range"
+                  selected={{
+                    from: customRange.from,
+                    to: customRange.to,
+                  }}
+                  onSelect={(range) => {
+                    setCustomRange({
+                      from: range?.from,
+                      to: range?.to,
+                    })
+                  }}
+                  numberOfMonths={1}
+                  className="rounded-lg border border-gray-700 w-full"
+                  classNames={{
+                    months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                    month: "space-y-4 w-full",
+                    caption: "flex justify-center pt-1 relative items-center",
+                    caption_label: "text-sm font-medium text-gray-200",
+                    nav: "space-x-1 flex items-center",
+                    nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 text-gray-400 hover:text-white",
+                    nav_button_previous: "absolute left-1",
+                    nav_button_next: "absolute right-1",
+                    table: "w-full border-collapse space-y-1",
+                    head_row: "flex justify-between",
+                    head_cell: "text-gray-500 rounded-md w-9 font-normal text-[0.8rem]",
+                    row: "flex w-full mt-2 justify-between",
+                    cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                    day: "h-9 w-9 p-0 font-normal text-gray-300 hover:bg-gray-800 rounded-md transition-colors",
+                    day_range_end: "day-range-end",
+                    day_selected: "bg-[#50C878] text-white hover:bg-[#50C878] hover:text-white focus:bg-[#50C878] focus:text-white",
+                    day_today: "bg-gray-800 text-white",
+                    day_outside: "text-gray-600 opacity-50",
+                    day_disabled: "text-gray-600 opacity-50",
+                    day_range_middle: "bg-[#50C878]/20 text-[#50C878]",
+                    day_hidden: "invisible",
+                  }}
+                />
+              </div>
+              <div className="sticky bottom-0 bg-gray-900 border-t border-gray-700 p-3 flex justify-end gap-2">
                 <Button
                   variant="outline"
                   size="sm"

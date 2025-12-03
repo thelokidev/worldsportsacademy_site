@@ -32,7 +32,7 @@ export function Hero() {
           {/* FREE REGISTRATION PROMO BANNER - Top centered */}
           {new Date() < new Date('2026-01-01T00:00:00-05:00') && (
             <div className="absolute bottom-4 md:top-6 md:bottom-auto left-1/2 -translate-x-1/2 z-20 max-w-md w-full px-4">
-              <div className="bg-gradient-to-r from-[#50C878] via-[#3DA860] to-[#50C878] rounded-full p-[2px] shadow-2xl animate-pulse">
+              <div className="bg-gradient-to-r from-[#50C878] via-[#3DA860] to-[#50C878] rounded-full p-[2px] shadow-2xl">
                 <div className="bg-black/90 backdrop-blur-lg rounded-full px-6 py-3 flex items-center justify-center gap-3">
                   <span className="text-xl">🎉</span>
                   <div className="text-center">

@@ -43,15 +43,15 @@ export function Footer() {
                   <li><Link href="/bookings" className="hover:opacity-80">Book a Session</Link></li>
                   <li><Link href="/memberships" className="hover:opacity-80">Memberships</Link></li>
                   <li><a href="mailto:Info@wsateam.com" className="hover:opacity-80">Contact</a></li>
-                  <li><a href="tel:+1234567890" className="hover:opacity-80 font-semibold text-[#50C878]">+1 (234) 567-890</a></li>
+                  <li><a href="tel:+13653249060" className="hover:opacity-80 font-semibold text-[#50C878]">+1 (365) 324-9060</a></li>
                   <li>
                     <a
-                      href="https://maps.google.com/?q=World+Sports+Academy"
+                      href="https://maps.google.com/?q=1233+Dillon+Rd,+Burlington,+ON+L7M+1K6,+Canada"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="hover:opacity-80 text-xs text-gray-400 mt-2 block"
                     >
-                      123 Sports Avenue, City, Country
+                      1233 Dillon Rd, Burlington, ON L7M 1K6
                     </a>
                   </li>
                 </ul>
