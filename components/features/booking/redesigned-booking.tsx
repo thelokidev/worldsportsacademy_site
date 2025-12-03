@@ -673,42 +673,40 @@ export function RedesignedBooking() {
                       <label className="block text-sm font-semibold text-white dark:text-white mb-3">
                         Select Date
                       </label>
-                      <div className="w-fit mx-auto">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={handleDateSelect}
-                          disabled={(date) =>
-                            date < bookingWindowStart || date > bookingWindowEnd
-                          }
-                          className="rounded-lg border border-gray-800 bg-black"
-                          fromDate={bookingWindowStart}
-                          toDate={bookingWindowEnd}
-                          modifiers={calendarModifiers}
-                          modifiersClassNames={calendarModifierClasses}
-                          classNames={{
-                            months: 'flex flex-col space-y-4',
-                            month: 'space-y-4',
-                            caption: 'flex justify-center pt-1 relative items-center mb-4',
-                            caption_label: 'text-sm font-semibold text-white',
-                            nav: 'space-x-1 flex items-center',
-                            nav_button: 'h-8 w-8 bg-transparent p-0 hover:bg-[#50C878]/10 rounded-md transition-colors text-white',
-                            nav_button_previous: 'absolute left-1',
-                            nav_button_next: 'absolute right-1',
-                            table: 'w-full border-collapse',
-                            head_row: 'flex w-full mb-2',
-                            head_cell: 'text-gray-400 rounded-md flex-1 font-medium text-xs text-center',
-                            row: 'flex w-full mt-1',
-                            cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20 flex-1',
-                            day: 'h-10 w-10 mx-auto p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20 flex items-center justify-center',
-                            day_selected: '!bg-[#50C878] !text-white hover:!bg-[#50C878]/90 focus:!bg-[#50C878] !font-bold',
-                            day_today: '!bg-[#50C878]/30 !text-[#50C878] !font-bold !ring-2 !ring-[#50C878]',
-                            day_outside: 'text-gray-600 opacity-30',
-                            day_disabled: '!text-red-500/70 !bg-red-950/30 !opacity-50 hover:!bg-red-950/30 !cursor-not-allowed relative after:content-["🔒"] after:absolute after:bottom-0 after:right-0 after:text-[10px] after:opacity-60',
-                            day_hidden: 'invisible',
-                          }}
-                        />
-                      </div>
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateSelect}
+                        disabled={(date) =>
+                          date < bookingWindowStart || date > bookingWindowEnd
+                        }
+                        className="rounded-lg border border-gray-800 bg-black"
+                        fromDate={bookingWindowStart}
+                        toDate={bookingWindowEnd}
+                        modifiers={calendarModifiers}
+                        modifiersClassNames={calendarModifierClasses}
+                        classNames={{
+                          months: 'flex flex-col space-y-4',
+                          month: 'space-y-4',
+                          caption: 'flex justify-center pt-1 relative items-center mb-4',
+                          caption_label: 'text-sm font-semibold text-white',
+                          nav: 'space-x-1 flex items-center',
+                          nav_button: 'h-8 w-8 bg-transparent p-0 hover:bg-[#50C878]/10 rounded-md transition-colors text-white',
+                          nav_button_previous: 'absolute left-1',
+                          nav_button_next: 'absolute right-1',
+                          table: 'w-full border-collapse',
+                          head_row: 'flex mb-2',
+                          head_cell: 'text-gray-400 rounded-md w-10 font-medium text-xs text-center',
+                          row: 'flex w-full mt-1',
+                          cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
+                          day: 'h-10 w-10 p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20',
+                          day_selected: '!bg-[#50C878] !text-white hover:!bg-[#50C878]/90 focus:!bg-[#50C878] !font-bold',
+                          day_today: '!bg-[#50C878]/30 !text-[#50C878] !font-bold !ring-2 !ring-[#50C878]',
+                          day_outside: 'text-gray-600 opacity-30',
+                          day_disabled: '!text-red-500/70 !bg-red-950/30 !opacity-50 hover:!bg-red-950/30 !cursor-not-allowed relative after:content-["🔒"] after:absolute after:bottom-0 after:right-0 after:text-[10px] after:opacity-60',
+                          day_hidden: 'invisible',
+                        }}
+                      />
                       <div className="mt-3 space-y-2 text-xs text-gray-400">
                         <div className="flex items-center gap-2 bg-[#50C878]/10 px-2 py-1 rounded border border-[#50C878]/30">
                           <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#50C878]" aria-hidden="true" />
@@ -735,7 +733,7 @@ export function RedesignedBooking() {
                               <button
                                 key={slot.time}
                                 onClick={() => handleTimeSelect(slot.time)}
-                                className={`w-full p-2 rounded-lg border-2 transition-all text-left ${selectedTime === slot.time
+                                className={`w-full p-4 rounded-lg border-2 transition-all text-left ${selectedTime === slot.time
                                   ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
                                   : 'border-gray-800 hover:border-[#50C878]/50 bg-gray-900'
                                   }`}
