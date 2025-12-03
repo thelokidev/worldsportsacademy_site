@@ -64,7 +64,7 @@ export function ProgramCTA() {
                 >
                   <Link href="/bookings" className="flex items-center justify-center gap-2">
                     <Calendar className="w-5 h-5" />
-                    Free Drop-in Session
+                    Book Drop-in Session
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>

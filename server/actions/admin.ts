@@ -11,7 +11,7 @@ import { revalidatePath } from 'next/cache'
  */
 async function fetchUserEmails(userIds?: string[]): Promise<Map<string, string>> {
   const emailMap = new Map<string, string>()
-  
+
   try {
     const serviceSupabase = getServiceSupabaseClientSafe()
     if (!serviceSupabase) {
@@ -54,7 +54,7 @@ async function fetchUserEmail(userId: string): Promise<string | null> {
     }
 
     const { data: authUser, error } = await serviceSupabase.auth.admin.getUserById(userId)
-    
+
     if (error) {
       console.error('Failed to fetch auth user:', error)
       return null
@@ -165,7 +165,7 @@ export async function getAllCourts() {
         user: profileMap.get(nextBooking.user_id)
       } : null
     }
-  })
+  }).filter(court => !court.sports?.display_name?.toLowerCase().includes('chess'))
 }
 
 export async function toggleCourtBlock(courtId: string, isBlocked: boolean, reason?: string) {
@@ -295,7 +295,7 @@ export async function getCourtBookingStats(courtId: string) {
 
 export async function getAllMembers(page = 1, limit = 50) {
   await requireAdmin()
-  
+
   // Use service role client to bypass RLS for admin queries
   const serviceSupabase = getServiceSupabaseClientSafe()
   if (!serviceSupabase) {
@@ -374,7 +374,7 @@ export async function getAllMembers(page = 1, limit = 50) {
 
 export async function updateMemberRole(userId: string, role: 'user' | 'admin') {
   await requireAdmin()
-  
+
   // Use service role client to bypass RLS for admin updates
   const serviceSupabase = getServiceSupabaseClientSafe()
   if (!serviceSupabase) {
@@ -400,7 +400,7 @@ export async function updateMemberRole(userId: string, role: 'user' | 'admin') {
 
 export async function getMemberDetails(userId: string) {
   await requireAdmin()
-  
+
   // Use service role client to bypass RLS for admin queries
   const serviceSupabase = getServiceSupabaseClientSafe()
   if (!serviceSupabase) {
@@ -420,7 +420,7 @@ export async function getMemberDetails(userId: string) {
 
   // Get auth user to get email (using service role client with safe fallback)
   const email = await fetchUserEmail(userId)
-  
+
   // Merge email into profile
   const profileWithEmail = {
     ...profile,
@@ -482,7 +482,7 @@ export async function getMemberDetails(userId: string) {
 
 export async function searchMembers(query: string) {
   await requireAdmin()
-  
+
   // Use service role client to bypass RLS for admin queries
   const serviceSupabase = getServiceSupabaseClientSafe()
   if (!serviceSupabase) {
@@ -537,9 +537,15 @@ export async function getCourtUtilization() {
         display_name
       )
     `)
+    .order('name', { ascending: true })
+
+  // Filter out chess courts
+  const activeCourts = (courts || []).filter((court: any) =>
+    !court.sports?.display_name?.toLowerCase().includes('chess')
+  )
 
   const utilizationData = await Promise.all(
-    (courts || []).map(async (court) => {
+    activeCourts.map(async (court) => {
       const { count: bookingCount } = await supabase
         .from('bookings')
         .select('*', { count: 'exact', head: true })

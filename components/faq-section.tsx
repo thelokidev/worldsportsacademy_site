@@ -22,7 +22,7 @@ const faqs = [
     },
     {
         question: "Do you offer trial sessions?",
-        answer: "Absolutely! We offer a Free Drop-in Session for new visitors to experience our facilities and meet our coaches before committing to a membership."
+        answer: "Absolutely! We offer a Drop-in Session for new visitors to experience our facilities and meet our coaches before committing to a membership."
     },
     {
         question: "What is your cancellation policy?",

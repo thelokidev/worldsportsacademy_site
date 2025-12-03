@@ -240,6 +240,22 @@ export function useCourtStatus(initialData?: CourtsSummary) {
       const response = await fetch('/api/admin/dashboard/courts')
       if (!response.ok) throw new Error('Failed to fetch court status')
       const data = await response.json()
+
+      // Filter out chess courts (Coming Soon)
+      if (data && data.courts) {
+        data.courts = data.courts.filter((court: any) =>
+          !court.sports?.display_name?.toLowerCase().includes('chess')
+        )
+
+        // Recalculate summary based on filtered courts
+        data.summary = {
+          total: data.courts.length,
+          available: data.courts.filter((c: any) => c.status === 'available').length,
+          occupied: data.courts.filter((c: any) => c.status === 'occupied').length,
+          blocked: data.courts.filter((c: any) => c.status === 'blocked').length
+        }
+      }
+
       setCourtData(data)
       setError(null)
     } catch (err) {

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { format, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, startOfDay, endOfDay } from 'date-fns'
-import { Calendar as CalendarIcon, ChevronDown, X } from 'lucide-react'
+import { Calendar as CalendarIcon, ChevronDown, ChevronLeft, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -140,14 +140,17 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-auto p-0 bg-gray-900 border-gray-700" 
+      <PopoverContent
+        className="w-[calc(100vw-32px)] sm:w-auto p-0 bg-gray-900 border-gray-700 max-h-[85vh] overflow-y-auto"
         align="start"
         sideOffset={4}
       >
         <div className="flex flex-col sm:flex-row">
           {/* Presets */}
-          <div className="border-b sm:border-b-0 sm:border-r border-gray-700 p-3 space-y-1">
+          <div className={cn(
+            "border-b sm:border-b-0 sm:border-r border-gray-700 p-3 space-y-1",
+            showCustom ? "hidden sm:block" : "block"
+          )}>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
               Quick Select
             </p>
@@ -167,7 +170,7 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
             ))}
             <div className="pt-2 border-t border-gray-700 mt-2">
               <button
-                onClick={() => setShowCustom(!showCustom)}
+                onClick={() => setShowCustom(true)}
                 className={cn(
                   "w-full text-left px-3 py-2 text-sm rounded-lg transition-colors",
                   showCustom
@@ -193,8 +196,19 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
 
           {/* Custom Calendar */}
           {showCustom && (
-            <div className="p-3">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
+            <div className="p-3 w-full sm:w-auto">
+              <div className="flex items-center justify-between mb-2 px-2 sm:hidden">
+                <button
+                  onClick={() => setShowCustom(false)}
+                  className="text-sm text-gray-400 hover:text-white flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" /> Back
+                </button>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Select Range
+                </p>
+              </div>
+              <p className="hidden sm:block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">
                 Select Range
               </p>
               <Calendar
@@ -210,10 +224,10 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
                   })
                 }}
                 numberOfMonths={1}
-                className="rounded-lg border border-gray-700"
+                className="rounded-lg border border-gray-700 w-full"
                 classNames={{
                   months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                  month: "space-y-4",
+                  month: "space-y-4 w-full",
                   caption: "flex justify-center pt-1 relative items-center",
                   caption_label: "text-sm font-medium text-gray-200",
                   nav: "space-x-1 flex items-center",
@@ -221,9 +235,9 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
                   nav_button_previous: "absolute left-1",
                   nav_button_next: "absolute right-1",
                   table: "w-full border-collapse space-y-1",
-                  head_row: "flex",
+                  head_row: "flex justify-between",
                   head_cell: "text-gray-500 rounded-md w-9 font-normal text-[0.8rem]",
-                  row: "flex w-full mt-2",
+                  row: "flex w-full mt-2 justify-between",
                   cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
                   day: "h-9 w-9 p-0 font-normal text-gray-300 hover:bg-gray-800 rounded-md transition-colors",
                   day_range_end: "day-range-end",
@@ -257,7 +271,7 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
           )}
         </div>
       </PopoverContent>
-    </Popover>
+    </Popover >
   )
 }
 

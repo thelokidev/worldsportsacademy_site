@@ -8,9 +8,9 @@ import { requireAdmin } from '@/lib/auth/admin'
  */
 async function fetchUserEmails(userIds: string[]): Promise<Map<string, string>> {
   const emailMap = new Map<string, string>()
-  
+
   if (userIds.length === 0) return emailMap
-  
+
   try {
     const serviceSupabase = getServiceSupabaseClientSafe()
     if (!serviceSupabase) {
@@ -106,7 +106,7 @@ export async function GET() {
         .from('profiles')
         .select('id, full_name')
         .in('id', userIdsArray)
-      
+
       profileMap = new Map(profiles?.map(p => [p.id, { full_name: p.full_name }]) || [])
     }
 
@@ -145,7 +145,7 @@ export async function GET() {
           user: getUser(nextBooking.user_id)
         } : null,
       }
-    })
+    }).filter(court => !court.sports?.display_name?.toLowerCase().includes('chess'))
 
     // Calculate summary stats
     const totalCourts = courtsWithStatus.length

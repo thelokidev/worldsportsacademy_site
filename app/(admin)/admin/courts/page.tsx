@@ -34,7 +34,7 @@ export default async function AdminCourtsPage() {
       sports: court.sports || { id: '', name: 'unknown', display_name: 'Unknown Sport' },
       currentBooking: court.currentBooking,
       nextBooking: court.nextBooking
-    }))
+    })).filter(court => !court.sports.display_name.toLowerCase().includes('chess'))
 
     const activeCourts = courts.filter(c => c.is_active && !c.is_blocked)
     const blockedCourts = courts.filter(c => c.is_blocked)

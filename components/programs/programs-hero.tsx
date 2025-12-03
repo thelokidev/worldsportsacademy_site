@@ -27,7 +27,7 @@ export function ProgramsHero() {
           </div>
 
           {/* Floating stats badges */}
-          <div className="absolute top-6 right-6 flex flex-col gap-3 z-10">
+          <div className="absolute top-6 right-6 flex-col gap-3 z-10 hidden md:flex">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/20">
               <div className="flex items-center gap-3">
                 <Award className="w-5 h-5 text-[#CFEA6C]" />
@@ -80,7 +80,7 @@ export function ProgramsHero() {
                   size="lg"
                 >
                   <Link href="/bookings" className="flex items-center gap-2">
-                    Free Drop-in Session
+                    Book Drop-in Session
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>

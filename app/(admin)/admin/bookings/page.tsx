@@ -34,11 +34,13 @@ export default async function AdminBookingsPage({
     })
 
     const sportsData = await getSports()
-    const sports: Sport[] = Array.isArray(sportsData) ? sportsData : []
+    const sports: Sport[] = Array.isArray(sportsData) ? sportsData.filter(s => !s.display_name.toLowerCase().includes('chess')) : []
 
-    const confirmedCount = bookings.filter((b: any) => b.status === 'confirmed').length
-    const pendingCount = bookings.filter((b: any) => b.status === 'pending').length
-    const canceledCount = bookings.filter((b: any) => b.status === 'canceled').length
+    const filteredBookings = bookings.filter((b: any) => !(b.sports as any)?.display_name?.toLowerCase().includes('chess'))
+
+    const confirmedCount = filteredBookings.filter((b: any) => b.status === 'confirmed').length
+    const pendingCount = filteredBookings.filter((b: any) => b.status === 'pending').length
+    const canceledCount = filteredBookings.filter((b: any) => b.status === 'canceled').length
 
     return (
       <div className="space-y-8">
@@ -109,12 +111,12 @@ export default async function AdminBookingsPage({
             />
 
             {/* Bookings List */}
-            {bookings.length === 0 ? (
+            {filteredBookings.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No bookings found</p>
             ) : (
               <>
                 <div className="space-y-3 mt-4">
-                  {bookings.map((booking: any) => (
+                  {filteredBookings.map((booking: any) => (
                     <div
                       key={booking.id}
                       className="flex items-center justify-between p-4 border border-gray-800 rounded-lg bg-black/20 hover:bg-black/40 transition-colors"

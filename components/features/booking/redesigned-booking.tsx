@@ -23,7 +23,7 @@ export function RedesignedBooking() {
   const [courts, setCourts] = useState<any[]>([])
   const [selectedSport, setSelectedSport] = useState<any>(null)
   const [selectedCourt, setSelectedCourt] = useState<any>(null)
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [slots, setSlots] = useState<any[]>([])
 
@@ -138,7 +138,15 @@ export function RedesignedBooking() {
     async function fetchSports() {
       try {
         const data = await getSports()
-        setSports(data)
+        // Sort sports: enabled first, coming soon (chess, pilates) last
+        const sortedData = [...data].sort((a, b) => {
+          const isAComingSoon = a.display_name?.toLowerCase().includes('chess') || a.display_name?.toLowerCase().includes('pilates')
+          const isBComingSoon = b.display_name?.toLowerCase().includes('chess') || b.display_name?.toLowerCase().includes('pilates')
+          if (isAComingSoon && !isBComingSoon) return 1
+          if (!isAComingSoon && isBComingSoon) return -1
+          return 0
+        })
+        setSports(sortedData)
       } catch (error) {
         console.error('Failed to fetch sports:', error)
         toast.error('Failed to load sports')
@@ -505,10 +513,10 @@ export function RedesignedBooking() {
                 >
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${step.done
-                        ? 'bg-[#50C878] text-white scale-110'
-                        : currentStep === step.num
-                          ? 'bg-[#50C878] text-white scale-105'
-                          : 'bg-gray-900 text-gray-400'
+                      ? 'bg-[#50C878] text-white scale-110'
+                      : currentStep === step.num
+                        ? 'bg-[#50C878] text-white scale-105'
+                        : 'bg-gray-900 text-gray-400'
                       }`}
                   >
                     {step.done ? <Check className="w-5 h-5" /> : step.num}
@@ -560,12 +568,11 @@ export function RedesignedBooking() {
                           key={sport.id}
                           onClick={() => handleSportSelect(sport)}
                           disabled={comingSoon}
-                          className={`relative group p-6 rounded-xl border-2 transition-all text-left ${
-                            comingSoon
+                          className={`relative group p-6 rounded-xl border-2 transition-all text-left ${comingSoon
                               ? 'border-gray-700 bg-gray-800/50 opacity-60 cursor-not-allowed'
                               : selectedSport?.id === sport.id
-                              ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
-                              : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
+                                ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
+                                : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
                             }`}
                         >
                           {comingSoon && (
@@ -577,25 +584,22 @@ export function RedesignedBooking() {
                           )}
                           <div className="flex items-start gap-4">
                             <div
-                              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                                comingSoon
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${comingSoon
                                   ? 'bg-gray-700 text-gray-500'
                                   : selectedSport?.id === sport.id
-                                  ? 'bg-[#50C878] text-white'
-                                  : 'bg-gray-900 text-white group-hover:bg-[#50C878]/20'
+                                    ? 'bg-[#50C878] text-white'
+                                    : 'bg-gray-900 text-white group-hover:bg-[#50C878]/20'
                                 }`}
                             >
                               <Icon className="w-6 h-6" />
                             </div>
                             <div className="flex-1">
-                              <h3 className={`font-bold text-lg mb-1 ${
-                                comingSoon ? 'text-gray-500' : 'text-white dark:text-white'
-                              }`}>
+                              <h3 className={`font-bold text-lg mb-1 ${comingSoon ? 'text-gray-500' : 'text-white dark:text-white'
+                                }`}>
                                 {sport.display_name}
                               </h3>
-                              <p className={`text-sm ${
-                                comingSoon ? 'text-gray-600' : 'text-gray-300 dark:text-gray-300'
-                              }`}>
+                              <p className={`text-sm ${comingSoon ? 'text-gray-600' : 'text-gray-300 dark:text-gray-300'
+                                }`}>
                                 {comingSoon ? 'Available soon' : `${sport.duration_minutes} min session`}
                               </p>
                             </div>
@@ -632,8 +636,8 @@ export function RedesignedBooking() {
                           key={court.id}
                           onClick={() => handleCourtSelect(court)}
                           className={`p-6 rounded-xl border-2 transition-all text-left ${selectedCourt?.id === court.id
-                              ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
-                              : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
+                            ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
+                            : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
                             }`}
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -730,8 +734,8 @@ export function RedesignedBooking() {
                                 key={slot.time}
                                 onClick={() => handleTimeSelect(slot.time)}
                                 className={`w-full p-4 rounded-lg border-2 transition-all text-left ${selectedTime === slot.time
-                                    ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
-                                    : 'border-gray-800 hover:border-[#50C878]/50 bg-gray-900'
+                                  ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
+                                  : 'border-gray-800 hover:border-[#50C878]/50 bg-gray-900'
                                   }`}
                               >
                                 <div className="flex items-center justify-between">

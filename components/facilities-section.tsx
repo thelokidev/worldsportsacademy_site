@@ -117,7 +117,7 @@ export function FacilitiesSection() {
             variant="outline"
             className="border-2 border-gray-800 text-white hover:bg-gray-900 rounded-lg px-6 py-3 h-auto font-semibold"
           >
-            <Link href="/bookings">Free Drop-in Session</Link>
+            <Link href="/bookings">Book Drop-in Session</Link>
           </Button>
         </div>
       </div>

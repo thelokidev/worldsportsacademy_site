@@ -31,7 +31,7 @@ export function Footer() {
                   High-performance programs, facilities, and coaching for ambitious athletes.
                 </p>
                 <Button asChild className="bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-full px-5 py-2 h-auto">
-                  <Link href="/bookings">Free Drop-in Session</Link>
+                  <Link href="/bookings">Book Drop-in Session</Link>
                 </Button>
               </div>
 
