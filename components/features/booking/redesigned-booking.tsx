@@ -569,10 +569,10 @@ export function RedesignedBooking() {
                           onClick={() => handleSportSelect(sport)}
                           disabled={comingSoon}
                           className={`relative group p-6 rounded-xl border-2 transition-all text-left ${comingSoon
-                              ? 'border-gray-700 bg-gray-800/50 opacity-60 cursor-not-allowed'
-                              : selectedSport?.id === sport.id
-                                ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
-                                : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
+                            ? 'border-gray-700 bg-gray-800/50 opacity-60 cursor-not-allowed'
+                            : selectedSport?.id === sport.id
+                              ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
+                              : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
                             }`}
                         >
                           {comingSoon && (
@@ -585,10 +585,10 @@ export function RedesignedBooking() {
                           <div className="flex items-start gap-4">
                             <div
                               className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${comingSoon
-                                  ? 'bg-gray-700 text-gray-500'
-                                  : selectedSport?.id === sport.id
-                                    ? 'bg-[#50C878] text-white'
-                                    : 'bg-gray-900 text-white group-hover:bg-[#50C878]/20'
+                                ? 'bg-gray-700 text-gray-500'
+                                : selectedSport?.id === sport.id
+                                  ? 'bg-[#50C878] text-white'
+                                  : 'bg-gray-900 text-white group-hover:bg-[#50C878]/20'
                                 }`}
                             >
                               <Icon className="w-6 h-6" />
@@ -695,15 +695,15 @@ export function RedesignedBooking() {
                           nav_button_previous: 'absolute left-1',
                           nav_button_next: 'absolute right-1',
                           table: 'w-full border-collapse',
-                          head_row: 'flex mb-2',
-                          head_cell: 'text-gray-400 rounded-md w-10 font-medium text-xs text-center',
-                          row: 'flex w-full mt-1',
+                          head_row: 'flex mb-2 justify-between',
+                          head_cell: 'text-gray-400 rounded-md w-10 font-medium text-xs text-center flex items-center justify-center',
+                          row: 'flex w-full mt-1 justify-between',
                           cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
-                          day: 'h-10 w-10 p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20',
-                          day_selected: '!bg-[#50C878] !text-white hover:!bg-[#50C878]/90 focus:!bg-[#50C878] !font-bold',
-                          day_today: '!bg-[#50C878]/30 !text-[#50C878] !font-bold !ring-2 !ring-[#50C878]',
+                          day: 'h-10 w-10 p-0 font-medium rounded-lg transition-all text-white bg-gray-900/50 hover:bg-[#50C878]/20 border border-gray-800 hover:border-[#50C878]/50 flex items-center justify-center',
+                          day_selected: '!bg-[#50C878] !text-white hover:!bg-[#50C878]/90 focus:!bg-[#50C878] !font-bold shadow-lg shadow-[#50C878]/20 border-[#50C878]',
+                          day_today: '!bg-[#50C878]/10 !text-[#50C878] !font-bold ring-1 ring-[#50C878]',
                           day_outside: 'text-gray-600 opacity-30',
-                          day_disabled: '!text-red-500/70 !bg-red-950/30 !opacity-50 hover:!bg-red-950/30 !cursor-not-allowed relative after:content-["🔒"] after:absolute after:bottom-0 after:right-0 after:text-[10px] after:opacity-60',
+                          day_disabled: '!text-gray-600 !bg-gray-900/30 !opacity-30 hover:!bg-gray-900/30 !cursor-not-allowed border-transparent',
                           day_hidden: 'invisible',
                         }}
                       />
