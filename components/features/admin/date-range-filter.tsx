@@ -214,6 +214,7 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
                 </p>
                 <Calendar
                   mode="range"
+                  defaultMonth={customRange.from}
                   selected={{
                     from: customRange.from,
                     to: customRange.to,
@@ -225,12 +226,16 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
                     })
                   }}
                   numberOfMonths={1}
+                  captionLayout="dropdown"
+                  fromYear={2024}
+                  toYear={2030}
                   className="rounded-lg border border-gray-700 w-full"
                   classNames={{
                     months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                     month: "space-y-4 w-full",
                     caption: "flex justify-center pt-1 relative items-center",
-                    caption_label: "text-sm font-medium text-gray-200",
+                    caption_label: "text-sm font-medium text-gray-200 hidden",
+                    caption_dropdowns: "flex justify-center gap-1",
                     nav: "space-x-1 flex items-center",
                     nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 text-gray-400 hover:text-white",
                     nav_button_previous: "absolute left-1",
@@ -251,7 +256,7 @@ export function DateRangeFilter({ value, onChange, className }: DateRangeFilterP
                   }}
                 />
               </div>
-              <div className="sticky bottom-0 bg-gray-900 border-t border-gray-700 p-3 flex justify-end gap-2">
+              <div className="p-3 border-t border-gray-700 flex justify-end gap-2 bg-gray-900">
                 <Button
                   variant="outline"
                   size="sm"
