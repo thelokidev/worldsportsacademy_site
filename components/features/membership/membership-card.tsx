@@ -98,26 +98,35 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
   }
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-CA', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'CAD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price)
   }
 
-  const features = plan.features as Record<string, boolean | string>
+  const features = plan.features as Record<string, boolean | string | number>
   const sports = plan.sports || []
 
-  const isPopular = plan.features.priority_booking
+  // Check for best value badge (yearly plan)
+  const isBestValue = features.best_value === true
+  // Check if all sports access is included
+  const hasAllSportsAccess = features.all_sports_access === true
+  // Get savings amount if exists
+  const savings = features.savings as string | undefined
+  // Get billing period display
+  const billingPeriod = features.billing_period as string | undefined
+
+  const isPopular = isBestValue
   const hasBadge = isPopular || isCurrentPlan
 
   return (
     <Card className={`relative flex flex-col h-full transition-all duration-300 ${isCurrentPlan
-        ? 'border-2 border-[#50C878] bg-black/60 shadow-lg shadow-[#50C878]/20 hover:border-[#50C878]'
-        : isPopular
-          ? 'border-2 border-[#50C878] bg-black shadow-lg shadow-[#50C878]/10 hover:border-[#50C878]/80'
-          : 'border border-[#50C878]/40 bg-black hover:border-[#50C878]/60 hover:shadow-md hover:shadow-[#50C878]/5'
+      ? 'border-2 border-[#50C878] bg-black/60 shadow-lg shadow-[#50C878]/20 hover:border-[#50C878]'
+      : isPopular
+        ? 'border-2 border-[#50C878] bg-black shadow-lg shadow-[#50C878]/10 hover:border-[#50C878]/80'
+        : 'border border-[#50C878]/40 bg-black hover:border-[#50C878]/60 hover:shadow-md hover:shadow-[#50C878]/5'
       }`}>
       {/* Current Plan Badge */}
       {isCurrentPlan && (
@@ -129,11 +138,11 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
         </div>
       )}
 
-      {/* Popular Badge */}
-      {isPopular && !isCurrentPlan && (
+      {/* Best Value Badge */}
+      {isBestValue && !isCurrentPlan && (
         <div className="absolute top-4 right-4 z-10">
-          <div className="bg-[#50C878] text-white text-xs font-semibold px-3 py-1 rounded-full">
-            Most Popular
+          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+            ⭐ Best Value
           </div>
         </div>
       )}
@@ -143,46 +152,52 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
 
         {/* Price Section */}
         <div className="mb-6">
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-baseline gap-2 mb-1">
             <span className="text-5xl font-bold text-white">
               {formatPrice(plan.price)}
             </span>
             <span className="text-gray-400 text-base">
-              /{plan.billing_interval === 'month' ? 'mo' : 'yr'}
+              {billingPeriod ? `/${billingPeriod.toLowerCase()}` : `/${plan.billing_interval}`}
             </span>
           </div>
+          {savings && (
+            <p className="text-[#50C878] text-sm font-semibold">
+              Save {savings}
+            </p>
+          )}
+          <p className="text-gray-400 text-xs mt-1">+ 13% HST</p>
         </div>
       </CardHeader>
 
       <CardContent className="flex-grow pt-0 pb-6 px-6">
         {/* Features List */}
         <ul className="space-y-3 mb-6">
+          {hasAllSportsAccess && (
+            <li className="flex items-center gap-3">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-r from-[#50C878] to-[#3DA860] flex items-center justify-center flex-shrink-0">
+                <Check className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-sm font-semibold text-[#CFEA6C]">All Sports Access</span>
+            </li>
+          )}
           {features.unlimited_bookings && (
             <li className="flex items-center gap-3">
               <Check className="w-5 h-5 text-[#50C878] flex-shrink-0" />
               <span className="text-sm text-gray-300">Unlimited bookings</span>
             </li>
           )}
-          {features.priority_booking && (
+          {features.cancel_anytime && (
             <li className="flex items-center gap-3">
               <Check className="w-5 h-5 text-[#50C878] flex-shrink-0" />
-              <span className="text-sm text-gray-300">Priority booking</span>
+              <span className="text-sm text-gray-300">Cancel anytime</span>
             </li>
           )}
-          {features.gym_access && (
+          {!isCurrentPlan && new Date() < new Date('2026-01-01T00:00:00-05:00') && (
             <li className="flex items-center gap-3">
-              <Check className="w-5 h-5 text-[#50C878] flex-shrink-0" />
-              <span className="text-sm text-gray-300">Pilates access included</span>
+              <span className="text-xl flex-shrink-0">🎉</span>
+              <span className="text-sm text-[#CFEA6C] font-semibold">FREE Registration (Save $25)</span>
             </li>
           )}
-          <li className="flex items-center gap-3">
-            <Check className="w-5 h-5 text-[#50C878] flex-shrink-0" />
-            <span className="text-sm text-gray-300">Monthly auto-renewal</span>
-          </li>
-          <li className="flex items-center gap-3">
-            <Check className="w-5 h-5 text-[#50C878] flex-shrink-0" />
-            <span className="text-sm text-gray-300">Cancel anytime</span>
-          </li>
         </ul>
 
         {/* Sports Badges */}
@@ -220,8 +235,8 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
             onClick={handlePurchase}
             disabled={isLoading}
             className={`w-full h-11 font-semibold rounded-lg transition-colors ${hasActiveMembership
-                ? 'bg-gradient-to-r from-[#50C878] to-[#3DA860] text-white hover:from-[#3DA860] hover:to-[#50C878]'
-                : 'bg-white text-gray-900 hover:bg-gray-100'
+              ? 'bg-gradient-to-r from-[#50C878] to-[#3DA860] text-white hover:from-[#3DA860] hover:to-[#50C878]'
+              : 'bg-white text-gray-900 hover:bg-gray-100'
               }`}
           >
             {isLoading ? (

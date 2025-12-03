@@ -43,7 +43,7 @@ export function Navbar() {
   useEffect(() => {
     let isMounted = true
     let supabase: ReturnType<typeof createClient> | null = null
-    
+
     // Safety timeout to prevent infinite loading state
     const loadingTimeout = setTimeout(() => {
       if (isMounted && loading) {
@@ -58,9 +58,9 @@ export function Navbar() {
         console.log('[Navbar] Checking admin status via API...')
         const response = await fetch('/api/auth/check-admin')
         const data = await response.json()
-        
+
         console.log('[Navbar] Admin check API response:', data)
-        
+
         if (isMounted) {
           setIsAdmin(data.isAdmin === true)
         }
@@ -77,11 +77,11 @@ export function Navbar() {
       try {
         supabase = createClient()
         const { data: { user }, error } = await supabase.auth.getUser()
-        
+
         if (error) {
           console.error('[Navbar] getUser error:', error.message)
         }
-        
+
         if (isMounted) {
           setUser(user)
           if (user) {
@@ -105,25 +105,25 @@ export function Navbar() {
       if (!supabase) {
         supabase = createClient()
       }
-      
+
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange(async (_event, session) => {
         if (!isMounted) return
-        
+
         setUser(session?.user ?? null)
         setLoading(false) // Ensure loading is cleared on any auth state change
-        
+
         if (session?.user) {
           await checkAdmin()
         } else {
           setIsAdmin(false)
         }
       })
-      
+
       return subscription
     }
-    
+
     let subscription: { unsubscribe: () => void } | null = null
     setupSubscription().then(sub => {
       subscription = sub
@@ -195,8 +195,8 @@ export function Navbar() {
       {/* Main Navigation */}
       <nav
         className={`transition-all duration-300 ${scrolled
-          ? "bg-black/80 backdrop-blur-xl shadow-lg border-b border-gray-800/50"
-          : "bg-black/95 backdrop-blur-sm shadow-sm"
+          ? "bg-black/90 backdrop-blur-xl shadow-lg border-b border-white/10"
+          : "bg-transparent backdrop-blur-none border-b border-transparent"
           }`}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -205,9 +205,9 @@ export function Navbar() {
             <Link
               href="/"
               prefetch={true}
-              className="flex items-center group relative"
+              className="flex items-center gap-3 group relative"
             >
-              <div className="relative w-12 h-12 group-hover:scale-105 transition-all duration-300">
+              <div className="relative w-10 h-10 md:w-12 md:h-12 group-hover:scale-105 transition-all duration-300">
                 <Image
                   src="/logo.png"
                   alt="World Sports Academy Logo"
@@ -217,6 +217,9 @@ export function Navbar() {
                   priority
                 />
               </div>
+              <span className="font-bold text-lg md:text-xl text-white tracking-tight hidden sm:block group-hover:text-[#50C878] transition-colors">
+                World Sports Academy
+              </span>
             </Link>
 
             {/* Navigation Links - Desktop */}
@@ -240,7 +243,7 @@ export function Navbar() {
                   </Link>
                 )
               })}
-              </div>
+            </div>
 
             {/* Right Side - Auth & Mobile Menu */}
             <div className="flex items-center gap-3">
@@ -353,14 +356,12 @@ export function Navbar() {
               >
                 <div className="relative w-6 h-6">
                   <Menu
-                    className={`absolute inset-0 w-6 h-6 text-gray-200 transition-all duration-300 ease-out ${
-                      mobileMenuOpen ? "opacity-0 rotate-180 scale-50" : "opacity-100 rotate-0 scale-100"
-                    }`}
+                    className={`absolute inset-0 w-6 h-6 text-gray-200 transition-all duration-300 ease-out ${mobileMenuOpen ? "opacity-0 rotate-180 scale-50" : "opacity-100 rotate-0 scale-100"
+                      }`}
                   />
                   <X
-                    className={`absolute inset-0 w-6 h-6 text-gray-200 transition-all duration-300 ease-out ${
-                      mobileMenuOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-180 scale-50"
-                    }`}
+                    className={`absolute inset-0 w-6 h-6 text-gray-200 transition-all duration-300 ease-out ${mobileMenuOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-180 scale-50"
+                      }`}
                   />
                 </div>
               </button>
@@ -371,24 +372,21 @@ export function Navbar() {
 
       {/* Mobile Menu - Full Screen Overlay */}
       <div
-        className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 ${
-          mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
-        }`}
+        className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 ${mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
+          }`}
       >
         {/* Backdrop */}
         <div
-          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
-            mobileMenuOpen ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100" : "opacity-0"
+            }`}
           onClick={handleLinkClick}
           aria-hidden="true"
         />
 
         {/* Menu Panel */}
         <div
-          className={`absolute top-0 right-0 h-full w-full max-w-sm bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 shadow-2xl transform transition-transform duration-300 ease-out ${
-            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`absolute top-0 right-0 h-full w-full max-w-sm bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 shadow-2xl transform transition-transform duration-300 ease-out ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
         >
           {/* Menu Header */}
           <div className="flex items-center justify-between p-5 pt-6 border-b border-gray-800/50">
@@ -454,32 +452,28 @@ export function Navbar() {
                       href={item.href}
                       prefetch={true}
                       onClick={handleLinkClick}
-                      className={`group flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 ${
-                        active
-                          ? "bg-[#50C878]/15 border border-[#50C878]/30"
-                          : "hover:bg-gray-800/50 border border-transparent"
-                      }`}
+                      className={`group flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200 ${active
+                        ? "bg-[#50C878]/15 border border-[#50C878]/30"
+                        : "hover:bg-gray-800/50 border border-transparent"
+                        }`}
                       style={{
                         animationDelay: `${index * 50}ms`,
                       }}
                     >
-                      <div className={`p-2 rounded-lg transition-colors ${
-                        active 
-                          ? "bg-[#50C878]/20 text-[#50C878]" 
-                          : "bg-gray-800 text-gray-400 group-hover:text-[#50C878] group-hover:bg-gray-700"
-                      }`}>
+                      <div className={`p-2 rounded-lg transition-colors ${active
+                        ? "bg-[#50C878]/20 text-[#50C878]"
+                        : "bg-gray-800 text-gray-400 group-hover:text-[#50C878] group-hover:bg-gray-700"
+                        }`}>
                         <Icon className="w-5 h-5" />
                       </div>
-                      <span className={`flex-1 text-base font-medium transition-colors ${
-                        active ? "text-[#50C878]" : "text-gray-200 group-hover:text-white"
-                      }`}>
+                      <span className={`flex-1 text-base font-medium transition-colors ${active ? "text-[#50C878]" : "text-gray-200 group-hover:text-white"
+                        }`}>
                         {item.name}
                       </span>
-                      <ChevronRight className={`w-5 h-5 transition-all ${
-                        active 
-                          ? "text-[#50C878] translate-x-0 opacity-100" 
-                          : "text-gray-600 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
-                      }`} />
+                      <ChevronRight className={`w-5 h-5 transition-all ${active
+                        ? "text-[#50C878] translate-x-0 opacity-100"
+                        : "text-gray-600 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
+                        }`} />
                     </Link>
                   )
                 })}

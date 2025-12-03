@@ -8,21 +8,25 @@ type PlanMapping = {
 type ServiceSupabaseClient = ReturnType<typeof getServiceSupabaseClient>
 
 export const MEMBERSHIP_PRICE_MAP: Record<string, PlanMapping> = {
-  price_1SU8DiDrcV6C4UxVJ9IJUgFN: {
-    name: 'Squash Monthly Membership',
-    productId: 'prod_TR0EUV4UN3agee',
-  },
-  price_1SU8HzDrcV6C4UxVkPQVUJZg: {
-    name: 'Table Tennis Monthly Membership',
-    productId: 'prod_TR0IPewTnDWYGI',
-  },
-  price_1SU8J6DrcV6C4UxVLHTPsSTb: {
-    name: 'Squash + Pilates Monthly Membership',
-    productId: 'prod_TR0Jm3UW2QuvHu',
-  },
-  price_1SU8KqDrcV6C4UxVCCuNwOaE: {
+  price_1Sa46oC2I88MOqJ1EoippchK: {
     name: 'Drop-In Session',
-    productId: 'prod_TR0LWsYW3ACwFQ',
+    productId: 'prod_TX8NXeBVG5Op9s',
+  },
+  price_1Sa46oC2I88MOqJ1hWTT8OxV: {
+    name: 'Initiation Fee',
+    productId: 'prod_TX8N4hRNC5iARd',
+  },
+  price_1Sa46pC2I88MOqJ1K8iEy1NH: {
+    name: 'Monthly Membership',
+    productId: 'prod_TX8Nj6SfIe7Pif',
+  },
+  price_1Sa46pC2I88MOqJ1yd0uZ1Lj: {
+    name: 'Half-Yearly Membership',
+    productId: 'prod_TX8NDRIaXUjNl6',
+  },
+  price_1Sa46qC2I88MOqJ1iDaWEf0o: {
+    name: 'Yearly Membership',
+    productId: 'prod_TX8Nc4iWv8q7QM',
   },
 }
 

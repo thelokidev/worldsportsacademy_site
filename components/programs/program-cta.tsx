@@ -20,7 +20,7 @@ export function ProgramCTA() {
               sizes="(max-width: 1280px) 100vw, 1280px"
             />
             <div className="absolute inset-0 bg-gradient-to-br from-[#1C2A24]/95 via-[#2D5B4A]/90 to-[#50C878]/85" />
-            
+
             {/* Animated gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/20 to-transparent opacity-0 animate-pulse" />
           </div>
@@ -64,7 +64,7 @@ export function ProgramCTA() {
                 >
                   <Link href="/bookings" className="flex items-center justify-center gap-2">
                     <Calendar className="w-5 h-5" />
-                    Book Your Session
+                    Free Drop-in Session
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
@@ -116,7 +116,7 @@ export function ProgramCTA() {
               >
                 {/* Background decoration */}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-[#50C878]/5 rounded-full blur-2xl group-hover:bg-[#50C878]/10 transition-all duration-500" />
-                
+
                 <div className="relative z-10">
                   <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                     <Icon className="w-7 h-7 text-white" />

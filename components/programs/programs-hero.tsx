@@ -21,7 +21,7 @@ export function ProgramsHero() {
               sizes="(max-width: 1280px) 100vw, 1280px"
             />
             <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-[#2D5B4A]/60 to-black/80" />
-            
+
             {/* Animated gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-tr from-[#50C878]/20 to-transparent opacity-0 animate-pulse" />
           </div>
@@ -80,7 +80,7 @@ export function ProgramsHero() {
                   size="lg"
                 >
                   <Link href="/bookings" className="flex items-center gap-2">
-                    Book a Session
+                    Free Drop-in Session
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
@@ -97,9 +97,9 @@ export function ProgramsHero() {
               {/* Program highlights */}
               <div className="flex flex-wrap items-center gap-6 pt-8 border-t border-white/20">
                 {[
-                  { icon: Award, text: "Certified Coaches" },
-                  { icon: TrendingUp, text: "Proven Results" },
-                  { icon: Users, text: "Small Groups" }
+                  { icon: Award, text: "Expert Coaching" },
+                  { icon: TrendingUp, text: "All Levels" },
+                  { icon: Users, text: "Beginners Welcome" }
                 ].map((item, idx) => {
                   const Icon = item.icon
                   return (

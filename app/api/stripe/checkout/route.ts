@@ -13,12 +13,12 @@ async function checkProfilesTableExists(supabase: Awaited<ReturnType<typeof crea
       .from('profiles')
       .select('id')
       .limit(1)
-    
+
     // If error is about table not found, return false
     if (error && (error.code === 'PGRST205' || error.message.includes('does not exist'))) {
       return false
     }
-    
+
     return true
   } catch {
     return false
@@ -33,7 +33,7 @@ async function getOrCreateProfile(
   fullName: string | undefined
 ) {
   const profilesTableExists = await checkProfilesTableExists(supabase)
-  
+
   if (!profilesTableExists) {
     console.warn('Profiles table does not exist. Please run the migration: 20250531113526_create_profiles_table.sql')
     return null
@@ -64,7 +64,7 @@ async function getOrCreateProfile(
         .select('stripe_customer_id, full_name')
         .eq('id', userId)
         .maybeSingle()
-      
+
       profile = existingProfile || null
     } else {
       profile = newProfile
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       const errorMessage = stripeError instanceof Error ? stripeError.message : 'Unknown Stripe error'
       console.error('Stripe configuration error:', errorMessage)
       return NextResponse.json(
-        { 
+        {
           error: 'Payment system is not configured. Please contact support.',
           details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
         },
@@ -164,14 +164,14 @@ export async function POST(req: NextRequest) {
         }
       } catch (stripeError) {
         console.error('Failed to create Stripe customer:', stripeError)
-        
+
         // Extract detailed error information
         let errorMessage = 'Failed to initialize payment. Please check your Stripe configuration.'
         let errorDetails: string | undefined
-        
+
         if (stripeError instanceof Error) {
           errorDetails = stripeError.message
-          
+
           // Provide more specific error messages
           if (stripeError.message.includes('Invalid API Key')) {
             errorMessage = 'Invalid Stripe API key. Please check your STRIPE_SECRET_KEY in .env.local'
@@ -184,9 +184,9 @@ export async function POST(req: NextRequest) {
             errorDetails = stripeError.message
           }
         }
-        
+
         return NextResponse.json(
-          { 
+          {
             error: errorMessage,
             details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
           },
@@ -241,6 +241,22 @@ export async function POST(req: NextRequest) {
         )
       }
 
+      // Check if user needs to pay initiation fee
+      // Promotional period: Free registration until Jan 1, 2026 00:00:00
+      const promotionEndDate = new Date('2026-01-01T00:00:00-05:00') // EST/Ontario time
+      const isPromotionActive = new Date() < promotionEndDate
+
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('initiation_fee_paid')
+        .eq('id', user.id)
+        .single()
+
+      // Only charge initiation fee if:
+      // 1. User hasn't paid it yet
+      // 2. Promotion period has ended (after Jan 1, 2026)
+      const needsInitiationFee = !userProfile?.initiation_fee_paid && !isPromotionActive
+
       // Check if user has an active membership and cancel it if switching plans
       const { data: activeMembership } = await supabase
         .from('memberships')
@@ -272,24 +288,37 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Build line items - add initiation fee if needed
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+        {
+          price: plan.stripe_price_id,
+          quantity: 1,
+        },
+      ]
+
+      // Add initiation fee for first-time users
+      if (needsInitiationFee) {
+        lineItems.push({
+          price: 'price_1Sa46oC2I88MOqJ1hWTT8OxV', // Initiation fee price ID
+          quantity: 1,
+        })
+      }
+
       // Create checkout session for subscription
       let session
       try {
         session = await stripe.checkout.sessions.create({
           customer: customerId,
           mode: 'subscription',
-          line_items: [
-            {
-              price: plan.stripe_price_id,
-              quantity: 1,
-            },
-          ],
+          line_items: lineItems,
+          currency: 'cad',
           success_url: `${appUrl}/dashboard/membership/success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/memberships?canceled=true`,
           metadata: {
             user_id: user.id,
             plan_id: plan.id,
             payment_type: 'membership',
+            includes_initiation_fee: needsInitiationFee.toString(),
           },
           subscription_data: {
             metadata: {
@@ -300,13 +329,13 @@ export async function POST(req: NextRequest) {
         })
       } catch (sessionError) {
         console.error('Failed to create Stripe checkout session:', sessionError)
-        
+
         let errorMessage = 'Failed to create checkout session'
         let errorDetails: string | undefined
-        
+
         if (sessionError instanceof Error) {
           errorDetails = sessionError.message
-          
+
           if (sessionError.message.includes('No such price')) {
             errorMessage = `Stripe price ID "${plan.stripe_price_id}" not found. Please check your membership plan configuration.`
             errorDetails = 'The Stripe price ID in the database does not exist in your Stripe account. Please verify the price ID in the membership_plans table matches your Stripe products.'
@@ -315,7 +344,7 @@ export async function POST(req: NextRequest) {
             errorDetails = 'The Stripe secret key is invalid or not properly configured.'
           }
         }
-        
+
         return NextResponse.json(
           {
             error: errorMessage,
@@ -386,18 +415,23 @@ export async function POST(req: NextRequest) {
         )
       }
 
+      // Drop-in sessions do NOT include initiation fee
+      // Initiation fee only applies to membership purchases
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+        {
+          price: pricing.stripe_price_id,
+          quantity: 1,
+        },
+      ]
+
       // Create checkout session for one-time payment using static price ID
       let session
       try {
         session = await stripe.checkout.sessions.create({
           customer: customerId,
           mode: 'payment',
-          line_items: [
-            {
-              price: pricing.stripe_price_id,
-              quantity: 1,
-            },
-          ],
+          line_items: lineItems,
+          currency: 'cad',
           success_url: `${appUrl}/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/bookings?canceled=true`,
           metadata: {
@@ -406,17 +440,18 @@ export async function POST(req: NextRequest) {
             payment_type: 'drop_in',
             sport_id: booking.sport_id,
             duration_minutes: duration.toString(),
+            includes_initiation_fee: 'false', // Drop-ins never include initiation fee
           },
         })
       } catch (sessionError) {
         console.error('Failed to create Stripe checkout session for drop-in:', sessionError)
-        
+
         let errorMessage = 'Failed to create checkout session'
         let errorDetails: string | undefined
-        
+
         if (sessionError instanceof Error) {
           errorDetails = sessionError.message
-          
+
           if (sessionError.message.includes('No such price')) {
             errorMessage = `Stripe price ID "${pricing.stripe_price_id}" not found. Please check your drop-in pricing configuration.`
             errorDetails = 'The Stripe price ID in the database does not exist in your Stripe account. Please verify the price ID in the drop_in_pricing table matches your Stripe products.'
@@ -425,7 +460,7 @@ export async function POST(req: NextRequest) {
             errorDetails = 'The Stripe secret key is invalid or not properly configured.'
           }
         }
-        
+
         return NextResponse.json(
           {
             error: errorMessage,

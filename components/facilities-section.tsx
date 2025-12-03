@@ -107,8 +107,8 @@ export function FacilitiesSection() {
         {/* CTA Section - Compact */}
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button asChild className="bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg px-6 py-3 h-auto font-semibold group">
-            <Link href="/memberships" className="flex items-center gap-2">
-              Enroll now
+            <Link href="/programs" className="flex items-center gap-2">
+              Explore Programs
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
@@ -117,7 +117,7 @@ export function FacilitiesSection() {
             variant="outline"
             className="border-2 border-gray-800 text-white hover:bg-gray-900 rounded-lg px-6 py-3 h-auto font-semibold"
           >
-            <Link href="/bookings">Book a Session</Link>
+            <Link href="/bookings">Free Drop-in Session</Link>
           </Button>
         </div>
       </div>

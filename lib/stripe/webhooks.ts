@@ -111,51 +111,51 @@ async function handleSubscriptionCreated(
       subscriptionId: subscription.id,
       profileError: profileError?.message,
     })
-    
+
     // Fallback: Try to find user by email from Stripe customer
     const stripe = getStripeClient()
     try {
       const stripeCustomer = await stripe.customers.retrieve(customerId) as Stripe.Customer
       const customerEmail = stripeCustomer.email
-      
+
       if (customerEmail) {
         console.log('[webhook:subscription.created] Trying email fallback', { customerEmail })
         const { data: authUser, error: authError } = await supabase.auth.admin.listUsers()
         const foundUser = authUser?.users?.find(u => u.email === customerEmail)
-        
+
         if (foundUser) {
           console.log('[webhook:subscription.created] Found user by email, updating profile', {
             userId: foundUser.id,
             customerEmail,
           })
-          
+
           // Update profile with customer_id
           const { error: updateError } = await supabase
             .from('profiles')
-            .upsert({ 
-              id: foundUser.id, 
+            .upsert({
+              id: foundUser.id,
               stripe_customer_id: customerId,
-              email: customerEmail 
+              email: customerEmail
             }, { onConflict: 'id' })
-          
+
           if (updateError) {
             console.error('[webhook:subscription.created] ERROR: Failed to update profile', {
               userId: foundUser.id,
               error: updateError.message,
             })
           }
-          
+
           // Re-fetch profile
           const { data: updatedProfile } = await supabase
             .from('profiles')
             .select('id')
             .eq('id', foundUser.id)
             .single()
-          
+
           if (!updatedProfile) {
             throw new Error(`User not found for customer ${customerId} even after update`)
           }
-          
+
           // Continue with updated profile
           return await createMembershipRecord(subscription, updatedProfile.id, customerId, priceId, supabase)
         }
@@ -165,7 +165,7 @@ async function handleSubscriptionCreated(
         error: fallbackError instanceof Error ? fallbackError.message : 'Unknown',
       })
     }
-    
+
     throw new Error(`User not found for customer ${customerId}`)
   }
 
@@ -275,7 +275,7 @@ async function handleSubscriptionUpdated(
   })
 
   const period = getPeriodBounds(subscription)
-  
+
   // Map Stripe subscription status to our membership status
   let membershipStatus: string
   if (subscription.status === 'active' || subscription.status === 'trialing') {
@@ -346,7 +346,7 @@ async function handleInvoicePaymentSucceeded(
   const stripe = getStripeClient()
   const subscription = await stripe.subscriptions.retrieve(subscriptionId)
   const period = getPeriodBounds(subscription)
-  
+
   await supabase
     .from('memberships')
     .update({
@@ -413,6 +413,33 @@ async function handleCheckoutSessionCompleted(
   const customerId = session.customer as string
   const metadata = session.metadata || {}
 
+  // Mark initiation fee as paid if it was included in the checkout
+  if (metadata.includes_initiation_fee === 'true' && customerId) {
+    console.log('[webhook:checkout.completed] Marking initiation fee as paid', { customerId })
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('stripe_customer_id', customerId)
+      .single()
+
+    if (profile) {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ initiation_fee_paid: true })
+        .eq('id', profile.id)
+
+      if (updateError) {
+        console.error('[webhook:checkout.completed] Failed to mark initiation fee as paid', {
+          profileId: profile.id,
+          error: updateError.message,
+        })
+      } else {
+        console.log('[webhook:checkout.completed] Initiation fee marked as paid', { profileId: profile.id })
+      }
+    }
+  }
+
   // Handle drop-in payment completion
   if (metadata.payment_type === 'drop_in' && session.payment_intent && metadata.booking_id) {
     const { data: profile } = await supabase
@@ -430,7 +457,7 @@ async function handleCheckoutSessionCompleted(
           booking_id: metadata.booking_id,
           stripe_payment_intent_id: session.payment_intent as string,
           amount: (session.amount_total || 0) / 100,
-          currency: session.currency || 'usd',
+          currency: session.currency || 'cad',
           status: 'succeeded',
           payment_type: 'drop_in',
           metadata: metadata as Record<string, unknown>,

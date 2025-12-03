@@ -25,11 +25,11 @@ export default async function MembershipsPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#1C2A24] via-[#2D5B4A] to-[#50C878] opacity-90" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(80,200,120,0.2)_0%,_transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(45,91,74,0.3)_0%,_transparent_50%)]" />
-        
+
         {/* Floating Orbs */}
         <div className="absolute top-16 left-10 w-48 h-48 bg-[#50C878]/15 rounded-full blur-2xl animate-pulse" />
         <div className="absolute bottom-8 right-20 w-64 h-64 bg-[#2D5B4A]/15 rounded-full blur-2xl animate-pulse delay-1000" />
-        
+
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-3 leading-tight tracking-tight">
@@ -42,6 +42,43 @@ export default async function MembershipsPage() {
               Unlock unlimited access to our world-class sports facilities and training programs
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* FREE REGISTRATION PROMOTION BANNER */}
+      <section className="px-4 sm:px-6 lg:px-8 -mt-6 mb-6 relative z-20">
+        <div className="max-w-7xl mx-auto">
+          {/* Check if promotion is active (before Jan 1, 2026) */}
+          {new Date() < new Date('2026-01-01T00:00:00-05:00') && (
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#50C878] via-[#3DA860] to-[#2D5B4A] p-[2px] shadow-2xl">
+              {/* Inner Content */}
+              <div className="relative bg-black/95 backdrop-blur-xl rounded-2xl p-6 md:p-8">
+                {/* Animated Background Effects */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#50C878]/10 via-transparent to-[#3DA860]/10 animate-pulse" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#50C878]/20 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#3DA860]/20 rounded-full blur-3xl" />
+
+                {/* Content */}
+                <div className="relative z-10 text-center">
+                  {/* Emoji Badge */}
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#50C878] to-[#3DA860] shadow-lg mb-4">
+                    <span className="text-3xl">🎉</span>
+                  </div>
+
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                    FREE Registration Promotion
+                  </h2>
+                  <p className="text-lg md:text-xl text-white/90 mb-1">
+                    Join before <span className="font-bold text-[#CFEA6C]">January 1, 2026</span> and save{' '}
+                    <span className="font-bold text-[#50C878]">$25 CAD</span> on your initiation fee!
+                  </p>
+                  <p className="text-sm text-white/70">
+                    Limited time offer • Applies to all new memberships
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -67,8 +104,8 @@ export default async function MembershipsPage() {
                       className="animate-in fade-in slide-in-from-bottom-4"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
-                      <MembershipCard 
-                        plan={plan} 
+                      <MembershipCard
+                        plan={plan}
                         currentMembership={isCurrentPlan ? activeMembership : null}
                         hasActiveMembership={!!activeMembership}
                       />
@@ -85,7 +122,7 @@ export default async function MembershipsPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-[#50C878]/1 via-[#2D5B4A]/1 to-[#50C878]/1 opacity-5 group-hover:opacity-8 transition-opacity duration-500" />
                   <div className="absolute top-0 right-0 w-20 h-20 bg-[#50C878]/5 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
                   <div className="absolute bottom-0 left-0 w-20 h-20 bg-[#2D5B4A]/5 rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
-                  
+
                   <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1">
                       <div className="relative">

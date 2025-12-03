@@ -31,7 +31,7 @@ export function Footer() {
                   High-performance programs, facilities, and coaching for ambitious athletes.
                 </p>
                 <Button asChild className="bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-full px-5 py-2 h-auto">
-                  <Link href="/memberships">Enroll now</Link>
+                  <Link href="/bookings">Free Drop-in Session</Link>
                 </Button>
               </div>
 
@@ -43,6 +43,17 @@ export function Footer() {
                   <li><Link href="/bookings" className="hover:opacity-80">Book a Session</Link></li>
                   <li><Link href="/memberships" className="hover:opacity-80">Memberships</Link></li>
                   <li><a href="mailto:Info@wsateam.com" className="hover:opacity-80">Contact</a></li>
+                  <li><a href="tel:+1234567890" className="hover:opacity-80 font-semibold text-[#50C878]">+1 (234) 567-890</a></li>
+                  <li>
+                    <a
+                      href="https://maps.google.com/?q=World+Sports+Academy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-80 text-xs text-gray-400 mt-2 block"
+                    >
+                      123 Sports Avenue, City, Country
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>
