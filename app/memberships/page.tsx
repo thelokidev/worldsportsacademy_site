@@ -96,26 +96,78 @@ export default async function MembershipsPage() {
               </p>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 mb-6">
-                {plans.map((plan, index) => {
-                  const membershipPlan = activeMembership?.membership_plans as { id: string } | undefined
-                  const isCurrentPlan = activeMembership && membershipPlan?.id === plan.id
-                  return (
-                    <div
-                      key={plan.id}
-                      className="animate-in fade-in slide-in-from-bottom-4"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <MembershipCard
-                        plan={plan}
-                        currentMembership={isCurrentPlan ? activeMembership : null}
-                        hasActiveMembership={!!activeMembership}
-                      />
+            <div className="space-y-16">
+              {/* Table Tennis Plans */}
+              {plans.some(p => p.sports?.some((s: any) => s.name === 'table-tennis')) && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#50C878] to-[#3DA860] flex items-center justify-center shadow-lg shadow-[#50C878]/20">
+                      <span className="text-2xl">🏓</span>
                     </div>
-                  )
-                })}
-              </div>
+                    <div>
+                      <h2 className="text-2xl md:text-3xl font-bold text-white">Table Tennis Plans</h2>
+                      <p className="text-gray-400">Unlimited access to professional tables</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+                    {plans
+                      .filter(plan => plan.sports?.some((s: any) => s.name === 'table-tennis'))
+                      .map((plan, index) => {
+                        const membershipPlan = activeMembership?.membership_plans as { id: string } | undefined
+                        const isCurrentPlan = activeMembership && membershipPlan?.id === plan.id
+                        return (
+                          <div
+                            key={plan.id}
+                            className="animate-in fade-in slide-in-from-bottom-4"
+                            style={{ animationDelay: `${index * 100}ms` }}
+                          >
+                            <MembershipCard
+                              plan={plan}
+                              currentMembership={isCurrentPlan ? activeMembership : null}
+                              hasActiveMembership={!!activeMembership}
+                            />
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* Squash Plans */}
+              {plans.some(p => p.sports?.some((s: any) => s.name === 'squash')) && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#50C878] to-[#3DA860] flex items-center justify-center shadow-lg shadow-[#50C878]/20">
+                      <span className="text-2xl">🏸</span>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl md:text-3xl font-bold text-white">Squash Plans</h2>
+                      <p className="text-gray-400">Unlimited access to squash courts</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+                    {plans
+                      .filter(plan => plan.sports?.some((s: any) => s.name === 'squash'))
+                      .map((plan, index) => {
+                        const membershipPlan = activeMembership?.membership_plans as { id: string } | undefined
+                        const isCurrentPlan = activeMembership && membershipPlan?.id === plan.id
+                        return (
+                          <div
+                            key={plan.id}
+                            className="animate-in fade-in slide-in-from-bottom-4"
+                            style={{ animationDelay: `${index * 100}ms` }}
+                          >
+                            <MembershipCard
+                              plan={plan}
+                              currentMembership={isCurrentPlan ? activeMembership : null}
+                              hasActiveMembership={!!activeMembership}
+                            />
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              )}
 
               {/* Compact Drop-in CTA Section */}
               <div className="relative group mt-8">
@@ -153,7 +205,7 @@ export default async function MembershipsPage() {
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </section>

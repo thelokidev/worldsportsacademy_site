@@ -16,6 +16,7 @@ export const MEMBERSHIP_PRICE_MAP: Record<string, PlanMapping> = {
     name: 'Initiation Fee',
     productId: 'prod_TX8N4hRNC5iARd',
   },
+  // Legacy Unified Plans (kept for reference)
   price_1Sa46pC2I88MOqJ1K8iEy1NH: {
     name: 'Monthly Membership',
     productId: 'prod_TX8Nj6SfIe7Pif',
@@ -27,6 +28,32 @@ export const MEMBERSHIP_PRICE_MAP: Record<string, PlanMapping> = {
   price_1Sa46qC2I88MOqJ1iDaWEf0o: {
     name: 'Yearly Membership',
     productId: 'prod_TX8Nc4iWv8q7QM',
+  },
+  // Table Tennis Plans - TODO: Update with real Stripe IDs
+  price_TT_Monthly_PLACEHOLDER: {
+    name: 'Table Tennis Monthly',
+    productId: 'prod_TT_Monthly_PLACEHOLDER',
+  },
+  price_TT_HalfYearly_PLACEHOLDER: {
+    name: 'Table Tennis Half-Yearly',
+    productId: 'prod_TT_HalfYearly_PLACEHOLDER',
+  },
+  price_TT_Yearly_PLACEHOLDER: {
+    name: 'Table Tennis Yearly',
+    productId: 'prod_TT_Yearly_PLACEHOLDER',
+  },
+  // Squash Plans - TODO: Update with real Stripe IDs
+  price_Squash_Monthly_PLACEHOLDER: {
+    name: 'Squash Monthly',
+    productId: 'prod_Squash_Monthly_PLACEHOLDER',
+  },
+  price_Squash_HalfYearly_PLACEHOLDER: {
+    name: 'Squash Half-Yearly',
+    productId: 'prod_Squash_HalfYearly_PLACEHOLDER',
+  },
+  price_Squash_Yearly_PLACEHOLDER: {
+    name: 'Squash Yearly',
+    productId: 'prod_Squash_Yearly_PLACEHOLDER',
   },
 }
 
@@ -76,4 +103,3 @@ export async function ensurePlanForPriceId(
 
   return updatedPlan
 }
-
