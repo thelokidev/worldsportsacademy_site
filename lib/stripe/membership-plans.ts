@@ -7,7 +7,18 @@ type PlanMapping = {
 
 type ServiceSupabaseClient = ReturnType<typeof getServiceSupabaseClient>
 
+/**
+ * Stripe Price ID to Plan Name mapping
+ * Used as a fallback when plans don't have stripe_price_id set in the database
+ * 
+ * Sport-Specific Memberships:
+ * - Table Tennis: Monthly ($75), Half-Yearly ($400), Yearly ($700)
+ * - Squash: Monthly ($75), Half-Yearly ($400), Yearly ($700)
+ */
 export const MEMBERSHIP_PRICE_MAP: Record<string, PlanMapping> = {
+  // ============================================
+  // Utility Products (Drop-in, Initiation Fee)
+  // ============================================
   price_1Sa46oC2I88MOqJ1EoippchK: {
     name: 'Drop-In Session',
     productId: 'prod_TX8NXeBVG5Op9s',
@@ -16,7 +27,10 @@ export const MEMBERSHIP_PRICE_MAP: Record<string, PlanMapping> = {
     name: 'Initiation Fee',
     productId: 'prod_TX8N4hRNC5iARd',
   },
-  // Legacy Unified Plans (kept for reference)
+
+  // ============================================
+  // Legacy Unified Plans (deprecated - kept for backwards compatibility)
+  // ============================================
   price_1Sa46pC2I88MOqJ1K8iEy1NH: {
     name: 'Monthly Membership',
     productId: 'prod_TX8Nj6SfIe7Pif',
@@ -29,38 +43,50 @@ export const MEMBERSHIP_PRICE_MAP: Record<string, PlanMapping> = {
     name: 'Yearly Membership',
     productId: 'prod_TX8Nc4iWv8q7QM',
   },
-  // Table Tennis Plans - TODO: Update with real Stripe IDs
-  price_TT_Monthly_PLACEHOLDER: {
+
+  // ============================================
+  // Table Tennis Plans (Sport-Specific)
+  // ============================================
+  'price_1SdkApDwbguMPSQsHILVu4JE': {
     name: 'Table Tennis Monthly',
-    productId: 'prod_TT_Monthly_PLACEHOLDER',
+    productId: 'prod_Taw22MiUG5m0ks',
   },
-  price_TT_HalfYearly_PLACEHOLDER: {
+  'price_1SdkAqDwbguMPSQsAzKUb3gL': {
     name: 'Table Tennis Half-Yearly',
-    productId: 'prod_TT_HalfYearly_PLACEHOLDER',
+    productId: 'prod_Taw2ut97ns5aCZ',
   },
-  price_TT_Yearly_PLACEHOLDER: {
+  'price_1SdkAqDwbguMPSQsvb9JEF96': {
     name: 'Table Tennis Yearly',
-    productId: 'prod_TT_Yearly_PLACEHOLDER',
+    productId: 'prod_Taw2VIvwyOa6RM',
   },
-  // Squash Plans - TODO: Update with real Stripe IDs
-  price_Squash_Monthly_PLACEHOLDER: {
+
+  // ============================================
+  // Squash Plans (Sport-Specific)
+  // ============================================
+  'price_1SdkArDwbguMPSQsARsE47Ov': {
     name: 'Squash Monthly',
-    productId: 'prod_Squash_Monthly_PLACEHOLDER',
+    productId: 'prod_Taw2LUtLgwHieJ',
   },
-  price_Squash_HalfYearly_PLACEHOLDER: {
+  'price_1SdkArDwbguMPSQscUfrqyKy': {
     name: 'Squash Half-Yearly',
-    productId: 'prod_Squash_HalfYearly_PLACEHOLDER',
+    productId: 'prod_Taw2kz7Y7fbYqZ',
   },
-  price_Squash_Yearly_PLACEHOLDER: {
+  'price_1SdkAsDwbguMPSQsK2xsYLLD': {
     name: 'Squash Yearly',
-    productId: 'prod_Squash_Yearly_PLACEHOLDER',
+    productId: 'prod_Taw2YhPK3XaRQy',
   },
 }
 
+/**
+ * Ensures a membership plan exists for a given Stripe price ID
+ * First checks if the plan has the stripe_price_id set in the database
+ * If not, uses the fallback mapping to update the plan
+ */
 export async function ensurePlanForPriceId(
   supabase: ServiceSupabaseClient,
   priceId: string,
 ) {
+  // First try to find plan by stripe_price_id
   const { data: plan } = await supabase
     .from('membership_plans')
     .select('id, name')
@@ -71,6 +97,7 @@ export async function ensurePlanForPriceId(
     return plan
   }
 
+  // Try fallback mapping
   const fallback = MEMBERSHIP_PRICE_MAP[priceId]
   if (!fallback) {
     console.error('[membership-plan-map] No fallback mapping for price', { priceId })

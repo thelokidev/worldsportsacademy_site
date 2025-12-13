@@ -109,8 +109,10 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
 
   // Check for best value badge (yearly plan)
   const isBestValue = features.best_value === true
-  // Check if all sports access is included
-  const hasAllSportsAccess = features.all_sports_access === true
+  // Check if all sports access is included (unified plans only, not sport-specific)
+  const hasAllSportsAccess = features.all_sports_access === true && !features.sport_specific_access
+  // Check if this is a sport-specific plan
+  const isSportSpecific = features.sport_specific_access === true
   // Get savings amount if exists
   const savings = features.savings as string | undefined
   // Get billing period display
@@ -187,6 +189,14 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
                 <span className="text-sm font-medium text-white">All Sports Access</span>
               </li>
             )}
+            {isSportSpecific && sports.length > 0 && (
+              <li className="flex items-start gap-3 group/item">
+                <div className="mt-0.5 w-5 h-5 rounded-full bg-[#50C878]/20 flex items-center justify-center flex-shrink-0 group-hover/item:bg-[#50C878] transition-colors duration-300">
+                  <Check className="w-3 h-3 text-[#50C878] group-hover/item:text-black transition-colors duration-300" />
+                </div>
+                <span className="text-sm font-medium text-white">{sports[0]?.display_name} Access</span>
+              </li>
+            )}
             {features.unlimited_bookings && (
               <li className="flex items-start gap-3 group/item">
                 <div className="mt-0.5 w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 group-hover/item:bg-gray-700 transition-colors">
@@ -213,8 +223,8 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
             )}
           </ul>
 
-          {/* Sports Badges */}
-          {sports.length > 0 && (
+          {/* Sports Badges - Only show for unified/multi-sport plans */}
+          {sports.length > 1 && (
             <div className="pt-2">
               <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-3">Includes Access To</p>
               <div className="flex flex-wrap gap-2">

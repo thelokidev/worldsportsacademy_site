@@ -8,9 +8,6 @@ import { getUserMembership } from '@/server/queries/memberships'
 
 export default async function MembershipsPage() {
   const { plans } = await getAllMembershipPlans()
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/memberships/page.tsx:10',message:'Plans received in page component',data:{planCount:plans?.length||0,planNames:plans?.map((p:any)=>p.name)||[],planDetails:plans?.map((p:any)=>({name:p.name,sports:p.sports?.map((s:any)=>s.name)||[]}))||[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,D'})}).catch(()=>{});
-  // #endregion
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -18,9 +15,6 @@ export default async function MembershipsPage() {
   let activeMembership = null
   if (user) {
     activeMembership = await getUserMembership(user.id)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/memberships/page.tsx:18',message:'User logged in with active membership',data:{hasActiveMembership:!!activeMembership,membershipPlanName:activeMembership?.membership_plans?.name||null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
   }
 
   return (
