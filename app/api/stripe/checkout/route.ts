@@ -40,7 +40,7 @@ async function getOrCreateProfile(
   }
 
   // Try to get existing profile
-  const { data: profile, error: profileError } = await supabase
+  let { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('stripe_customer_id, full_name')
     .eq('id', userId)
