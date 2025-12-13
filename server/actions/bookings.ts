@@ -372,7 +372,13 @@ export async function createBooking(formData: FormData) {
     const bookingType = (formData.get('bookingType') as string) || 'member'
 
     if (bookingType === 'member') {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/bookings.ts:374',message:'Checking membership coverage before booking',data:{userId:user.id,sportId,bookingType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+      // #endregion
       const hasCoverage = await userHasMembershipCoverage(supabase, user.id, sportId)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/bookings.ts:375',message:'Membership coverage result',data:{userId:user.id,sportId,hasCoverage},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+      // #endregion
       if (!hasCoverage) {
         throw new Error('Active membership required to book without payment')
       }
@@ -604,6 +610,9 @@ async function userHasMembershipCoverage(
   userId: string,
   sportId: string,
 ) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/bookings.ts:602',message:'userHasMembershipCoverage entry',data:{userId,sportId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+  // #endregion
   const nowIso = new Date().toISOString()
   const { data, error } = await supabase
     .from('memberships')
@@ -619,15 +628,28 @@ async function userHasMembershipCoverage(
     .in('status', ['active', 'trialing'])
     .gt('current_period_end', nowIso)
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/bookings.ts:620',message:'Memberships fetched in userHasMembershipCoverage',data:{membershipCount:data?.length||0,memberships:data?.map((m:any)=>({id:m.id,status:m.status,sport_ids:(m.membership_plans as any)?.sport_ids||[]}))||[],error:error?.message||null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+  // #endregion
+
   if (error) {
     console.error('Membership coverage check failed:', error)
     return false
   }
 
-  return (data || []).some((membership) => {
+  const result = (data || []).some((membership) => {
     const plan = membership.membership_plans as { sport_ids?: string[] } | null
-    return plan?.sport_ids?.includes(sportId)
+    const hasSport = plan?.sport_ids?.includes(sportId)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/bookings.ts:627',message:'Checking membership plan for sport',data:{membershipId:membership.id,sportId,planSportIds:plan?.sport_ids||[],hasSport},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+    // #endregion
+    return hasSport
   })
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/bookings.ts:631',message:'userHasMembershipCoverage result',data:{userId,sportId,result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+  // #endregion
+  return result
 }
 
 /**
