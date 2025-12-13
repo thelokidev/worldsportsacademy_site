@@ -84,6 +84,9 @@ export async function getActiveMembershipForSport(sportId: string) {
 
 export async function getAllMembershipPlans() {
   try {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/memberships.ts:85',message:'getAllMembershipPlans entry',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C'})}).catch(()=>{});
+    // #endregion
     const supabase = await createClient()
 
     // Fetch membership plans
@@ -93,11 +96,18 @@ export async function getAllMembershipPlans() {
       .eq('is_active', true)
       .order('display_order', { ascending: true })
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/memberships.ts:95',message:'Plans fetched from DB',data:{planCount:plans?.length||0,planNames:plans?.map((p:any)=>p.name)||[],planDetails:plans?.map((p:any)=>({name:p.name,is_active:p.is_active,sport_ids:p.sport_ids,display_order:p.display_order}))||[],error:plansError?.message||null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C'})}).catch(()=>{});
+    // #endregion
+
     if (plansError) {
       throw new Error(`Failed to fetch membership plans: ${plansError.message}`)
     }
 
     if (!plans || plans.length === 0) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/memberships.ts:102',message:'No plans found',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       return { success: true, plans: [] }
     }
 
@@ -141,6 +151,10 @@ export async function getAllMembershipPlans() {
         sports: planSports,
       }
     })
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/actions/memberships.ts:145',message:'Final plans being returned',data:{finalPlanCount:plansWithSports.length,finalPlans:plansWithSports.map((p:any)=>({name:p.name,sports:p.sports?.map((s:any)=>s.name)||[],sport_ids:p.sport_ids})),hasOldPlans:plansWithSports.some((p:any)=>['Monthly Membership','Half-Yearly Membership','Yearly Membership'].includes(p.name)),hasNewPlans:plansWithSports.some((p:any)=>p.name.includes('Table Tennis')||p.name.includes('Squash'))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+    // #endregion
 
     return { success: true, plans: plansWithSports }
   } catch (error) {
