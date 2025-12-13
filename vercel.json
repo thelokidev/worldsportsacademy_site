@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-pending-bookings",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
+

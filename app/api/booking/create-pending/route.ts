@@ -23,16 +23,24 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Validate court is available
+    // Validate court is available AND belongs to the correct sport
     const { data: court } = await supabase
       .from('courts')
-      .select('is_blocked, is_active')
+      .select('is_blocked, is_active, sport_id')
       .eq('id', courtId)
       .single()
 
     if (!court || !court.is_active) {
       return NextResponse.json(
         { error: 'Court is not available' },
+        { status: 400 }
+      )
+    }
+
+    // Ensure court belongs to the selected sport
+    if (court.sport_id !== sportId) {
+      return NextResponse.json(
+        { error: 'This court is not available for the selected sport' },
         { status: 400 }
       )
     }

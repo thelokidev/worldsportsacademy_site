@@ -6,8 +6,8 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { addMinutes, format, parseISO, startOfDay, eachHourOfInterval, setHours, getDay } from 'date-fns'
 import { fromZonedTime } from 'date-fns-tz'
 
-// Facility timezone - change this if your facility is in a different timezone
-const FACILITY_TIMEZONE = 'America/Chicago'
+// Facility timezone - Ontario, Canada
+const FACILITY_TIMEZONE = 'America/Toronto'
 
 export async function getAvailableSlots(
   sportId: string,
@@ -325,10 +325,10 @@ export async function createBooking(formData: FormData) {
       throw new Error('Missing required fields')
     }
 
-    // Validate court is not blocked
+    // Validate court is not blocked AND belongs to the correct sport
     const { data: court } = await supabase
       .from('courts')
-      .select('is_blocked, is_active')
+      .select('is_blocked, is_active, sport_id')
       .eq('id', courtId)
       .single()
 
@@ -338,6 +338,11 @@ export async function createBooking(formData: FormData) {
 
     if (court.is_blocked) {
       throw new Error('Court is currently blocked')
+    }
+
+    // Ensure court belongs to the selected sport
+    if (court.sport_id !== sportId) {
+      throw new Error('This court is not available for the selected sport')
     }
 
     // Check for conflicts on the same court

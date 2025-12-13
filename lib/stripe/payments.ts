@@ -255,7 +255,7 @@ export const createBookingPaymentIntent = async ({
     .from('bookings')
     .update({
       expected_payment_amount: pricing.total,
-      payment_currency: 'usd',
+      payment_currency: 'cad',
     })
     .eq('id', booking.id)
 
@@ -289,7 +289,7 @@ export const createBookingPaymentIntent = async ({
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
-      currency: 'usd',
+      currency: 'cad',
       customer: customerId,
       receipt_email: receiptEmail || undefined,
       description: `Drop-in booking ${booking.id} payment`,
