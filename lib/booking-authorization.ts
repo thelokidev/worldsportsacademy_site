@@ -15,9 +15,6 @@ export async function checkBookingAuthorization(
   sportId: string,
   durationMinutes: number
 ): Promise<BookingAuthorizationResult> {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/booking-authorization.ts:13',message:'checkBookingAuthorization entry',data:{userId,sportId,durationMinutes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C'})}).catch(()=>{});
-  // #endregion
   const supabase = getServiceSupabaseClient()
   const nowIso = new Date().toISOString()
 
@@ -48,9 +45,6 @@ export async function checkBookingAuthorization(
   // Gather membership coverage for this user
   const membershipCoverage = await getMembershipCoverage(supabase, userId, nowIso)
   const hasMembershipForSport = membershipCoverage.has(sportId)
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/booking-authorization.ts:47',message:'Membership coverage check result',data:{sportId,hasMembershipForSport,coverageSize:membershipCoverage.size,coverageArray:Array.from(membershipCoverage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-  // #endregion
 
   // Check if sport requires membership
   if (sportSettings?.requires_membership_for_booking) {
@@ -115,9 +109,6 @@ async function getMembershipCoverage(
   userId: string,
   nowIso: string,
 ) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/booking-authorization.ts:107',message:'getMembershipCoverage entry',data:{userId,nowIso},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-  // #endregion
   const coverage = new Set<string>()
 
   const { data, error } = await supabase
@@ -136,10 +127,6 @@ async function getMembershipCoverage(
     .in('status', ['active', 'trialing'])
     .gt('current_period_end', nowIso)
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/booking-authorization.ts:129',message:'Memberships fetched from DB',data:{membershipCount:data?.length||0,memberships:data?.map((m:any)=>({id:m.id,status:m.status,current_period_end:m.current_period_end,sport_ids:(m.membership_plans as any)?.sport_ids||[]}))||[],error:error?.message||null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-  // #endregion
-
   if (error) {
     console.error('Failed to load membership coverage:', error)
     return coverage
@@ -147,24 +134,15 @@ async function getMembershipCoverage(
 
   for (const membership of data || []) {
     const plan = membership.membership_plans as { sport_ids?: string[] } | null
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/booking-authorization.ts:135',message:'Processing membership plan',data:{membershipId:membership.id,planSportIds:plan?.sport_ids||[],sportIdsLength:plan?.sport_ids?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-    // #endregion
     if (plan?.sport_ids?.length) {
       plan.sport_ids.forEach((sportId) => {
         if (typeof sportId === 'string' && sportId.length > 0) {
           coverage.add(sportId)
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/booking-authorization.ts:140',message:'Added sport to coverage',data:{sportId,coverageSize:coverage.size},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-          // #endregion
         }
       })
     }
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/4dd60e4f-86b2-4010-b4f4-df03858838dd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/booking-authorization.ts:146',message:'Final coverage set',data:{coverageSize:coverage.size,coverageArray:Array.from(coverage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
-  // #endregion
   return coverage
 }
 
