@@ -101,8 +101,8 @@ export function Hero() {
                   className="bg-[#50C878] hover:bg-[#50C878]/90 text-white text-base font-semibold rounded-lg px-8 py-6 h-auto shadow-lg hover:shadow-xl transition-all group"
                   size="lg"
                 >
-                  <Link href="/programs" className="flex items-center gap-2">
-                    Explore Programs
+                  <Link href="/training" className="flex items-center gap-2">
+                    Explore Training
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </Button>
@@ -112,7 +112,7 @@ export function Hero() {
                   className="bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:text-[#2D5B4A] text-base font-semibold rounded-lg px-8 py-6 h-auto shadow-lg transition-all group"
                   size="lg"
                 >
-                  <Link href="/bookings" className="flex items-center gap-2">
+                  <Link href="/drop-in" className="flex items-center gap-2">
                     <Play className="w-5 h-5" />
                     Book Drop-in Session
                   </Link>

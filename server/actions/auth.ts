@@ -8,6 +8,7 @@ export interface SignUpData {
   email: string
   password: string
   fullName?: string
+  phoneNumber: string
 }
 
 export interface SignInData {
@@ -28,9 +29,23 @@ export async function signUp(data: SignUpData) {
       emailRedirectTo: `${appUrl}/auth/callback`,
       data: {
         full_name: data.fullName,
+        phone_number: data.phoneNumber,
       },
     },
   })
+
+  // After successful signup, update the profile with phone number
+  if (authData.user && !error) {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ phone_number: data.phoneNumber })
+      .eq('id', authData.user.id)
+
+    if (profileError) {
+      console.error('Error updating profile with phone number:', profileError)
+      // Don't fail the signup if profile update fails
+    }
+  }
 
   if (error) {
     console.error('Sign-up error:', error)

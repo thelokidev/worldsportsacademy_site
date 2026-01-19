@@ -179,8 +179,8 @@ export function ProgramsGrid() {
                           <Clock className="w-4 h-4" />
                         </span>
                       ) : (
-                        <Link href="/bookings" className="flex items-center justify-center gap-2">
-                          Start Training
+                        <Link href="/drop-in" className="flex items-center justify-center gap-2">
+                          Book Drop-in
                           <Users className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                         </Link>
                       )}

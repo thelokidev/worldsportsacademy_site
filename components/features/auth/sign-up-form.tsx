@@ -22,6 +22,9 @@ const formSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
   fullName: z.string().optional(),
+  phoneNumber: z.string()
+    .min(10, 'Phone number must be at least 10 digits')
+    .regex(/^[\d\s\-\+\(\)]+$/, 'Please enter a valid phone number'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
@@ -40,11 +43,12 @@ export function SignUpForm() {
       password: '',
       confirmPassword: '',
       fullName: '',
+      phoneNumber: '',
     },
   })
 
   async function onSubmit(data: FormData) {
-    const result = await signUp({ email: data.email, password: data.password, fullName: data.fullName })
+    const result = await signUp({ email: data.email, password: data.password, fullName: data.fullName, phoneNumber: data.phoneNumber })
     if (result?.error) {
       toast({ 
         title: 'Sign-up Error', 
@@ -99,6 +103,24 @@ export function SignUpForm() {
                 <Input 
                   type="email" 
                   placeholder="you@example.com" 
+                  className="h-12 bg-black/50 border-gray-800 text-white placeholder:text-gray-500 focus:border-[#50C878] focus:ring-2 focus:ring-[#50C878]/20 rounded-xl transition-all" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage className="text-red-400" />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="phoneNumber"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel className="text-white font-semibold text-sm">Phone Number</FormLabel>
+              <FormControl>
+                <Input 
+                  type="tel" 
+                  placeholder="(123) 456-7890" 
                   className="h-12 bg-black/50 border-gray-800 text-white placeholder:text-gray-500 focus:border-[#50C878] focus:ring-2 focus:ring-[#50C878]/20 rounded-xl transition-all" 
                   {...field} 
                 />

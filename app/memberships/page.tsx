@@ -138,7 +138,7 @@ export default async function MembershipsPage() {
                 <div className="space-y-6">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#50C878] to-[#3DA860] flex items-center justify-center shadow-lg shadow-[#50C878]/20">
-                      <span className="text-2xl">🏸</span>
+                      <span className="text-2xl">🎾</span>
                     </div>
                     <div>
                       <h2 className="text-2xl md:text-3xl font-bold text-white">Squash Plans</h2>

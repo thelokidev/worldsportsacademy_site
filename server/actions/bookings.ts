@@ -1,5 +1,10 @@
 'use server'
 
+// TODO: Implement capacity enforcement for bookings
+// - Max 2 people per Table Tennis table
+// - Max 2 people per Squash court
+// See /docs/BOOKING_CAPACITY_RULES.md for implementation details
+
 import { createClient } from '@/lib/supabase/server'
 import { initiateBookingRefund } from '@/lib/stripe/payments'
 import { revalidatePath, revalidateTag } from 'next/cache'

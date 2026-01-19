@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, ChevronRight, Home, Dumbbell, CalendarCheck, Crown, Shield } from "lucide-react"
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, ChevronRight, Home, Dumbbell, CalendarCheck, Crown, Shield, Users, Tent } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useTransition, useMemo, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -19,9 +19,10 @@ import Image from "next/image"
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
-  { name: "Programs", href: "/programs", icon: Dumbbell },
-  { name: "Book Now", href: "/bookings", icon: CalendarCheck },
-  { name: "Memberships", href: "/memberships", icon: Crown },
+  { name: "Training", href: "/training", icon: Dumbbell },
+  { name: "Drop-in", href: "/drop-in", icon: CalendarCheck },
+  { name: "About", href: "/about", icon: Users },
+  { name: "Camps", href: "/camps", icon: Tent },
 ]
 
 export function Navbar() {

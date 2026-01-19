@@ -120,6 +120,20 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   turbopack: {},
+  async redirects() {
+    return [
+      {
+        source: '/bookings',
+        destination: '/drop-in',
+        permanent: true,
+      },
+      {
+        source: '/programs',
+        destination: '/training',
+        permanent: false,
+      },
+    ]
+  },
 };
 
 export default withPWA(nextConfig);

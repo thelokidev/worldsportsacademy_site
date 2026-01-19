@@ -62,21 +62,10 @@ export function ProgramCTA() {
                   className="bg-[#50C878] hover:bg-[#50C878]/90 text-white text-base font-semibold rounded-xl px-8 py-7 h-auto shadow-xl hover:shadow-2xl transition-all group"
                   size="lg"
                 >
-                  <Link href="/bookings" className="flex items-center justify-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    Book Drop-in Session
+                  <Link href="/training" className="flex items-center justify-center gap-2">
+                    <Trophy className="w-5 h-5" />
+                    Enquire About Training
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="bg-white/10 backdrop-blur-md border-2 border-white text-white hover:bg-white hover:text-[#2D5B4A] text-base font-semibold rounded-xl px-8 py-7 h-auto shadow-xl transition-all"
-                  size="lg"
-                >
-                  <Link href="/memberships" className="flex items-center justify-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    View Memberships
                   </Link>
                 </Button>
               </div>
