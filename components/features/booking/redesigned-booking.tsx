@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useTransition } from 'react'
 import { getSports } from '@/server/queries/bookings'
 import { getCourtsBySport } from '@/server/queries/bookings'
 import { Button } from '@/components/ui/button'
-import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Dumbbell, Circle, Grid3x3, ArrowRight, Info, X, Activity } from 'lucide-react'
+import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Dumbbell, Circle, Grid3x3, ArrowRight, Info, X, Activity, Crown } from 'lucide-react'
 import { format, addDays, parseISO, addMinutes, startOfDay } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -493,6 +493,37 @@ export function RedesignedBooking() {
               Book flexible pay-as-you-go sessions for table tennis and squash. No membership required.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Membership Promotion Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 -mt-2">
+        <div className="bg-gradient-to-r from-[#50C878]/5 to-[#2D5B4A]/10 border border-[#50C878]/20 rounded-2xl p-6 md:p-8 shadow-lg">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            {/* Left: Message */}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-[#50C878]/20 flex items-center justify-center flex-shrink-0">
+                <Crown className="w-6 h-6 text-[#50C878]" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-1">Play More, Pay Less</h3>
+                <p className="text-gray-300 text-sm">Memberships start at $75/month for unlimited access</p>
+              </div>
+            </div>
+            
+            {/* Right: Comparison + CTA */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
+              <div className="text-sm text-gray-400">
+                <span className="text-white font-semibold">Drop-in:</span> $15/session
+                <span className="mx-2">vs</span>
+                <span className="text-[#50C878] font-semibold">Membership:</span> ~$3/session*
+              </div>
+              <Button asChild className="bg-[#50C878] hover:bg-[#3DA860] text-white font-semibold px-6 whitespace-nowrap">
+                <Link href="/memberships">View Memberships</Link>
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-4">*Based on 25 sessions/month with a monthly membership</p>
         </div>
       </div>
 
