@@ -4,9 +4,11 @@ import { getServiceSupabaseClient } from '@/lib/supabase/service'
 /**
  * Cron job to clean up stale pending bookings
  * 
- * This endpoint should be called every 5 minutes by:
- * - Vercel Cron Jobs (add to vercel.json)
- * - External scheduler (e.g., cron-job.org)
+ * This endpoint is configured to run once daily at 2 AM via Vercel Cron Jobs.
+ * For Hobby plan: Limited to once per day
+ * For Pro plan: Can be configured to run more frequently (e.g., every 5 minutes)
+ * 
+ * Alternative: Use external scheduler (e.g., cron-job.org) for more frequent runs
  * 
  * Security: Requires CRON_SECRET header to prevent unauthorized calls
  */
