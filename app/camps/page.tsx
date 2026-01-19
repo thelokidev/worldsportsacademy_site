@@ -152,12 +152,14 @@ export default function CampsPage() {
               </Button>
               
               <Button
-                onClick={() => window.location.href = 'tel:+14169831555'}
+                asChild
                 variant="outline"
                 className="bg-white/10 backdrop-blur-md border-2 border-white text-white hover:bg-white hover:text-black font-semibold rounded-xl px-8 py-6 h-auto shadow-lg"
               >
-                <Phone className="w-5 h-5 mr-2" />
-                Call: (416) 983-1555
+                <Link href="tel:+14169831555">
+                  <Phone className="w-5 h-5 mr-2" />
+                  Call: (416) 983-1555
+                </Link>
               </Button>
             </div>
 
