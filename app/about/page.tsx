@@ -116,12 +116,14 @@ export default function AboutPage() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                     <Button
-                      onClick={() => window.location.href = 'tel:+14169831555'}
+                      asChild
                       className="bg-[#50C878] hover:bg-[#3DA860] text-white"
                       size="sm"
                     >
-                      <Phone className="w-4 h-4 mr-2" />
-                      (416) 983-1555
+                      <Link href="tel:+14169831555">
+                        <Phone className="w-4 h-4 mr-2" />
+                        (416) 983-1555
+                      </Link>
                     </Button>
                     <Button
                       asChild
