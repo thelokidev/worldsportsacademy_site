@@ -46,6 +46,55 @@ CREATE TABLE IF NOT EXISTS public.membership_plans (
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
+-- Step 3b: Ensure drop_in_pricing table exists
+CREATE TABLE IF NOT EXISTS public.drop_in_pricing (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sport_id UUID NOT NULL REFERENCES public.sports(id) ON DELETE CASCADE,
+  price DECIMAL(10, 2) NOT NULL,
+  duration_minutes INTEGER NOT NULL,
+  tax_rate DECIMAL(5, 4) DEFAULT 0.0000,
+  description TEXT,
+  stripe_price_id TEXT,
+  stripe_product_id TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  UNIQUE(sport_id, duration_minutes)
+);
+
+-- Step 3c: Create drop-in pricing entries if they don't exist
+INSERT INTO public.drop_in_pricing (sport_id, price, duration_minutes, tax_rate, description, is_active)
+SELECT
+  s.id,
+  15.00,
+  60,
+  0.0000,
+  'Drop-in access to squash court for 1 hour',
+  true
+FROM public.sports s
+WHERE s.name = 'squash'
+ON CONFLICT (sport_id, duration_minutes) DO UPDATE SET
+  price = EXCLUDED.price,
+  description = EXCLUDED.description,
+  is_active = true,
+  updated_at = NOW();
+
+INSERT INTO public.drop_in_pricing (sport_id, price, duration_minutes, tax_rate, description, is_active)
+SELECT
+  s.id,
+  15.00,
+  120,
+  0.0000,
+  'Drop-in access to table tennis table for 2 hours',
+  true
+FROM public.sports s
+WHERE s.name = 'table-tennis'
+ON CONFLICT (sport_id, duration_minutes) DO UPDATE SET
+  price = EXCLUDED.price,
+  description = EXCLUDED.description,
+  is_active = true,
+  updated_at = NOW();
+
 -- Step 4: Deactivate old unified plans
 UPDATE public.membership_plans
 SET 
@@ -209,47 +258,85 @@ END $$;
 -- Step 6: Update Stripe IDs for the plans
 UPDATE public.membership_plans 
 SET 
-  stripe_price_id = 'price_1SdkApDwbguMPSQsHILVu4JE',
-  stripe_product_id = 'prod_Taw22MiUG5m0ks',
+  stripe_price_id = 'price_1SrPqNDrcV6C4UxVwurJIy8P',
+  stripe_product_id = 'prod_Tp3y66WeMEruGq',
   updated_at = NOW()
 WHERE name = 'Table Tennis Monthly';
 
 UPDATE public.membership_plans 
 SET 
-  stripe_price_id = 'price_1SdkAqDwbguMPSQsAzKUb3gL',
-  stripe_product_id = 'prod_Taw2ut97ns5aCZ',
+  stripe_price_id = 'price_1SrPquDrcV6C4UxVVoIsXWTp',
+  stripe_product_id = 'prod_Tp3y7yvbUGKhaw',
   updated_at = NOW()
 WHERE name = 'Table Tennis Half-Yearly';
 
 UPDATE public.membership_plans 
 SET 
-  stripe_price_id = 'price_1SdkAqDwbguMPSQsvb9JEF96',
-  stripe_product_id = 'prod_Taw2VIvwyOa6RM',
+  stripe_price_id = 'price_1SrPqwDrcV6C4UxVga7Xmx5f',
+  stripe_product_id = 'prod_Tp3yhrzsxxJbkg',
   updated_at = NOW()
 WHERE name = 'Table Tennis Yearly';
 
 UPDATE public.membership_plans 
 SET 
-  stripe_price_id = 'price_1SdkArDwbguMPSQsARsE47Ov',
-  stripe_product_id = 'prod_Taw2LUtLgwHieJ',
+  stripe_price_id = 'price_1SrPqxDrcV6C4UxVFAt8uTQR',
+  stripe_product_id = 'prod_Tp3yEBQHX37B9T',
   updated_at = NOW()
 WHERE name = 'Squash Monthly';
 
 UPDATE public.membership_plans 
 SET 
-  stripe_price_id = 'price_1SdkArDwbguMPSQscUfrqyKy',
-  stripe_product_id = 'prod_Taw2kz7Y7fbYqZ',
+  stripe_price_id = 'price_1SrPqzDrcV6C4UxVSjopZuAY',
+  stripe_product_id = 'prod_Tp3yWHfXJPspiX',
   updated_at = NOW()
 WHERE name = 'Squash Half-Yearly';
 
 UPDATE public.membership_plans 
 SET 
-  stripe_price_id = 'price_1SdkAsDwbguMPSQsK2xsYLLD',
-  stripe_product_id = 'prod_Taw2YhPK3XaRQy',
+  stripe_price_id = 'price_1SrPqzDrcV6C4UxVy3xvhpnt',
+  stripe_product_id = 'prod_Tp3ywHkZ6qp0d7',
   updated_at = NOW()
 WHERE name = 'Squash Yearly';
 
--- Step 7: Verify the results
+-- Step 7: Update Drop-In Pricing with Drop-In Session Product
+-- ============================================================================
+-- All drop-in bookings use the same Stripe "Drop-In Session" product
+-- This is a one-time payment product (not a subscription)
+
+UPDATE public.drop_in_pricing
+SET 
+  stripe_price_id = 'price_1SU8KqDrcV6C4UxVCCuNwOaE',
+  stripe_product_id = 'prod_TR0LWsYW3ACwFQ',
+  price = 15.00,
+  updated_at = NOW()
+WHERE is_active = true;
+
+-- Step 8: Deactivate Old/Unused Plans
+-- ============================================================================
+-- Deactivate any old unified plans or incorrect membership plans
+
+UPDATE public.membership_plans
+SET 
+  is_active = false,
+  updated_at = NOW()
+WHERE 
+  name IN (
+    'Monthly Membership', 
+    'Half-Yearly Membership', 
+    'Yearly Membership',
+    'Squash Monthly Membership',
+    'Table Tennis Monthly Membership',
+    'Squash + Gym Monthly Membership'
+  )
+  AND is_active = true;
+
+-- Step 9: Verify the results
+-- ============================================================================
+
+-- Verify Membership Plans (Should show 6 active plans)
+SELECT 
+  '=== MEMBERSHIP PLANS ===' as section;
+
 SELECT 
   name, 
   price, 
@@ -263,6 +350,47 @@ FROM public.membership_plans
 WHERE is_active = true
 ORDER BY display_order;
 
+-- Verify Drop-In Pricing (Should show pricing for all sports)
+SELECT 
+  '=== DROP-IN PRICING ===' as section;
+
+SELECT 
+  dp.id,
+  s.name as sport_name,
+  s.display_name,
+  dp.price,
+  dp.duration_minutes,
+  dp.stripe_price_id,
+  dp.stripe_product_id,
+  dp.is_active
+FROM public.drop_in_pricing dp
+JOIN public.sports s ON dp.sport_id = s.id
+WHERE dp.is_active = true
+ORDER BY s.name, dp.duration_minutes;
+
 -- Also show the sports for reference
+SELECT 
+  '=== ACTIVE SPORTS ===' as section;
+
 SELECT id, name, display_name, status FROM public.sports WHERE status = 'active';
+
+-- Summary Count
+SELECT 
+  '=== SUMMARY ===' as section;
+
+SELECT 
+  'Active Membership Plans' as type,
+  COUNT(*) as count,
+  '(Expected: 6)' as expected
+FROM public.membership_plans
+WHERE is_active = true
+
+UNION ALL
+
+SELECT 
+  'Active Drop-In Pricing' as type,
+  COUNT(*) as count,
+  '(Expected: 2+)' as expected
+FROM public.drop_in_pricing
+WHERE is_active = true;
 

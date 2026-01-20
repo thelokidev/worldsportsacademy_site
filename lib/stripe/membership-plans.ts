@@ -47,33 +47,33 @@ export const MEMBERSHIP_PRICE_MAP: Record<string, PlanMapping> = {
   // ============================================
   // Table Tennis Plans (Sport-Specific)
   // ============================================
-  'price_1SdkApDwbguMPSQsHILVu4JE': {
+  'price_1SrPqNDrcV6C4UxVwurJIy8P': {
     name: 'Table Tennis Monthly',
-    productId: 'prod_Taw22MiUG5m0ks',
+    productId: 'prod_Tp3y66WeMEruGq',
   },
-  'price_1SdkAqDwbguMPSQsAzKUb3gL': {
+  'price_1SrPquDrcV6C4UxVVoIsXWTp': {
     name: 'Table Tennis Half-Yearly',
-    productId: 'prod_Taw2ut97ns5aCZ',
+    productId: 'prod_Tp3y7yvbUGKhaw',
   },
-  'price_1SdkAqDwbguMPSQsvb9JEF96': {
+  'price_1SrPqwDrcV6C4UxVga7Xmx5f': {
     name: 'Table Tennis Yearly',
-    productId: 'prod_Taw2VIvwyOa6RM',
+    productId: 'prod_Tp3yhrzsxxJbkg',
   },
 
   // ============================================
   // Squash Plans (Sport-Specific)
   // ============================================
-  'price_1SdkArDwbguMPSQsARsE47Ov': {
+  'price_1SrPqxDrcV6C4UxVFAt8uTQR': {
     name: 'Squash Monthly',
-    productId: 'prod_Taw2LUtLgwHieJ',
+    productId: 'prod_Tp3yEBQHX37B9T',
   },
-  'price_1SdkArDwbguMPSQscUfrqyKy': {
+  'price_1SrPqzDrcV6C4UxVSjopZuAY': {
     name: 'Squash Half-Yearly',
-    productId: 'prod_Taw2kz7Y7fbYqZ',
+    productId: 'prod_Tp3yWHfXJPspiX',
   },
-  'price_1SdkAsDwbguMPSQsK2xsYLLD': {
+  'price_1SrPqzDrcV6C4UxVy3xvhpnt': {
     name: 'Squash Yearly',
-    productId: 'prod_Taw2YhPK3XaRQy',
+    productId: 'prod_Tp3ywHkZ6qp0d7',
   },
 }
 
