@@ -328,12 +328,14 @@ export async function POST(req: NextRequest) {
       ];
 
       // Add initiation fee for first-time users
-      if (needsInitiationFee) {
-        lineItems.push({
-          price: "price_1SvJxmDwbguMPSQsDdgst4ib", // Initiation fee price ID
-          quantity: 1,
-        });
-      }
+      // NOTE: Initiation fee is currently disabled - no price exists in Stripe
+      // To enable, create an Initiation Fee product in Stripe and add the price ID here
+      // if (needsInitiationFee) {
+      //   lineItems.push({
+      //     price: "YOUR_INITIATION_FEE_PRICE_ID",
+      //     quantity: 1,
+      //   });
+      // }
 
       // Create checkout session for subscription
       let session;

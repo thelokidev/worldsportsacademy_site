@@ -17,63 +17,43 @@ type ServiceSupabaseClient = ReturnType<typeof getServiceSupabaseClient>;
  */
 export const MEMBERSHIP_PRICE_MAP: Record<string, PlanMapping> = {
   // ============================================
-  // Utility Products (Drop-in, Initiation Fee)
+  // Utility Products (Drop-in)
   // ============================================
-  price_1SvJvaDwbguMPSQshdIDI7S5: {
+  price_1SU8KqDrcV6C4UxVCCuNwOaE: {
     name: "Drop-In Session",
-    productId: "prod_Tt670rQMvzR1Tr",
-  },
-  price_1SvJxmDwbguMPSQsDdgst4ib: {
-    name: "Initiation Fee",
-    productId: "prod_Tt6AiHh9sPfqM0",
-  },
-
-  // ============================================
-  // Legacy Unified Plans (deprecated - kept for backwards compatibility)
-  // ============================================
-  price_1Sa46pC2I88MOqJ1K8iEy1NH: {
-    name: "Monthly Membership",
-    productId: "prod_TX8Nj6SfIe7Pif",
-  },
-  price_1Sa46pC2I88MOqJ1yd0uZ1Lj: {
-    name: "Half-Yearly Membership",
-    productId: "prod_TX8NDRIaXUjNl6",
-  },
-  price_1Sa46qC2I88MOqJ1iDaWEf0o: {
-    name: "Yearly Membership",
-    productId: "prod_TX8Nc4iWv8q7QM",
+    productId: "prod_TR0LWsYW3ACwFQ",
   },
 
   // ============================================
   // Table Tennis Plans (Sport-Specific)
   // ============================================
-  price_1SrPp0DwbguMPSQs4ux7Q4Sw: {
+  price_1SrPqNDrcV6C4UxVwurJIy8P: {
     name: "Table Tennis Monthly",
-    productId: "prod_Tp3wTFdLAGs4WD",
+    productId: "prod_Tp3y66WeMEruGq",
   },
-  price_1SrPp1DwbguMPSQsIYDiXQcX: {
+  price_1SrPquDrcV6C4UxVVoIsXWTp: {
     name: "Table Tennis Half-Yearly",
-    productId: "prod_Tp3wu9D5lPbapA",
+    productId: "prod_Tp3y7yvbUGKhaw",
   },
-  price_1SrPp1DwbguMPSQsGxCSTUBF: {
+  price_1SrPqwDrcV6C4UxVga7Xmx5f: {
     name: "Table Tennis Yearly",
-    productId: "prod_Tp3wTNlWzgZQ1a",
+    productId: "prod_Tp3yhrzsxxJbkg",
   },
 
   // ============================================
   // Squash Plans (Sport-Specific)
   // ============================================
-  price_1SrPp2DwbguMPSQsfmgBrJqP: {
+  price_1SrPqxDrcV6C4UxVFAt8uTQR: {
     name: "Squash Monthly",
-    productId: "prod_Tp3wyR02WyBbCa",
+    productId: "prod_Tp3yEBQHX37B9T",
   },
-  price_1SrPp3DwbguMPSQs7zVoskc6: {
+  price_1SrPqzDrcV6C4UxVSjopZuAY: {
     name: "Squash Half-Yearly",
-    productId: "prod_Tp3wqSLuAhap3W",
+    productId: "prod_Tp3yWHfXJPspiX",
   },
-  price_1SrPp3DwbguMPSQs2X8NMw2F: {
+  price_1SrPqzDrcV6C4UxVy3xvhpnt: {
     name: "Squash Yearly",
-    productId: "prod_Tp3whjjsxU5hWE",
+    productId: "prod_Tp3ywHkZ6qp0d7",
   },
 };
 
