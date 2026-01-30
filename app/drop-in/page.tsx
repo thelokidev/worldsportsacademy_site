@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { RedesignedBooking } from '@/components/features/booking/redesigned-booking'
+import { Suspense } from 'react'
 
 export const metadata = {
   title: 'Drop-in Sessions | World Sports Academy',
@@ -29,5 +30,9 @@ export default async function DropInPage({
     }
   }
 
-  return <RedesignedBooking />
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
+      <RedesignedBooking />
+    </Suspense>
+  )
 }
