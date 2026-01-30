@@ -52,8 +52,8 @@ export function FacilitiesSection() {
           </p>
         </div>
 
-        {/* Facilities Grid - Compact Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Facilities Grid - 3 items, centered */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl mx-auto">
           {facilities.map((facility, index) => {
             const Icon = facility.icon
             return (

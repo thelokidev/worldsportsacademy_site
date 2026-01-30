@@ -1,6 +1,6 @@
 "use client"
 
-import { User, Users, Users2, Trophy, ArrowRight, Dumbbell, CheckCircle2 } from "lucide-react"
+import { User, Users, Users2, Trophy, ArrowRight, CheckCircle2, type LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const trainingTypes = [
@@ -67,14 +67,7 @@ const trainingTypes = [
   },
 ]
 
-const comingSoonPrograms = [
-  {
-    id: 'strength',
-    name: 'Strength & Conditioning',
-    description: 'Sport-specific fitness programs.',
-    icon: Dumbbell,
-  },
-]
+const comingSoonPrograms: { id: string; name: string; description: string; icon: LucideIcon }[] = []
 
 export function TrainingTypes() {
   const handleEnquiry = () => {
@@ -153,7 +146,8 @@ export function TrainingTypes() {
           })}
         </div>
 
-        {/* Coming Soon - Minimal */}
+        {/* Coming Soon - Minimal (only when there are items) */}
+        {comingSoonPrograms.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 max-w-3xl mx-auto">
           {comingSoonPrograms.map((program) => {
             const Icon = program.icon
@@ -173,6 +167,7 @@ export function TrainingTypes() {
             )
           })}
         </div>
+        )}
       </div>
     </section>
   )
