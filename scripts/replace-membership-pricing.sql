@@ -49,8 +49,7 @@ SET
 WHERE name IN (
   'Squash Monthly Membership',
   'Table Tennis Monthly Membership',
-  'Squash + Gym Monthly Membership',
-  'Squash + Pilates Monthly Membership'
+  'Squash + Gym Monthly Membership'
 );
 
 -- ============================================================================

@@ -36,7 +36,7 @@ All planned features have been successfully implemented according to the product
 - Each program shows "Enquire About This Program" with direct phone link
 - Contact: Coach Abhinay Vaddi at (416) 983-1555
 - Custom pricing model - contact for rates, pay via website after consultation
-- Strength Training and Pilates marked as "Coming Soon"
+- Strength Training marked as "Coming Soon"
 - No membership required for training programs
 
 ---
@@ -95,7 +95,7 @@ All planned features have been successfully implemented according to the product
 - Removed "Book Drop-in Session" and "View Memberships" buttons from program-cta
 - Replaced with single "Enquire About Training" button linking to `/training`
 - Maintained existing Table Tennis and Squash tile backgrounds
-- Chess and Pilates remain marked as "Coming Soon"
+- Chess remains marked as "Coming Soon"
 
 ---
 
@@ -248,7 +248,7 @@ Before deployment, verify:
 1. **Social Open Play UI:** Add booking interface for social sessions in drop-in flow
 2. **Booking Capacity:** Implement API-level enforcement of 2-person limit
 3. **Camps Integration:** Connect to external vendor page when available
-4. **Strength Training & Pilates:** Launch when programs are ready
+4. **Strength Training:** Launch when programs are ready
 
 ---
 

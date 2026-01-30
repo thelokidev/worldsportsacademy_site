@@ -44,15 +44,6 @@ const testimonials: Testimonial[] = [
     sport: "Chess"
   },
   {
-    id: "4",
-    name: "James Anderson",
-    role: "Pilates Practitioner",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=256&auto=format&fit=crop",
-    rating: 5,
-    quote: "The pilates studio and personalized training plans have taken my core strength to the next level. This place is a game-changer for serious athletes.",
-    sport: "Pilates"
-  },
-  {
     id: "5",
     name: "Priya Patel",
     role: "Junior Squash Champion",

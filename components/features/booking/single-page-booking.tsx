@@ -576,10 +576,10 @@ export function SinglePageBooking() {
                           onChange={(e) => {
                             const value = e.target.value
                             const sport = sports.find((s) => s.id === value) || null
-                            // Block chess and pilates bookings
+                            // Block chess bookings
                             if (sport) {
                               const name = sport.display_name?.toLowerCase() || sport.name?.toLowerCase() || ''
-                              if (name.includes('chess') || name.includes('pilates')) {
+                              if (name.includes('chess')) {
                                 const sportName = sport.display_name || sport.name || 'This sport'
                                 toast.info(`${sportName} bookings are coming soon!`, {
                                   duration: 3000,
@@ -596,7 +596,7 @@ export function SinglePageBooking() {
                           {sports
                             .filter((sport) => {
                               const name = sport.display_name?.toLowerCase() || sport.name?.toLowerCase() || ''
-                              return !name.includes('chess') && !name.includes('pilates')
+                              return !name.includes('chess')
                             })
                             .map((sport) => (
                               <option key={sport.id} value={sport.id}>{sport.display_name}</option>

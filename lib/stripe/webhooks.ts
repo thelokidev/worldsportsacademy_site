@@ -440,6 +440,20 @@ async function handleCheckoutSessionCompleted(
     }
   }
 
+  // Handle Social Open Play payment completion
+  if (metadata.payment_type === 'social_open_play' && session.payment_intent && metadata.social_open_play_booking_id) {
+    const amountPaid = session.amount_total != null ? (session.amount_total / 100) : 15
+    await supabase
+      .from('social_open_play_bookings')
+      .update({
+        payment_status: 'paid',
+        payment_intent_id: session.payment_intent as string,
+        amount_paid: amountPaid,
+      })
+      .eq('id', metadata.social_open_play_booking_id)
+    return
+  }
+
   // Handle drop-in payment completion
   if (metadata.payment_type === 'drop_in' && session.payment_intent && metadata.booking_id) {
     const { data: profile } = await supabase

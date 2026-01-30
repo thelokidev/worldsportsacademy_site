@@ -56,11 +56,8 @@ export function Navbar() {
     const checkAdmin = async () => {
       if (!isMounted) return
       try {
-        console.log('[Navbar] Checking admin status via API...')
         const response = await fetch('/api/auth/check-admin')
         const data = await response.json()
-
-        console.log('[Navbar] Admin check API response:', data)
 
         if (isMounted) {
           setIsAdmin(data.isAdmin === true)
@@ -79,7 +76,7 @@ export function Navbar() {
         supabase = createClient()
         const { data: { user }, error } = await supabase.auth.getUser()
 
-        if (error) {
+        if (error && error.message !== 'Auth session missing!') {
           console.error('[Navbar] getUser error:', error.message)
         }
 

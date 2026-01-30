@@ -19,8 +19,8 @@ export function CoachSection() {
                             {/* Placeholder for Coach Image - using a professional looking placeholder or user can replace */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
                             <Image
-                                src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop"
-                                alt="Head Coach"
+                                src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1887&auto=format&fit=crop"
+                                alt="Coach Abhinay Vaddi"
                                 fill
                                 className="object-cover"
                                 sizes="(max-width: 768px) 100vw, 50vw"

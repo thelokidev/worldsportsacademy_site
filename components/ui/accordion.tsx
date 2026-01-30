@@ -17,7 +17,7 @@ const Accordion = React.forwardRef<
         value?: string
         onValueChange?: (value: string) => void
     }
->(({ className, type, value, onValueChange, ...props }, ref) => {
+>(({ className, type, value, onValueChange, collapsible, ...props }, ref) => {
     const [stateValue, setStateValue] = React.useState<string | undefined>(value)
 
     const handleValueChange = (newValue: string) => {

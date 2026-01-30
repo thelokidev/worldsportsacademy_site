@@ -11,9 +11,52 @@ import { confirmBookingPaymentFromSession } from '@/server/actions/booking-payme
 const FACILITY_TIMEZONE = 'America/Chicago'
 
 async function CheckoutSuccessContent({ sessionId }: { sessionId: string }) {
-  // Verify payment and update booking
   try {
-    const booking = await confirmBookingPaymentFromSession(sessionId)
+    const result = await confirmBookingPaymentFromSession(sessionId)
+
+    if (result && typeof result === 'object' && 'type' in result && result.type === 'social_open_play') {
+      const { booking_date } = result
+      const date = format(new Date(booking_date + 'T12:00:00'), 'EEEE, MMMM d, yyyy')
+      return (
+        <Card className="border-green-500/40 bg-green-500/5">
+          <CardHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="h-6 w-6 text-green-500" />
+              <CardTitle>Payment Successful!</CardTitle>
+            </div>
+            <CardDescription>
+              You&apos;re confirmed for Table Tennis Social Open Play.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl border border-green-500/30 bg-black/40 p-4 text-sm text-gray-200 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Session</span>
+                <span className="font-semibold text-white">Table Tennis Social Open Play</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Date</span>
+                <span className="font-semibold text-white">{date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Time</span>
+                <span className="font-semibold text-white">7:00 PM – 9:00 PM</span>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <Button asChild>
+                <Link href="/dashboard/bookings">View My Bookings</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/drop-in">Book Another</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    const booking = result as { start_time: string; end_time: string; sports?: { display_name?: string; name?: string }; courts?: { name?: string } }
     const start = toZonedTime(new Date(booking.start_time), FACILITY_TIMEZONE)
     const end = toZonedTime(new Date(booking.end_time), FACILITY_TIMEZONE)
 
@@ -60,7 +103,7 @@ async function CheckoutSuccessContent({ sessionId }: { sessionId: string }) {
               <Link href="/dashboard/bookings">View My Bookings</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/bookings">Book Another</Link>
+              <Link href="/drop-in">Book Another</Link>
             </Button>
           </div>
         </CardContent>
@@ -116,7 +159,7 @@ export default async function CheckoutSuccessPage({
                   <Link href="/dashboard/bookings">View My Bookings</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/bookings">Book Another</Link>
+                  <Link href="/drop-in">Book Another</Link>
                 </Button>
               </div>
             </CardContent>

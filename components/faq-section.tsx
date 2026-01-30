@@ -18,7 +18,7 @@ const faqs = [
     },
     {
         question: "What should I wear to my first session?",
-        answer: "Wear comfortable athletic clothing and non-marking indoor court shoes. For pilates, comfortable stretchable clothing is recommended."
+        answer: "Wear comfortable athletic clothing and non-marking indoor court shoes."
     },
     {
         question: "Do you offer trial sessions?",

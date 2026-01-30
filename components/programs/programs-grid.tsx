@@ -1,6 +1,6 @@
 "use client"
 
-import { Target, Circle, Grid3x3, Activity, Clock, Users, TrendingUp, Award } from "lucide-react"
+import { Target, Circle, Grid3x3, Clock, Users, TrendingUp, Award } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
@@ -53,23 +53,6 @@ const programs = [
       'Game analysis with coaches',
     ],
     color: 'from-purple-500 to-pink-500',
-    comingSoon: true,
-  },
-  {
-    id: 'pilates',
-    name: 'Pilates Studio',
-    icon: Activity,
-    description: 'Strengthen your core and improve flexibility with our comprehensive pilates programs.',
-    image: '/explore/pilates.jpg',
-    duration: '60 min sessions',
-    level: 'All Levels',
-    features: [
-      'Core strength training',
-      'Flexibility improvement',
-      'Posture correction',
-      'Mind-body connection',
-    ],
-    color: 'from-green-500 to-emerald-500',
     comingSoon: true,
   },
 ]

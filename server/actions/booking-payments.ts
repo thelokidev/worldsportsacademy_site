@@ -8,17 +8,48 @@ export async function confirmBookingPaymentFromSession(sessionId: string) {
   const supabase = getServiceSupabaseClient()
 
   const session = await stripe.checkout.sessions.retrieve(sessionId)
-
-  if (!session.metadata?.booking_id) {
-    throw new Error('No booking ID attached to checkout session')
-  }
-
-  const bookingId = session.metadata.booking_id
+  const metadata = session.metadata || {}
+  const paymentType = metadata.payment_type as string | undefined
   const paymentIntentId = session.payment_intent as string | null
 
   if (!paymentIntentId) {
     throw new Error('Checkout session is missing payment intent')
   }
+
+  if (paymentType === 'social_open_play') {
+    const socialOpenPlayBookingId = metadata.social_open_play_booking_id as string | undefined
+    if (!socialOpenPlayBookingId) {
+      throw new Error('No Social Open Play booking ID in session')
+    }
+
+    const amountPaid = session.amount_total != null ? session.amount_total / 100 : 15
+
+    const { data: sopBooking, error: updateError } = await supabase
+      .from('social_open_play_bookings')
+      .update({
+        payment_status: 'paid',
+        payment_intent_id: paymentIntentId,
+        amount_paid: amountPaid,
+      })
+      .eq('id', socialOpenPlayBookingId)
+      .select('id, booking_date')
+      .single()
+
+    if (updateError || !sopBooking) {
+      throw new Error(`Failed to confirm Social Open Play booking: ${updateError?.message}`)
+    }
+
+    return {
+      type: 'social_open_play' as const,
+      booking_date: sopBooking.booking_date,
+    }
+  }
+
+  if (!metadata.booking_id) {
+    throw new Error('No booking ID attached to checkout session')
+  }
+
+  const bookingId = metadata.booking_id
 
   const { data: booking, error: bookingFetchError } = await supabase
     .from('bookings')
@@ -30,7 +61,6 @@ export async function confirmBookingPaymentFromSession(sessionId: string) {
     throw new Error(`Booking not found for session ${sessionId}`)
   }
 
-  // Ensure payment record exists
   const { data: existingPayment } = await supabase
     .from('payments')
     .select('id')
@@ -61,7 +91,6 @@ export async function confirmBookingPaymentFromSession(sessionId: string) {
     paymentId = payment.id
   }
 
-  // Update booking status
   const { data: updatedBooking, error: bookingUpdateError } = await supabase
     .from('bookings')
     .update({

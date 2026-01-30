@@ -18,8 +18,14 @@ npm install
 ```
 
 ### 2) Environment variables
-Create `.env.local` in `myapp/` with:
+Create `.env.local` in the **project root** with:
 ```bash
+# App URL — for local dev use localhost so login stays on localhost (see docs/LOCAL_DEVELOPMENT.md)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Drop-in page: set false (or omit) for local so you can view without login; set true in production (e.g. Vercel)
+# REQUIRE_AUTH_FOR_DROP_IN_VIEW=false
+
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your-project-ref-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -68,6 +74,8 @@ PAYMENT_ALERT_WEBHOOK_URL=https://hooks.slack.com/services/...
 npm run dev
 ```
 - App runs at http://localhost:3000
+
+**Google auth on localhost:** If login redirects you to production instead of staying on localhost, add `http://localhost:3000/auth/callback` to **Supabase** → Authentication → URL Configuration → Redirect URLs, and set `NEXT_PUBLIC_APP_URL=http://localhost:3000` in `.env.local`. Full steps: [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md).
 
 ### 4) Tests
 ```bash

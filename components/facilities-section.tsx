@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Activity, Target, Circle, Grid, ArrowRight, CheckCircle2 } from "lucide-react"
+import { Target, Circle, Grid, ArrowRight, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -19,13 +19,6 @@ const facilities = [
     description: "Premium table tennis tables with professional-grade equipment for all skill levels.",
     image: "/explore/TT.jpg",
     features: ["6 Competition Tables", "Pro Equipment", "Training Areas"]
-  },
-  {
-    icon: Activity,
-    name: "Pilates Studio",
-    description: "Modern pilates equipment and spacious studio designed for holistic wellness and core training.",
-    image: "/explore/pilates.jpg",
-    features: ["Reformer Machines", "Mat Classes", "Private Sessions"]
   },
   {
     icon: Grid,

@@ -1,154 +1,151 @@
 "use client"
 
-import { User, Users, Users2, Trophy, Phone } from "lucide-react"
+import { User, Users, Users2, Trophy, ArrowRight, Dumbbell, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
 
 const trainingTypes = [
   {
     id: 'one-on-one',
-    name: 'One-on-One',
-    description: 'Personal coaching with dedicated attention to your technique, strategy, and game development.',
+    name: 'Private Coaching',
+    description: 'Dedicated 1-on-1 attention to refine technique and strategy.',
     icon: User,
     features: [
-      'Individualized training plan',
-      'Focus on your specific goals',
-      'Video analysis included',
+      'Personalized development plan',
+      'Video analysis & feedback',
       'Flexible scheduling',
     ],
-    color: 'from-blue-500 to-cyan-500',
+    accentBg: 'bg-blue-500/20',
+    accentText: 'text-blue-500',
+    gradient: 'from-blue-500/20 to-cyan-500/5',
+    border: 'hover:border-blue-500/50',
   },
   {
     id: 'semi-private',
     name: 'Semi-Private',
-    description: 'Train with a partner under one coach. Perfect for friends or players at similar skill levels.',
+    description: 'Train with a partner. Perfect for friends or similar skill levels.',
     icon: Users2,
     features: [
-      '1 coach, 2 trainees',
-      'Partner drills and exercises',
-      'Competitive practice',
-      'Cost-effective option',
+      '2:1 Player-to-Coach ratio',
+      'Partner drills & tactics',
+      'Cost-effective training',
     ],
-    color: 'from-purple-500 to-pink-500',
+    accentBg: 'bg-indigo-500/20',
+    accentText: 'text-indigo-500',
+    gradient: 'from-indigo-500/20 to-purple-500/5',
+    border: 'hover:border-indigo-500/50',
   },
   {
     id: 'group',
-    name: 'Group Training',
-    description: 'Learn with a group of players in a dynamic and social training environment.',
+    name: 'Group Sessions',
+    description: 'Dynamic group training to build skills in a social environment.',
     icon: Users,
     features: [
-      'Small group sizes',
-      'Team drills and games',
-      'Build community',
-      'Great for beginners',
+      'Small group dynamic',
+      'Match play & scenarios',
+      'Community building',
     ],
-    color: 'from-orange-500 to-red-500',
+    accentBg: 'bg-orange-500/20',
+    accentText: 'text-orange-500',
+    gradient: 'from-orange-500/20 to-red-500/5',
+    border: 'hover:border-orange-500/50',
   },
   {
     id: 'high-performance',
     name: 'High Performance',
-    description: 'Elite training for provincial and national level athletes. Advanced tactics and conditioning.',
+    description: 'Elite coaching for provincial & national level athletes.',
     icon: Trophy,
     features: [
       'Advanced technical training',
       'Tournament preparation',
-      'Mental toughness coaching',
       'Strength & conditioning',
     ],
-    color: 'from-yellow-500 to-amber-500',
-    premium: true,
+    accentBg: 'bg-yellow-500/20',
+    accentText: 'text-yellow-500',
+    gradient: 'from-yellow-500/20 to-amber-500/5',
+    border: 'hover:border-yellow-500/50',
+    elite: true,
   },
 ]
 
 const comingSoonPrograms = [
   {
-    id: 'strength-training',
-    name: 'Strength Training',
-    description: 'Sport-specific strength and conditioning programs.',
-    icon: Trophy,
-    color: 'from-green-500 to-emerald-500',
-  },
-  {
-    id: 'pilates',
-    name: 'Pilates',
-    description: 'Core strength and flexibility for enhanced performance.',
-    icon: User,
-    color: 'from-teal-500 to-cyan-500',
+    id: 'strength',
+    name: 'Strength & Conditioning',
+    description: 'Sport-specific fitness programs.',
+    icon: Dumbbell,
   },
 ]
 
 export function TrainingTypes() {
   const handleEnquiry = () => {
-    window.location.href = 'tel:+14169831555' // Abhinay Vaddi's phone
+    window.location.href = 'tel:+14169831555'
   }
 
   return (
-    <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[#050505]">
       <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <span className="h-0.5 w-10 bg-yellow-400 inline-block" />
-            <span className="text-xs tracking-wider text-[#50C878] font-semibold uppercase">Training Options</span>
-            <span className="h-0.5 w-10 bg-yellow-400 inline-block" />
+        {/* Header */}
+        <div className="text-center mb-16 max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#50C878]" />
+            <span className="text-xs font-medium text-gray-300 uppercase tracking-wider">World Class Training</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
-            Choose Your Training Style
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+            Choose Your Path
           </h2>
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            All programs are led by Coach Abhinay Vaddi and tailored to your skill level and goals. 
-            Available for both Table Tennis and Squash.
+          <p className="text-gray-400 text-lg">
+            Led by Coach Abhinay Vaddi, our programs are tailored to elevate your game regardless of your starting point.
           </p>
         </div>
 
-        {/* Training Types Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-          {trainingTypes.map((training) => {
-            const Icon = training.icon
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          {trainingTypes.map((type) => {
+            const Icon = type.icon
             return (
               <div
-                key={training.id}
-                className="group bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden hover:border-[#50C878]/30 transition-all duration-500 hover:shadow-xl relative"
+                key={type.id}
+                className={`group relative flex flex-col p-6 rounded-2xl bg-[#0A0A0A] border border-white/5 ${type.border} transition-all duration-300 hover:shadow-2xl hover:shadow-black/50 hover:-translate-y-1`}
               >
-                {training.premium && (
-                  <div className="absolute top-4 right-4 z-10">
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-xs font-bold uppercase tracking-wider">
+                {/* Elite Badge */}
+                {type.elite && (
+                  <div className="absolute top-0 right-0 p-3">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-yellow-500/20 text-yellow-500 border border-yellow-500/20">
                       Elite
                     </span>
                   </div>
                 )}
 
-                <div className="p-8">
-                  {/* Icon */}
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${training.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
+                {/* Gradient Bg Hover */}
+                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${type.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
 
-                  {/* Title & Description */}
-                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-[#50C878] transition-colors">
-                    {training.name}
-                  </h3>
-                  <p className="text-gray-300 mb-6 leading-relaxed">
-                    {training.description}
+                {/* Icon */}
+                <div className={`w-12 h-12 rounded-xl ${type.accentBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className={`w-6 h-6 shrink-0 ${type.accentText}`} aria-hidden />
+                </div>
+
+                {/* Content */}
+                <div className="relative z-10 flex-1 flex flex-col">
+                  <h3 className="text-xl font-bold text-white mb-2">{type.name}</h3>
+                  <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                    {type.description}
                   </p>
 
-                  {/* Features */}
-                  <ul className="space-y-3 mb-8">
-                    {training.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center gap-3 text-sm text-gray-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#50C878]" />
-                        {feature}
+                  <ul className="space-y-3 mb-8 mt-auto">
+                    {type.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-xs font-medium text-gray-400">
+                        <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${type.accentText}`} aria-hidden />
+                        <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
 
-                  {/* CTA Button */}
                   <Button
                     onClick={handleEnquiry}
-                    className="w-full bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white font-semibold rounded-xl h-12 shadow-lg hover:shadow-xl transition-all"
+                    className="w-full bg-white/5 hover:bg-white text-white hover:text-black border border-white/10 hover:border-white transition-all duration-300"
+                    size="sm"
                   >
-                    <Phone className="w-4 h-4 mr-2" />
-                    Enquire About This Program
+                    Enquire Now
                   </Button>
                 </div>
               </div>
@@ -156,37 +153,25 @@ export function TrainingTypes() {
           })}
         </div>
 
-        {/* Coming Soon Section */}
-        <div className="border-t border-gray-800 pt-16">
-          <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold text-white mb-4">Coming Soon</h3>
-            <p className="text-gray-400">More training programs launching soon</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {comingSoonPrograms.map((program) => {
-              const Icon = program.icon
-              return (
-                <div
-                  key={program.id}
-                  className="relative bg-gray-900/50 rounded-2xl border border-gray-800 overflow-hidden p-8 opacity-60"
-                >
-                  <div className="absolute top-4 right-4">
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-semibold">
-                      Coming Soon
-                    </span>
-                  </div>
-
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${program.color} flex items-center justify-center mb-4`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-
-                  <h4 className="text-xl font-bold text-white mb-2">{program.name}</h4>
-                  <p className="text-gray-400 text-sm">{program.description}</p>
+        {/* Coming Soon - Minimal */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 max-w-3xl mx-auto">
+          {comingSoonPrograms.map((program) => {
+            const Icon = program.icon
+            return (
+              <div key={program.id} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 text-left">
+                <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-gray-500" />
                 </div>
-              )
-            })}
-          </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h4 className="font-semibold text-white">{program.name}</h4>
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">Soon</span>
+                  </div>
+                  <p className="text-xs text-gray-500">{program.description}</p>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Check, Loader2, CheckCircle2 } from 'lucide-react'
+import { Check, Loader2, CheckCircle2, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -50,7 +50,6 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
     setIsLoading(true)
 
     try {
-      // Check if user is authenticated
       const response = await fetch('/api/auth/check')
       const { authenticated } = await response.json()
 
@@ -59,16 +58,10 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
         return
       }
 
-      // Create checkout session
       const checkoutResponse = await fetch('/api/stripe/checkout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          planId: plan.id,
-          paymentType: 'membership',
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId: plan.id, paymentType: 'membership' }),
       })
 
       if (!checkoutResponse.ok) {
@@ -79,7 +72,6 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
       }
 
       const { url } = await checkoutResponse.json()
-
       if (url) {
         window.location.href = url
       } else {
@@ -88,9 +80,7 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
     } catch (error) {
       console.error('Purchase error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to start checkout'
-      toast.error(errorMessage, {
-        duration: 10000, // Show for 10 seconds to read the full error
-      })
+      toast.error(errorMessage, { duration: 10000 })
       setIsLoading(false)
     }
   }
@@ -106,177 +96,169 @@ export function MembershipCard({ plan, currentMembership, hasActiveMembership = 
 
   const features = plan.features as Record<string, boolean | string | number>
   const sports = plan.sports || []
-
-  // Check for best value badge (yearly plan)
   const isBestValue = features.best_value === true
-  // Check if all sports access is included (unified plans only, not sport-specific)
   const hasAllSportsAccess = features.all_sports_access === true && !features.sport_specific_access
-  // Check if this is a sport-specific plan
   const isSportSpecific = features.sport_specific_access === true
-  // Get savings amount if exists
   const savings = features.savings as string | undefined
-  // Get billing period display
   const billingPeriod = features.billing_period as string | undefined
-
   const isPopular = isBestValue
   const hasBadge = isPopular || isCurrentPlan
 
   return (
-    <div className={`group relative flex flex-col h-full overflow-hidden rounded-3xl transition-all duration-500 ${isCurrentPlan
-      ? 'bg-zinc-900/80 ring-2 ring-[#50C878] shadow-[0_0_40px_-10px_rgba(80,200,120,0.3)]'
-      : isPopular
-        ? 'bg-zinc-900/60 hover:bg-zinc-900/80 ring-1 ring-[#50C878]/50 hover:ring-[#50C878] shadow-xl hover:shadow-[0_0_30px_-10px_rgba(80,200,120,0.2)]'
-        : 'bg-zinc-900/40 hover:bg-zinc-900/60 ring-1 ring-white/10 hover:ring-white/20 hover:shadow-lg'
-      }`}>
-
-      {/* Background Gradients */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-      {isPopular && (
-        <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#50C878]/20 blur-[60px] rounded-full pointer-events-none" />
-      )}
-
-      {/* Badges */}
+    <article
+      className={`
+        group relative flex flex-col h-full overflow-hidden rounded-2xl
+        transition-all duration-300 ease-out
+        ${isCurrentPlan
+          ? 'bg-white/[0.06] ring-1 ring-[#50C878]/40 shadow-[0_0_0_1px_rgba(80,200,120,0.15)]'
+          : isPopular
+            ? 'bg-white/[0.04] ring-1 ring-white/10 hover:ring-[#50C878]/30 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]'
+            : 'bg-white/[0.03] ring-1 ring-white/[0.06] hover:ring-white/15 hover:bg-white/[0.05] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.35)]'
+        }
+      `}
+    >
+      {/* Badges — minimal */}
       {isCurrentPlan && (
-        <div className="absolute top-0 inset-x-0 flex justify-center -mt-3 z-20">
-          <div className="bg-[#50C878] text-black text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-[#50C878]/20">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            CURRENT PLAN
-          </div>
+        <div className="absolute top-4 left-0 right-0 flex justify-center z-20">
+          <span
+            className="inline-flex items-center gap-1.5 bg-[#50C878] text-black text-[10px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full"
+            aria-label="Your current plan"
+          >
+            <CheckCircle2 className="w-3 h-3" aria-hidden />
+            Current
+          </span>
         </div>
       )}
-
       {isBestValue && !isCurrentPlan && (
-        <div className="absolute top-5 right-5 z-20">
-          <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-black text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg shadow-orange-500/20">
-            Best Value
-          </div>
+        <div className="absolute top-4 right-4 z-20">
+          <span
+            className="inline-flex items-center gap-1 bg-amber-400/95 text-black text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
+            aria-label="Best value plan"
+          >
+            <Sparkles className="w-3 h-3" aria-hidden />
+            Best value
+          </span>
         </div>
       )}
 
-      <div className={`relative p-8 flex flex-col h-full z-10 ${hasBadge ? 'pt-12' : ''}`}>
-        {/* Header */}
-        <div className="mb-8">
-          <h3 className="text-lg font-medium text-gray-400 mb-4 uppercase tracking-widest">{plan.name}</h3>
-          <div className="flex items-baseline gap-1 mb-2">
-            <span className="text-5xl font-bold text-white tracking-tight">
+      <div className={`relative flex flex-col h-full p-6 z-10 ${hasBadge ? 'pt-12' : ''}`}>
+        {/* Header — clean hierarchy */}
+        <header className="mb-6">
+          <p className="text-[11px] font-medium text-white/50 uppercase tracking-[0.2em] mb-2">
+            {plan.name}
+          </p>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-3xl font-semibold text-white tracking-tight tabular-nums">
               {formatPrice(plan.price)}
             </span>
-            <span className="text-gray-500 font-medium">
+            <span className="text-sm text-white/45">
               /{billingPeriod ? billingPeriod.toLowerCase() : plan.billing_interval}
             </span>
           </div>
-
           {savings && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#50C878]/10 border border-[#50C878]/20">
-              <span className="text-[#50C878] text-xs font-bold uppercase tracking-wide">Save {savings}</span>
-            </div>
+            <p className="text-[#50C878] text-xs font-medium mt-2">
+              Save {savings}
+            </p>
           )}
+          <p className="text-white/40 text-[11px] mt-1">+ 13% HST</p>
+        </header>
 
-          <p className="text-gray-500 text-xs mt-3 font-medium">+ 13% HST</p>
-        </div>
-
-        {/* Divider */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-8" />
-
-        {/* Features */}
-        <div className="flex-grow space-y-6">
-          <ul className="space-y-4">
-            {hasAllSportsAccess && (
-              <li className="flex items-start gap-3 group/item">
-                <div className="mt-0.5 w-5 h-5 rounded-full bg-[#50C878]/20 flex items-center justify-center flex-shrink-0 group-hover/item:bg-[#50C878] transition-colors duration-300">
-                  <Check className="w-3 h-3 text-[#50C878] group-hover/item:text-black transition-colors duration-300" />
-                </div>
-                <span className="text-sm font-medium text-white">All Sports Access</span>
-              </li>
-            )}
-            {isSportSpecific && sports.length > 0 && (
-              <li className="flex items-start gap-3 group/item">
-                <div className="mt-0.5 w-5 h-5 rounded-full bg-[#50C878]/20 flex items-center justify-center flex-shrink-0 group-hover/item:bg-[#50C878] transition-colors duration-300">
-                  <Check className="w-3 h-3 text-[#50C878] group-hover/item:text-black transition-colors duration-300" />
-                </div>
-                <span className="text-sm font-medium text-white">{sports[0]?.display_name} Access</span>
-              </li>
-            )}
-            {features.unlimited_bookings && (
-              <li className="flex items-start gap-3 group/item">
-                <div className="mt-0.5 w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 group-hover/item:bg-gray-700 transition-colors">
-                  <Check className="w-3 h-3 text-gray-400 group-hover/item:text-white transition-colors" />
-                </div>
-                <span className="text-sm text-gray-300 group-hover/item:text-white transition-colors">Unlimited bookings</span>
-              </li>
-            )}
-            {features.cancel_anytime && (
-              <li className="flex items-start gap-3 group/item">
-                <div className="mt-0.5 w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 group-hover/item:bg-gray-700 transition-colors">
-                  <Check className="w-3 h-3 text-gray-400 group-hover/item:text-white transition-colors" />
-                </div>
-                <span className="text-sm text-gray-300 group-hover/item:text-white transition-colors">Cancel anytime</span>
-              </li>
-            )}
-            {!isCurrentPlan && new Date() < new Date('2026-01-01T00:00:00-05:00') && (
-              <li className="flex items-start gap-3 group/item">
-                <div className="mt-0.5 w-5 h-5 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm">🎉</span>
-                </div>
-                <span className="text-sm font-bold text-[#CFEA6C] animate-pulse">FREE Registration (Save $25)</span>
-              </li>
-            )}
-          </ul>
-
-          {/* Sports Badges - Only show for unified/multi-sport plans */}
-          {sports.length > 1 && (
-            <div className="pt-2">
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-3">Includes Access To</p>
-              <div className="flex flex-wrap gap-2">
-                {sports.map((sport) => (
-                  <div
-                    key={sport.id}
-                    className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-gray-300 hover:bg-white/10 hover:text-white transition-colors duration-300"
-                  >
-                    {sport.display_name}
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* Features — airy list, no heavy divider */}
+        <ul className="flex-grow space-y-3" role="list">
+          {hasAllSportsAccess && (
+            <li className="flex items-center gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#50C878]/20">
+                <Check className="h-3 w-3 text-[#50C878]" aria-hidden />
+              </span>
+              <span className="text-sm text-white/80">All sports access</span>
+            </li>
           )}
-        </div>
+          {isSportSpecific && sports.length > 0 && (
+            <li className="flex items-center gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#50C878]/20">
+                <Check className="h-3 w-3 text-[#50C878]" aria-hidden />
+              </span>
+              <span className="text-sm text-white/80">{sports[0]?.display_name} access</span>
+            </li>
+          )}
+          {features.unlimited_bookings && (
+            <li className="flex items-center gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10">
+                <Check className="h-3 w-3 text-white/70" aria-hidden />
+              </span>
+              <span className="text-sm text-white/70">Unlimited bookings</span>
+            </li>
+          )}
+          {features.cancel_anytime && (
+            <li className="flex items-center gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10">
+                <Check className="h-3 w-3 text-white/70" aria-hidden />
+              </span>
+              <span className="text-sm text-white/70">Cancel anytime</span>
+            </li>
+          )}
+          {!isCurrentPlan && new Date() < new Date('2026-01-01T00:00:00-05:00') && (
+            <li className="flex items-center gap-2.5">
+              <span className="text-sm" aria-hidden>🎉</span>
+              <span className="text-xs font-medium text-[#CFEA6C]">Free registration (save $25)</span>
+            </li>
+          )}
+        </ul>
 
-        {/* Action Button */}
-        <div className="mt-8 pt-6 border-t border-white/5">
+        {sports.length > 1 && (
+          <div className="mt-5 pt-4 border-t border-white/[0.06]">
+            <p className="text-[10px] text-white/40 uppercase tracking-wider mb-2">Includes</p>
+            <div className="flex flex-wrap gap-1.5">
+              {sports.map((sport) => (
+                <span
+                  key={sport.id}
+                  className="px-2 py-0.5 rounded-md bg-white/5 text-[11px] text-white/60"
+                >
+                  {sport.display_name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CTA — single clear action */}
+        <div className="mt-6 pt-5 border-t border-white/[0.06]">
           {isCurrentPlan ? (
             <Button
               asChild
               variant="outline"
-              className="w-full h-12 bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white hover:border-gray-600 transition-all duration-300 rounded-xl"
+              className="w-full h-10 text-sm font-medium bg-transparent border-white/15 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/20 rounded-xl transition-colors"
             >
-              <Link href="/dashboard/membership">
-                Manage Membership
-              </Link>
+              <Link href="/dashboard/membership">Manage plan</Link>
             </Button>
           ) : (
             <Button
               onClick={handlePurchase}
               disabled={isLoading}
-              className={`w-full h-12 text-sm font-bold tracking-wide rounded-xl transition-all duration-300 shadow-lg ${hasActiveMembership
-                ? 'bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#45b069] hover:to-[#359253] text-white shadow-[#50C878]/20 hover:shadow-[#50C878]/40 hover:-translate-y-0.5'
-                : 'bg-white text-black hover:bg-gray-100 shadow-white/10 hover:shadow-white/20 hover:-translate-y-0.5'
-                }`}
+              className={`
+                w-full h-10 text-sm font-semibold rounded-xl transition-all duration-200
+                ${hasActiveMembership
+                  ? 'bg-[#50C878] hover:bg-[#45B86A] text-black shadow-lg shadow-[#50C878]/20'
+                  : 'bg-white text-black hover:bg-white/95'
+                }
+              `}
+              aria-busy={isLoading}
+              aria-label={isLoading ? 'Processing' : hasActiveMembership ? 'Switch to this plan' : 'Get started with this plan'}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  PROCESSING...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                  Processing…
                 </>
               ) : hasActiveMembership ? (
-                'SWITCH PLAN'
+                'Switch plan'
               ) : (
-                'GET STARTED'
+                'Get started'
               )}
             </Button>
           )}
         </div>
       </div>
-    </div>
+    </article>
   )
 }
-

@@ -7,29 +7,26 @@ export const metadata = {
   description: 'Book drop-in sessions for table tennis and squash. Flexible pay-as-you-go access to our facilities.',
 }
 
+/** When true (prod), require auth to view drop-in page. When false/unset (local), page is viewable without login. */
+const REQUIRE_AUTH_FOR_DROP_IN_VIEW =
+  process.env.REQUIRE_AUTH_FOR_DROP_IN_VIEW === 'true'
+
 export default async function DropInPage({
   searchParams,
 }: {
   searchParams: Promise<{ canceled?: string }>
 }) {
-  const supabase = await createClient()
-  const params = await searchParams
-  const canceled = params.canceled === 'true'
-  
-  // Try to get user - if returning from external redirect (like Stripe),
-  // the session might need a moment to refresh, so try getting session first
-  const { data: { session } } = await supabase.auth.getSession()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  // Only redirect if truly no user (not just session refresh delay)
-  // When returning from Stripe, cookies should be present even if session needs refresh
-  if (!user && !session) {
-    // Properly encode the redirect URL with query parameters
-    const redirectPath = canceled 
-      ? '/drop-in?canceled=true'
-      : '/drop-in'
-    const encodedRedirect = encodeURIComponent(redirectPath)
-    redirect(`/auth?redirect=${encodedRedirect}`)
+  if (REQUIRE_AUTH_FOR_DROP_IN_VIEW) {
+    const supabase = await createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user && !session) {
+      const redirectPath =
+        (await searchParams).canceled === 'true'
+          ? '/drop-in?canceled=true'
+          : '/drop-in'
+      redirect(`/auth?redirect=${encodeURIComponent(redirectPath)}`)
+    }
   }
 
   return <RedesignedBooking />

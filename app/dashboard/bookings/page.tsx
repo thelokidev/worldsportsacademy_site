@@ -23,17 +23,31 @@ export default async function MyBookingsPage() {
   }
 
   const bookings = await getAllBookings(user.id)
-  
-  // Separate bookings by status
-  const upcomingBookings = bookings.filter((b: any) => 
+
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const { data: socialOpenPlayBookings = [] } = await supabase
+    .from('social_open_play_bookings')
+    .select('id, booking_date, payment_status')
+    .eq('user_id', user.id)
+    .eq('payment_status', 'paid')
+    .gte('booking_date', today)
+    .order('booking_date', { ascending: true })
+
+  const upcomingSocialOpenPlay = (socialOpenPlayBookings || []).filter(
+    (s: { booking_date: string }) => s.booking_date >= today
+  )
+
+  const upcomingBookings = bookings.filter((b: any) =>
     isFuture(parseISO(b.start_time)) && b.status !== 'cancelled'
   )
-  const pastBookings = bookings.filter((b: any) => 
+  const pastBookings = bookings.filter((b: any) =>
     isPast(parseISO(b.start_time)) && b.status !== 'cancelled'
   )
-  const cancelledBookings = bookings.filter((b: any) => 
+  const cancelledBookings = bookings.filter((b: any) =>
     b.status === 'cancelled'
   )
+
+  const hasAnyUpcoming = upcomingBookings.length > 0 || upcomingSocialOpenPlay.length > 0
 
   return (
     <div className="min-h-screen bg-black overflow-x-hidden">
@@ -52,7 +66,7 @@ export default async function MyBookingsPage() {
               asChild
               className="bg-white text-[#2D5B4A] hover:bg-white/90 font-semibold rounded-xl px-6 py-6 h-auto shadow-lg"
             >
-              <Link href="/bookings" className="flex items-center gap-2">
+              <Link href="/drop-in" className="flex items-center gap-2">
                 <CalendarDays className="w-5 h-5" />
                 Book Now
               </Link>
@@ -62,7 +76,7 @@ export default async function MyBookingsPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {bookings.length === 0 ? (
+        {!hasAnyUpcoming && pastBookings.length === 0 && cancelledBookings.length === 0 ? (
           <Card className="border border-gray-800 bg-black/50 backdrop-blur-xl shadow-2xl">
             <CardContent className="py-20 text-center">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-[#50C878]/10 mb-6">
@@ -70,15 +84,15 @@ export default async function MyBookingsPage() {
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">No Bookings Yet</h3>
               <p className="text-gray-400 mb-8 text-lg max-w-md mx-auto">
-                Start your training journey by booking your first court session
+                Start your training journey by booking your first court session or Social Open Play
               </p>
               <Button 
                 asChild
                 className="bg-gradient-to-r from-[#50C878] to-[#3DA860] hover:from-[#3DA860] hover:to-[#50C878] text-white font-semibold rounded-xl px-8 py-6 h-auto shadow-lg hover:shadow-xl transition-all"
                 size="lg"
               >
-                <Link href="/bookings" className="flex items-center gap-2">
-                  Book a Court
+                <Link href="/drop-in" className="flex items-center gap-2">
+                  Book Drop-in or Social Open Play
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>
@@ -86,6 +100,45 @@ export default async function MyBookingsPage() {
           </Card>
         ) : (
           <div className="space-y-8">
+            {/* Upcoming Social Open Play */}
+            {upcomingSocialOpenPlay.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                  <div className="w-1 h-6 bg-[#50C878] rounded-full"></div>
+                  Upcoming Social Open Play
+                </h2>
+                <div className="grid gap-4">
+                  {upcomingSocialOpenPlay.map((sop: { id: string; booking_date: string }) => (
+                    <Card
+                      key={sop.id}
+                      className="group relative overflow-hidden border border-gray-800 bg-black/50 backdrop-blur-xl hover:border-[#50C878]/50 transition-all duration-300"
+                    >
+                      <CardContent className="relative p-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-2">
+                            <h3 className="text-xl font-bold text-white">Table Tennis Social Open Play</h3>
+                            <div className="flex items-center gap-4 text-gray-400 text-sm">
+                              <span className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-[#50C878]" />
+                                {format(new Date(sop.booking_date + 'T12:00:00'), 'EEEE, MMMM d, yyyy')}
+                              </span>
+                              <span className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-[#50C878]" />
+                                7:00 PM – 9:00 PM
+                              </span>
+                            </div>
+                          </div>
+                          <Badge className="bg-[#50C878]/20 text-[#50C878] border-[#50C878]/30" variant="outline">
+                            Confirmed
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Upcoming Bookings */}
             {upcomingBookings.length > 0 && (
               <div>

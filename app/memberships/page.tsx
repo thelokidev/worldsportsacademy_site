@@ -82,34 +82,32 @@ export default async function MembershipsPage() {
         </div>
       </section>
 
-      {/* Membership Plans Section */}
-      <section className="py-10 px-4 sm:px-6 lg:px-8 -mt-4 relative z-10">
-        <div className="max-w-7xl mx-auto">
+      {/* Membership Plans Section — light, modern grid */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 -mt-4 relative z-10">
+        <div className="max-w-6xl mx-auto">
           {plans.length === 0 ? (
-            <div className="text-center py-20 bg-zinc-900/20 rounded-3xl border border-white/5 backdrop-blur-sm">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-zinc-900/50 mb-6 ring-1 ring-white/10">
-                <span className="text-4xl">📋</span>
+            <div className="text-center py-16 rounded-2xl bg-white/[0.04] ring-1 ring-white/[0.06]">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 mb-4">
+                <span className="text-2xl" aria-hidden>📋</span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">No Plans Available</h3>
-              <p className="text-gray-400 text-base max-w-md mx-auto">
-                We're currently updating our membership options. Please check back soon or contact us for more information.
+              <h3 className="text-lg font-semibold text-white mb-2">No Plans Available</h3>
+              <p className="text-white/60 text-sm max-w-sm mx-auto">
+                We're updating our membership options. Check back soon or contact us.
               </p>
             </div>
           ) : (
-            <div className="space-y-16">
+            <div className="space-y-14">
               {/* Table Tennis Plans */}
               {plans.some(p => p.sports?.some((s: any) => s.name === 'table-tennis')) && (
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#50C878] to-[#3DA860] flex items-center justify-center shadow-lg shadow-[#50C878]/20">
-                      <span className="text-2xl">🏓</span>
-                    </div>
+                <div className="space-y-5">
+                  <header className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-xl" aria-hidden>🏓</span>
                     <div>
-                      <h2 className="text-2xl md:text-3xl font-bold text-white">Table Tennis Plans</h2>
-                      <p className="text-gray-400">Unlimited access to professional tables</p>
+                      <h2 className="text-xl font-semibold text-white tracking-tight">Table Tennis</h2>
+                      <p className="text-xs text-white/50">Unlimited access to professional tables</p>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+                  </header>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {plans
                       .filter(plan => plan.sports?.some((s: any) => s.name === 'table-tennis'))
                       .map((plan, index) => {
@@ -118,8 +116,8 @@ export default async function MembershipsPage() {
                         return (
                           <div
                             key={plan.id}
-                            className="animate-in fade-in slide-in-from-bottom-4"
-                            style={{ animationDelay: `${index * 100}ms` }}
+                            className="animate-in fade-in slide-in-from-bottom-3 duration-500"
+                            style={{ animationDelay: `${index * 80}ms` }}
                           >
                             <MembershipCard
                               plan={plan}
@@ -135,17 +133,15 @@ export default async function MembershipsPage() {
 
               {/* Squash Plans */}
               {plans.some(p => p.sports?.some((s: any) => s.name === 'squash')) && (
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#50C878] to-[#3DA860] flex items-center justify-center shadow-lg shadow-[#50C878]/20">
-                      <span className="text-2xl">🎾</span>
-                    </div>
+                <div className="space-y-5">
+                  <header className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-xl" aria-hidden>🎾</span>
                     <div>
-                      <h2 className="text-2xl md:text-3xl font-bold text-white">Squash Plans</h2>
-                      <p className="text-gray-400">Unlimited access to squash courts</p>
+                      <h2 className="text-xl font-semibold text-white tracking-tight">Squash</h2>
+                      <p className="text-xs text-white/50">Unlimited access to squash courts</p>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+                  </header>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {plans
                       .filter(plan => plan.sports?.some((s: any) => s.name === 'squash'))
                       .map((plan, index) => {
@@ -154,8 +150,8 @@ export default async function MembershipsPage() {
                         return (
                           <div
                             key={plan.id}
-                            className="animate-in fade-in slide-in-from-bottom-4"
-                            style={{ animationDelay: `${index * 100}ms` }}
+                            className="animate-in fade-in slide-in-from-bottom-3 duration-500"
+                            style={{ animationDelay: `${index * 80}ms` }}
                           >
                             <MembershipCard
                               plan={plan}
@@ -169,37 +165,30 @@ export default async function MembershipsPage() {
                 </div>
               )}
 
-              {/* Compact Drop-in CTA Section */}
-              <div className="relative group mt-8">
-                {/* Glassmorphism Card */}
-                <div className="relative bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8 overflow-hidden transition-all duration-500 hover:border-white/20 hover:bg-zinc-900/60">
-                  {/* Animated Background Gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#50C878]/5 via-transparent to-[#50C878]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-5 flex-1">
-                      <div className="relative flex-shrink-0">
-                        <div className="absolute inset-0 bg-[#50C878]/20 rounded-xl blur-lg group-hover:blur-xl transition-all duration-500" />
-                        <div className="relative inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-[#50C878] to-[#2D5B4A] shadow-lg group-hover:scale-105 transition-transform duration-500">
-                          <ArrowRight className="w-6 h-6 text-white" />
-                        </div>
+              {/* Drop-in CTA — compact, modern */}
+              <div className="relative group mt-6">
+                <div className="relative rounded-2xl bg-white/[0.04] ring-1 ring-white/[0.08] p-6 md:p-6 overflow-hidden transition-all duration-300 hover:ring-white/15 hover:bg-white/[0.06]">
+                  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 text-center sm:text-left">
+                      <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#50C878]/20 text-[#50C878] shrink-0">
+                        <ArrowRight className="w-5 h-5" aria-hidden />
                       </div>
-                      <div className="text-center md:text-left">
-                        <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
+                      <div>
+                        <h2 className="text-base font-semibold text-white">
                           Not ready for a membership?
                         </h2>
-                        <p className="text-sm md:text-base text-gray-400 group-hover:text-gray-300 transition-colors">
-                          Try our drop-in rates for flexible access to our facilities.
+                        <p className="text-sm text-white/55">
+                          Try drop-in rates for flexible access.
                         </p>
                       </div>
                     </div>
                     <Button
                       asChild
-                      className="w-full md:w-auto bg-white text-black hover:bg-gray-100 font-bold rounded-xl px-8 py-6 h-auto shadow-lg shadow-white/5 hover:shadow-white/10 hover:-translate-y-0.5 transition-all duration-300 group/btn border-0"
+                      className="w-full sm:w-auto h-10 text-sm font-semibold bg-white text-black hover:bg-white/95 rounded-xl px-6 shrink-0"
                     >
-                      <Link href="/bookings" className="inline-flex items-center gap-2 text-base">
+                      <Link href="/bookings" className="inline-flex items-center gap-2">
                         View Drop-In Rates
-                        <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-4 h-4" aria-hidden />
                       </Link>
                     </Button>
                   </div>

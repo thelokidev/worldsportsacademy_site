@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo, useTransition } from 'react'
+import { useState, useEffect, useMemo, useTransition, type SVGProps } from 'react'
 import { getSports } from '@/server/queries/bookings'
 import { getCourtsBySport } from '@/server/queries/bookings'
 import { Button } from '@/components/ui/button'
-import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Trophy, Dumbbell, Circle, Grid3x3, ArrowRight, Info, X, Activity, Crown } from 'lucide-react'
+import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Dumbbell, Circle, Grid3x3, ArrowRight, Info, X, Crown, Users } from 'lucide-react'
 import { format, addDays, parseISO, addMinutes, startOfDay } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
 import Link from 'next/link'
@@ -14,6 +14,63 @@ import { Calendar } from '@/components/ui/calendar'
 
 // Facility timezone - must match the timezone used in server/actions/bookings.ts
 const FACILITY_TIMEZONE = 'America/Chicago'
+
+// Table Tennis Social Open Play: Mon/Wed/Fri 7–9 PM, $15 excl. tax
+const SOCIAL_OPEN_PLAY_DAYS = [1, 3, 5] // 0=Sun, 1=Mon, 3=Wed, 5=Fri
+const SOCIAL_OPEN_PLAY_PRICE = 15
+const SOCIAL_OPEN_PLAY_TAX_RATE = 0.13
+const SOCIAL_OPEN_PLAY_TIME_LABEL = '7:00 PM – 9:00 PM'
+
+/** Squash racket icon (elongated oval head, short handle – distinct from tennis). */
+function SquashIcon({ className, size = 24, ...props }: SVGProps<SVGSVGElement> & { size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      {/* Oval head (squash rackets are more rounded/compact than tennis) */}
+      <ellipse cx="12" cy="8" rx="5" ry="6" />
+      {/* Handle */}
+      <path d="M12 14v8" />
+      <path d="M10 22h4" />
+    </svg>
+  )
+}
+
+/** Table tennis paddle icon (round bat + ball). */
+function TableTennisIcon({ className, size = 24, ...props }: SVGProps<SVGSVGElement> & { size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      {/* Paddle (round bat) */}
+      <circle cx="8" cy="14" r="4" />
+      {/* Handle */}
+      <path d="M8 18v3" />
+      {/* Ball */}
+      <circle cx="18" cy="10" r="2.5" />
+    </svg>
+  )
+}
 
 export function RedesignedBooking() {
   const router = useRouter()
@@ -47,6 +104,8 @@ export function RedesignedBooking() {
   const [isDatePending, startDateTransition] = useTransition()
 
   const [currentStep, setCurrentStep] = useState(1)
+  const [dropInMode, setDropInMode] = useState<'regular' | 'social_open_play' | null>(null)
+  const [socialOpenPlayBookingId, setSocialOpenPlayBookingId] = useState<string | null>(null)
 
   const bookingWindowStart = useMemo(() => startOfDay(new Date()), [])
   const bookingWindowEnd = useMemo(
@@ -74,20 +133,20 @@ export function RedesignedBooking() {
   )
   const calendarModifierClasses = useMemo(
     () => ({
-      bookableWindow: '!bg-[#50C878]/20 !text-[#50C878] !font-bold ring-1 ring-[#50C878]/30',
-      lockedWindow: '!opacity-40 !text-gray-600 line-through !cursor-not-allowed bg-red-900/10',
+      bookableWindow: 'bg-[#50C878]/10 text-[#50C878] font-semibold hover:bg-[#50C878]/20',
+      lockedWindow: 'opacity-25 text-gray-600 grayscale cursor-not-allowed',
     }),
     []
   )
 
-  // Sport icons
+  // Sport icons – accurate per sport (squash racket, table tennis paddle, etc.)
   const getSportIcon = (sportName: string) => {
     const name = sportName.toLowerCase()
-    if (name.includes('squash')) return Trophy
-    if (name.includes('table')) return Circle
-    if (name.includes('pilates')) return Activity
+    if (name.includes('squash')) return SquashIcon
+    if (name.includes('table') && (name.includes('tennis') || name.includes('ping'))) return TableTennisIcon
     if (name.includes('chess')) return Grid3x3
-    return Trophy
+    if (name.includes('fitness') || name.includes('gym')) return Dumbbell
+    return Circle
   }
 
   // Handle payment cancellation
@@ -139,13 +198,17 @@ export function RedesignedBooking() {
     async function fetchSports() {
       try {
         const data = await getSports()
-        // Sort sports: enabled first, coming soon (chess, pilates) last
+        // Order: Table Tennis first, Squash second, then Soon (Chess, Pilates) at bottom
+        const displayOrder = ['table tennis', 'squash', 'chess', 'pilates']
+        const orderIndex = (name: string) => {
+          const n = (name || '').toLowerCase().trim()
+          const idx = displayOrder.findIndex((key) => n.includes(key))
+          return idx === -1 ? displayOrder.length : idx
+        }
         const sortedData = [...data].sort((a, b) => {
-          const isAComingSoon = a.display_name?.toLowerCase().includes('chess') || a.display_name?.toLowerCase().includes('pilates')
-          const isBComingSoon = b.display_name?.toLowerCase().includes('chess') || b.display_name?.toLowerCase().includes('pilates')
-          if (isAComingSoon && !isBComingSoon) return 1
-          if (!isAComingSoon && isBComingSoon) return -1
-          return 0
+          const nameA = a.display_name || a.name || ''
+          const nameB = b.display_name || b.name || ''
+          return orderIndex(nameA) - orderIndex(nameB)
         })
         setSports(sortedData)
       } catch (error) {
@@ -242,6 +305,11 @@ export function RedesignedBooking() {
 
         const data = await response.json()
 
+        if (response.status === 401) {
+          toast.info('Please sign in to continue', { duration: 3000 })
+          window.location.href = `/auth?redirect=${encodeURIComponent('/drop-in')}`
+          return
+        }
         if (!response.ok) {
           throw new Error(data?.error || 'Failed to check authorization')
         }
@@ -320,7 +388,6 @@ export function RedesignedBooking() {
 
   // Handle sport selection
   const handleSportSelect = (sport: any) => {
-    // Block chess and pilates bookings
     if (isComingSoon(sport)) {
       const sportName = sport.display_name || sport.name || 'This sport'
       toast.info(`${sportName} bookings are coming soon!`, {
@@ -426,6 +493,11 @@ export function RedesignedBooking() {
           }),
         })
 
+        if (response.status === 401) {
+          toast.info('Please sign in to continue', { duration: 3000 })
+          window.location.href = `/auth?redirect=${encodeURIComponent('/drop-in')}`
+          return
+        }
         if (!response.ok) {
           const error = await response.json()
           throw new Error(error.error || 'Failed to create pending booking')
@@ -497,101 +569,307 @@ export function RedesignedBooking() {
         </div>
       </div>
 
-      {/* Membership Promotion Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 -mt-2">
-        <div className="bg-gradient-to-r from-[#50C878]/5 to-[#2D5B4A]/10 border border-[#50C878]/20 rounded-2xl p-6 md:p-8 shadow-lg">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            {/* Left: Message */}
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#50C878]/20 flex items-center justify-center flex-shrink-0">
-                <Crown className="w-6 h-6 text-[#50C878]" />
+      {/* Membership promo – compact */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 -mt-2">
+        <div className="relative overflow-hidden rounded-xl bg-black/60 border border-[#50C878]/25 shadow-sm">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_40%_at_50%_-10%,rgba(80,200,120,0.08),transparent)] pointer-events-none" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 md:p-5">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-lg bg-[#50C878]/20 flex items-center justify-center shrink-0">
+                <Crown className="w-5 h-5 text-[#50C878]" />
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-white mb-1">Play More, Pay Less</h3>
-                <p className="text-gray-300 text-sm">Memberships start at $75/month for unlimited access</p>
+              <div className="min-w-0">
+                <h3 className="text-base md:text-lg font-bold text-white truncate">
+                  Play more. <span className="text-[#50C878]">Pay less.</span>
+                </h3>
+                <p className="text-gray-500 text-xs mt-0.5">From $75/mo · Drop-in $15 vs membership ~$3/session*</p>
               </div>
             </div>
-            
-            {/* Right: Comparison + CTA */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
-              <div className="text-sm text-gray-400">
-                <span className="text-white font-semibold">Drop-in:</span> $15/session
-                <span className="mx-2">vs</span>
-                <span className="text-[#50C878] font-semibold">Membership:</span> ~$3/session*
-              </div>
-              <Button asChild className="bg-[#50C878] hover:bg-[#3DA860] text-white font-semibold px-6 whitespace-nowrap">
-                <Link href="/memberships">View Memberships</Link>
-              </Button>
-            </div>
+            <Button
+              asChild
+              className="bg-[#50C878] hover:bg-[#45B86A] text-black font-semibold text-sm px-4 py-2 h-9 rounded-lg shrink-0"
+            >
+              <Link href="/memberships">View Memberships</Link>
+            </Button>
           </div>
-          <p className="text-xs text-gray-500 mt-4">*Based on 25 sessions/month with a monthly membership</p>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="bg-black border-b border-gray-800 shadow-sm sticky top-20 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
-            {[
-              { num: 1, label: 'Sport', done: !!selectedSport },
-              { num: 2, label: 'Court', done: !!selectedCourt },
-              { num: 3, label: 'Date', done: !!selectedDate },
-              { num: 4, label: 'Time', done: !!selectedTime },
-            ].map((step, idx) => (
-              <div key={step.num} className="flex items-center flex-1">
-                <button
-                  onClick={() => setCurrentStep(step.num)}
-                  className="flex flex-col items-center gap-2 group"
-                >
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${step.done
-                      ? 'bg-[#50C878] text-white scale-110'
-                      : currentStep === step.num
-                        ? 'bg-[#50C878] text-white scale-105'
-                        : 'bg-gray-900 text-gray-400'
-                      }`}
-                  >
-                    {step.done ? <Check className="w-5 h-5" /> : step.num}
+      {/* Entry choice: Regular drop-in vs Social Open Play */}
+      {dropInMode === null && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="max-w-2xl mx-auto">
+            <p className="text-center text-white/80 text-sm mb-6">Choose how you want to play</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setDropInMode('regular')
+                  setCurrentStep(1)
+                }}
+                className="group relative flex flex-col p-6 rounded-2xl bg-black/80 border border-white/10 hover:border-[#50C878]/50 transition-all duration-300 text-left"
+                aria-label="Book a regular drop-in session (pick sport, court, date and time)"
+              >
+                <div className="w-12 h-12 rounded-xl bg-[#50C878]/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Clock className="w-6 h-6 text-[#50C878]" aria-hidden />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">Regular drop-in</h3>
+                <p className="text-sm text-gray-400">
+                  Pick your sport, court, date and time. Flexible pay-as-you-go.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDropInMode('social_open_play')
+                  setCurrentStep(1)
+                  setSelectedDate(undefined)
+                }}
+                className="group relative flex flex-col p-6 rounded-2xl bg-black/80 border border-white/10 hover:border-[#50C878]/50 transition-all duration-300 text-left"
+                aria-label="Book Table Tennis Social Open Play (Mon/Wed/Fri 7–9 PM)"
+              >
+                <div className="w-12 h-12 rounded-xl bg-[#50C878]/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Users className="w-6 h-6 text-[#50C878]" aria-hidden />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">Table Tennis Social Open Play</h3>
+                <p className="text-sm text-gray-400 mb-2">
+                  Mon, Wed & Fri · 7:00 PM – 9:00 PM · $15 + tax. Play with random drop-ins, organized by Coach Abhinay.
+                </p>
+                <span className="text-xs text-[#50C878] font-medium">2 hours · Drop-in style</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Progress Bar – only when mode chosen */}
+      {dropInMode !== null && (
+        <div className="bg-black/90 backdrop-blur-sm border-b border-gray-800/80 shadow-sm sticky top-20 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between max-w-2xl mx-auto">
+              {(dropInMode === 'social_open_play'
+                ? [
+                    { num: 1, label: 'Date', done: !!selectedDate },
+                    { num: 2, label: 'Review & Book', done: !!selectedDate },
+                  ]
+                : [
+                    { num: 1, label: 'Sport', done: !!selectedSport },
+                    { num: 2, label: 'Court', done: !!selectedCourt },
+                    { num: 3, label: 'Date & Time', done: !!selectedDate && !!selectedTime },
+                    { num: 4, label: 'Review & Book', done: isComplete },
+                  ]
+              ).map((step, idx, arr) => {
+                const isHighlighted = step.done || currentStep === step.num
+                return (
+                  <div key={step.num} className="flex items-center flex-1">
+                    <button
+                      onClick={() => setCurrentStep(step.num)}
+                      className="flex flex-col items-center gap-2 group"
+                      aria-current={isHighlighted && step.num === currentStep ? 'step' : undefined}
+                      aria-label={`Step ${step.num}: ${step.label}${step.done ? ', completed' : ''}`}
+                    >
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${step.done
+                          ? 'bg-[#50C878] text-white scale-110'
+                          : isHighlighted
+                            ? 'bg-[#50C878] text-white scale-105'
+                            : 'bg-gray-900 text-gray-400'
+                          }`}
+                      >
+                        {step.done ? <Check className="w-4 h-4" /> : step.num}
+                      </div>
+                      <span
+                        className={`text-xs font-medium ${isHighlighted ? 'text-[#50C878] dark:text-[#50C878]' : 'text-gray-400 dark:text-gray-400'}`}
+                      >
+                        {step.label}
+                      </span>
+                    </button>
+                    {idx < arr.length - 1 && (
+                      <div
+                        className={`flex-1 h-1 mx-2 rounded transition-all ${step.done ? 'bg-[#50C878]' : 'bg-gray-900'}`}
+                      />
+                    )}
                   </div>
-                  <span
-                    className={`text-xs font-medium ${step.done || currentStep === step.num ? 'text-[#50C878] dark:text-[#50C878]' : 'text-gray-400 dark:text-gray-400'
-                      }`}
-                  >
-                    {step.label}
-                  </span>
-                </button>
-                {idx < 3 && (
-                  <div
-                    className={`flex-1 h-1 mx-2 rounded transition-all ${step.done ? 'bg-[#50C878]' : 'bg-gray-900'
-                      }`}
-                  />
-                )}
-              </div>
-            ))}
+                )
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Steps */}
-          <div className="lg:col-span-2 space-y-6">
+      {/* Main Content - single column */}
+      {dropInMode !== null && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="max-w-3xl mx-auto space-y-5">
+            {dropInMode === 'social_open_play' ? (
+              <>
+                {/* Social Open Play Step 1: Select Date (Mon/Wed/Fri only) */}
+                <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+                  <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                      <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">1</span>
+                      Select Date (Mon, Wed or Fri)
+                    </h2>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-sm text-gray-400 mb-4">
+                      Table Tennis Social Open Play runs 7:00 PM – 9:00 PM. Pick a Monday, Wednesday or Friday.
+                    </p>
+                    <div className="w-full max-w-[320px] shrink-0 max-h-[380px] overflow-hidden flex justify-center">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          setSelectedDate(date)
+                          setCurrentStep(2)
+                        }}
+                        disabled={(date) =>
+                          !SOCIAL_OPEN_PLAY_DAYS.includes(date.getDay()) ||
+                          date < bookingWindowStart ||
+                          date > bookingWindowEnd
+                        }
+                        className="rounded-xl border border-gray-800 bg-[#111111] p-4 w-full shadow-lg shadow-black/50"
+                        fromDate={bookingWindowStart}
+                        toDate={bookingWindowEnd}
+                        modifiers={calendarModifiers}
+                        modifiersClassNames={calendarModifierClasses}
+                        classNames={{
+                          months: 'flex flex-col w-full shrink-0',
+                          month: 'space-y-2 w-full shrink-0',
+                          month_caption: 'flex justify-between items-center w-full pt-1 pb-2 relative',
+                          caption_label: 'text-base font-bold text-white tracking-wide font-sans',
+                          nav: 'relative w-full flex items-center justify-between gap-2 min-h-[2rem]',
+                          button_previous: 'h-8 w-8 shrink-0 bg-gray-800 hover:bg-[#50C878] hover:text-white rounded-full transition-all flex items-center justify-center border border-gray-700 text-gray-400 shadow hover:scale-105 active:scale-95 duration-200 [&_svg]:w-4 [&_svg]:h-4',
+                          button_next: 'h-8 w-8 shrink-0 bg-gray-800 hover:bg-[#50C878] hover:text-white rounded-full transition-all flex items-center justify-center border border-gray-700 text-gray-400 shadow hover:scale-105 active:scale-95 duration-200 [&_svg]:w-4 [&_svg]:h-4',
+                          chevron: 'text-current',
+                          month_grid: 'w-full border-collapse',
+                          weekdays: 'grid grid-cols-7 mb-2 place-items-center',
+                          weekday: 'text-gray-500 font-semibold text-[0.75rem] uppercase tracking-wider text-center w-9',
+                          weeks: 'space-y-1',
+                          week: 'grid grid-cols-7 w-full gap-y-1 place-items-center',
+                          day: 'relative p-0 text-center h-9 w-9 flex items-center justify-center',
+                          day_button: 'h-9 w-9 p-0 text-sm font-medium rounded-full transition-all text-white hover:scale-105 hover:bg-[#50C878]/20 hover:text-[#50C878] border border-transparent focus:outline-none focus:ring-2 focus:ring-[#50C878] focus:ring-offset-2 focus:ring-offset-black touch-manipulation flex items-center justify-center',
+                          selected: '!bg-[#50C878] !text-white !font-bold shadow-[0_0_12px_rgba(80,200,120,0.5)] !scale-105 !z-10 relative !border-none',
+                          today: 'bg-white/5 text-white font-bold ring-1 ring-white/20',
+                          outside: 'text-gray-700 opacity-20',
+                          disabled: 'text-gray-700 opacity-20 cursor-not-allowed hover:!bg-transparent hover:!scale-100',
+                          hidden: 'invisible',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social Open Play Step 2: Review & Book */}
+                {selectedDate && (
+                  <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+                    <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">2</span>
+                        Review & Book
+                      </h2>
+                    </div>
+                    <div className="p-5 space-y-4">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                          <CalendarIcon className="w-4 h-4 text-[#50C878]" />
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-gray-500">Date</div>
+                            <div className="text-sm font-semibold text-white">{format(selectedDate, 'EEE, MMM d, yyyy')}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                          <Clock className="w-4 h-4 text-[#50C878]" />
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-gray-500">Time</div>
+                            <div className="text-sm font-semibold text-white">{SOCIAL_OPEN_PLAY_TIME_LABEL}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg border border-[#50C878]/30 bg-[#50C878]/5">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-300">Table Tennis Social Open Play</span>
+                          <span className="font-semibold text-white">
+                            ${SOCIAL_OPEN_PLAY_PRICE} + 13% HST = ${(SOCIAL_OPEN_PLAY_PRICE * (1 + SOCIAL_OPEN_PLAY_TAX_RATE)).toFixed(2)} CAD
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={async () => {
+                          setSubmitting(true)
+                          try {
+                            const bookingDateStr = format(selectedDate, 'yyyy-MM-dd')
+                            const createRes = await fetch('/api/booking/create-pending-social-open-play', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ bookingDate: bookingDateStr }),
+                            })
+                            if (createRes.status === 401) {
+                              toast.info('Please sign in to continue', { duration: 3000 })
+                              window.location.href = `/auth?redirect=${encodeURIComponent('/drop-in')}`
+                              return
+                            }
+                            if (!createRes.ok) {
+                              const err = await createRes.json()
+                              throw new Error(err.error || 'Failed to create booking')
+                            }
+                            const { socialOpenPlayBookingId: id } = await createRes.json()
+                            if (!id) throw new Error('No booking ID returned')
+                            setSocialOpenPlayBookingId(id)
+                            const checkoutRes = await fetch('/api/stripe/checkout', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                paymentType: 'social_open_play',
+                                socialOpenPlayBookingId: id,
+                              }),
+                            })
+                            if (!checkoutRes.ok) {
+                              const err = await checkoutRes.json()
+                              throw new Error(err.error || 'Failed to start checkout')
+                            }
+                            const { url } = await checkoutRes.json()
+                            if (url) window.location.href = url
+                            else throw new Error('No checkout URL')
+                          } catch (e) {
+                            toast.error(e instanceof Error ? e.message : 'Booking failed')
+                          } finally {
+                            setSubmitting(false)
+                          }
+                        }}
+                        disabled={submitting}
+                        className="w-full h-10 bg-[#50C878] hover:bg-[#45B86A] text-black font-semibold rounded-lg"
+                      >
+                        {submitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing…
+                          </>
+                        ) : (
+                          'Book & Pay $15 + tax'
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
             {/* Step 1: Select Sport */}
-            <div className="bg-black rounded-2xl shadow-sm border border-gray-800 overflow-hidden">
-              <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">1</span>
+            <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+              <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">1</span>
                   Choose Your Sport
                 </h2>
               </div>
-              <div className="p-6">
+              <div className="p-5">
                 {loadingSports ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#50C878]" />
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="h-7 w-7 animate-spin text-[#50C878]" />
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {sports.map((sport) => {
                       const Icon = getSportIcon(sport.display_name)
                       const comingSoon = isComingSoon(sport)
@@ -600,43 +878,41 @@ export function RedesignedBooking() {
                           key={sport.id}
                           onClick={() => handleSportSelect(sport)}
                           disabled={comingSoon}
-                          className={`relative group p-6 rounded-xl border-2 transition-all text-left ${comingSoon
-                            ? 'border-gray-700 bg-gray-800/50 opacity-60 cursor-not-allowed'
+                          className={`relative group p-4 rounded-lg border transition-all duration-200 text-left ${comingSoon
+                            ? 'border-gray-700/80 bg-gray-800/40 opacity-60 cursor-not-allowed'
                             : selectedSport?.id === sport.id
-                              ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
-                              : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
+                              ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
+                              : 'border-gray-800/80 hover:border-[#50C878]/40 hover:bg-gray-800/60 bg-gray-900/50'
                             }`}
                         >
                           {comingSoon && (
-                            <div className="absolute top-2 right-2 z-10">
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-semibold">
-                                Coming Soon
+                            <div className="absolute top-1.5 right-1.5 z-10">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-semibold uppercase tracking-wide">
+                                Soon
                               </span>
                             </div>
                           )}
-                          <div className="flex items-start gap-4">
+                          <div className="flex items-center gap-3">
                             <div
-                              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${comingSoon
+                              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${comingSoon
                                 ? 'bg-gray-700 text-gray-500'
                                 : selectedSport?.id === sport.id
                                   ? 'bg-[#50C878] text-white'
-                                  : 'bg-gray-900 text-white group-hover:bg-[#50C878]/20'
+                                  : 'bg-gray-800 text-white group-hover:bg-[#50C878]/20'
                                 }`}
                             >
-                              <Icon className="w-6 h-6" />
+                              <Icon className="w-5 h-5" />
                             </div>
-                            <div className="flex-1">
-                              <h3 className={`font-bold text-lg mb-1 ${comingSoon ? 'text-gray-500' : 'text-white dark:text-white'
-                                }`}>
+                            <div className="flex-1 min-w-0">
+                              <h3 className={`font-semibold text-sm mb-0.5 truncate ${comingSoon ? 'text-gray-500' : 'text-white dark:text-white'}`}>
                                 {sport.display_name}
                               </h3>
-                              <p className={`text-sm ${comingSoon ? 'text-gray-600' : 'text-gray-300 dark:text-gray-300'
-                                }`}>
-                                {comingSoon ? 'Available soon' : `${sport.duration_minutes} min session`}
+                              <p className={`text-xs ${comingSoon ? 'text-gray-600' : 'text-gray-400 dark:text-gray-400'}`}>
+                                {comingSoon ? 'Available soon' : `${sport.duration_minutes} min`}
                               </p>
                             </div>
                             {selectedSport?.id === sport.id && !comingSoon && (
-                              <Check className="w-6 h-6 text-[#50C878] absolute top-4 right-4" />
+                              <Check className="w-5 h-5 text-[#50C878] shrink-0" />
                             )}
                           </div>
                         </button>
@@ -649,38 +925,38 @@ export function RedesignedBooking() {
 
             {/* Step 2: Select Court */}
             {selectedSport && (
-              <div className="bg-black rounded-2xl shadow-sm border border-gray-800 overflow-hidden">
-                <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">2</span>
+              <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+                <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">2</span>
                     Choose Your Court
                   </h2>
                 </div>
-                <div className="p-6">
+                <div className="p-5">
                   {loadingCourts ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader2 className="h-8 w-8 animate-spin text-[#50C878]" />
+                    <div className="flex items-center justify-center py-10">
+                      <Loader2 className="h-7 w-7 animate-spin text-[#50C878]" />
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {courts.map((court) => (
                         <button
                           key={court.id}
                           onClick={() => handleCourtSelect(court)}
-                          className={`p-6 rounded-xl border-2 transition-all text-left ${selectedCourt?.id === court.id
-                            ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-md'
-                            : 'border-gray-800 hover:border-[#50C878]/50 hover:shadow-sm bg-gray-900'
+                          className={`p-4 rounded-lg border transition-all duration-200 text-left flex items-center justify-between gap-3 ${selectedCourt?.id === court.id
+                            ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
+                            : 'border-gray-800/80 hover:border-[#50C878]/40 hover:bg-gray-800/60 bg-gray-900/50'
                             }`}
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-bold text-lg text-white dark:text-white">{court.name}</h3>
-                            {selectedCourt?.id === court.id && (
-                              <Check className="w-6 h-6 text-[#50C878]" />
-                            )}
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-sm text-white dark:text-white truncate">{court.name}</h3>
+                            <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5 truncate">
+                              {court.location || 'Available for booking'}
+                            </p>
                           </div>
-                          <p className="text-sm text-gray-300 dark:text-gray-300">
-                            {court.location || 'Available for booking'}
-                          </p>
+                          {selectedCourt?.id === court.id && (
+                            <Check className="w-5 h-5 text-[#50C878] shrink-0" />
+                          )}
                         </button>
                       ))}
                     </div>
@@ -689,23 +965,23 @@ export function RedesignedBooking() {
               </div>
             )}
 
-            {/* Step 3 & 4: Select Date & Time */}
+            {/* Step 3: Select Date & Time */}
             {selectedCourt && (
-              <div className="bg-black rounded-2xl shadow-sm border border-gray-800 overflow-hidden">
-                <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm">3</span>
+              <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+                <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">3</span>
                     Pick Date & Time
                   </h2>
                 </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Date Picker */}
-                    <div>
-                      <label className="block text-sm font-semibold text-white dark:text-white mb-3">
+                <div className="p-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+                    {/* Date Picker - constrained so it doesn't stretch */}
+                    <div className="flex flex-col items-center min-w-0">
+                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 w-full text-left">
                         Select Date
                       </label>
-                      <div className="flex justify-center">
+                      <div className="w-full max-w-[320px] shrink-0 max-h-[380px] overflow-hidden flex justify-center">
                         <Calendar
                           mode="single"
                           selected={selectedDate}
@@ -713,53 +989,57 @@ export function RedesignedBooking() {
                           disabled={(date) =>
                             date < bookingWindowStart || date > bookingWindowEnd
                           }
-                          className="rounded-lg border border-gray-800 bg-black mx-auto"
+                          className="rounded-xl border border-gray-800 bg-[#111111] p-4 w-full shadow-lg shadow-black/50"
                           fromDate={bookingWindowStart}
                           toDate={bookingWindowEnd}
                           modifiers={calendarModifiers}
                           modifiersClassNames={calendarModifierClasses}
                           classNames={{
-                            months: 'flex flex-col space-y-4',
-                            month: 'space-y-4',
-                            caption: 'flex justify-center pt-1 relative items-center mb-4',
-                            caption_label: 'text-sm font-semibold text-white',
-                            nav: 'space-x-1 flex items-center',
-                            nav_button: 'h-8 w-8 bg-transparent p-0 hover:bg-[#50C878]/10 rounded-md transition-colors text-white',
-                            nav_button_previous: 'absolute left-1',
-                            nav_button_next: 'absolute right-1',
-                            table: 'w-full border-collapse',
-                            head_row: 'flex mb-2',
-                            head_cell: 'text-gray-400 rounded-md w-10 font-medium text-xs text-center',
-                            row: 'flex w-full mt-1',
-                            cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
-                            day: 'h-10 w-10 p-0 font-medium rounded-md transition-all text-white bg-[#50C878]/5 hover:bg-[#50C878]/20 border border-[#50C878]/20',
-                            day_selected: '!bg-[#50C878] !text-white hover:!bg-[#50C878]/90 focus:!bg-[#50C878] !font-bold !ring-4 !ring-[#50C878]/40 !shadow-lg !shadow-[#50C878]/30 !scale-110',
-                            day_today: '!bg-[#50C878]/30 !text-[#50C878] !font-bold !ring-2 !ring-[#50C878]',
-                            day_outside: 'text-gray-600 opacity-30',
-                            day_disabled: '!text-red-500/70 !bg-red-950/30 !opacity-50 hover:!bg-red-950/30 !cursor-not-allowed relative after:content-["🔒"] after:absolute after:bottom-0 after:right-0 after:text-[10px] after:opacity-60',
-                            day_hidden: 'invisible',
+                            months: 'flex flex-col w-full shrink-0',
+                            month: 'space-y-2 w-full shrink-0',
+                            month_caption: 'flex justify-between items-center w-full pt-1 pb-2 relative',
+                            caption_label: 'text-base font-bold text-white tracking-wide font-sans',
+                            nav: 'relative w-full flex items-center justify-between gap-2 min-h-[2rem]',
+                            button_previous: 'h-8 w-8 shrink-0 bg-gray-800 hover:bg-[#50C878] hover:text-white rounded-full transition-all flex items-center justify-center border border-gray-700 text-gray-400 shadow hover:scale-105 active:scale-95 duration-200 [&_svg]:w-4 [&_svg]:h-4',
+                            button_next: 'h-8 w-8 shrink-0 bg-gray-800 hover:bg-[#50C878] hover:text-white rounded-full transition-all flex items-center justify-center border border-gray-700 text-gray-400 shadow hover:scale-105 active:scale-95 duration-200 [&_svg]:w-4 [&_svg]:h-4',
+                            chevron: 'text-current',
+                            month_grid: 'w-full border-collapse',
+                            weekdays: 'grid grid-cols-7 mb-2 place-items-center',
+                            weekday: 'text-gray-500 font-semibold text-[0.75rem] uppercase tracking-wider text-center w-9',
+                            weeks: 'space-y-1',
+                            week: 'grid grid-cols-7 w-full gap-y-1 place-items-center',
+                            day: 'relative p-0 text-center h-9 w-9 flex items-center justify-center',
+                            day_button: 'h-9 w-9 p-0 text-sm font-medium rounded-full transition-all text-white hover:scale-105 hover:bg-[#50C878]/20 hover:text-[#50C878] border border-transparent focus:outline-none focus:ring-2 focus:ring-[#50C878] focus:ring-offset-2 focus:ring-offset-black touch-manipulation flex items-center justify-center',
+                            selected: '!bg-[#50C878] !text-white !font-bold shadow-[0_0_12px_rgba(80,200,120,0.5)] !scale-105 !z-10 relative !border-none',
+                            today: 'bg-white/5 text-white font-bold ring-1 ring-white/20',
+                            outside: 'text-gray-700 opacity-20',
+                            disabled: 'text-gray-700 opacity-20 cursor-not-allowed hover:!bg-transparent hover:!scale-100',
+                            hidden: 'invisible',
                           }}
                         />
                       </div>
-                      <div className="mt-3 space-y-2 text-xs text-gray-400 flex justify-center">
-                        <div className="flex items-center gap-2 bg-[#50C878]/10 px-2 py-1 rounded border border-[#50C878]/30">
-                          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#50C878]" aria-hidden="true" />
-                          <span className="text-[#50C878] font-semibold">Bookable (Next 14 days)</span>
+                      <div className="mt-3 flex justify-center">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#50C878]/10 border border-[#50C878]/20">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#50C878] opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#50C878]"></span>
+                          </span>
+                          <span className="text-[10px] font-medium uppercase tracking-wider text-[#50C878]">Next 14 days</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Time Picker */}
-                    <div>
-                      <label className="block text-sm font-semibold text-white dark:text-white mb-3">
+                    {/* Time Picker - aligned to top, scrollable list */}
+                    <div className="min-w-0 flex flex-col">
+                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                         Select Time
                       </label>
                       {loadingSlots ? (
-                        <div className="flex items-center justify-center py-12">
-                          <Loader2 className="h-8 w-8 animate-spin text-[#50C878]" />
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin text-[#50C878]" />
                         </div>
                       ) : availableTimeSlots.length > 0 ? (
-                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                        <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1.5">
                           {availableTimeSlots.map((slot: any) => {
                             const slotTime = toZonedTime(parseISO(slot.time), FACILITY_TIMEZONE)
                             const slotEndTime = addMinutes(slotTime, durationMinutes)
@@ -767,25 +1047,25 @@ export function RedesignedBooking() {
                               <button
                                 key={slot.time}
                                 onClick={() => handleTimeSelect(slot.time)}
-                                className={`w-full p-4 rounded-lg border-2 transition-all text-left ${selectedTime === slot.time
-                                  ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
-                                  : 'border-gray-800 hover:border-[#50C878]/50 bg-gray-900'
+                                className={`w-full p-3 rounded-lg border transition-all duration-200 text-left group relative overflow-hidden ${selectedTime === slot.time
+                                  ? 'border-[#50C878] bg-[#50C878] text-white shadow-sm'
+                                  : 'border-gray-800/80 hover:border-[#50C878]/40 hover:bg-[#50C878]/5 bg-gray-900/50'
                                   }`}
                               >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <Clock className="w-5 h-5 text-[#50C878] dark:text-[#50C878]" />
-                                    <div>
-                                      <div className="font-semibold text-white dark:text-white">
-                                        {format(slotTime, 'h:mm a')} - {format(slotEndTime, 'h:mm a')}
+                                <div className="flex items-center justify-between relative z-10 gap-2">
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <Clock className={`w-4 h-4 shrink-0 transition-colors ${selectedTime === slot.time ? 'text-white' : 'text-[#50C878]'}`} />
+                                    <div className="min-w-0">
+                                      <div className={`font-semibold text-sm truncate ${selectedTime === slot.time ? 'text-white' : 'text-white'}`}>
+                                        {format(slotTime, 'h:mm a')} – {format(slotEndTime, 'h:mm a')}
                                       </div>
-                                      <div className="text-xs text-gray-300 dark:text-gray-300">
-                                        {durationMinutes} minutes
+                                      <div className={`text-xs ${selectedTime === slot.time ? 'text-emerald-100' : 'text-gray-400'}`}>
+                                        {durationMinutes} min
                                       </div>
                                     </div>
                                   </div>
                                   {selectedTime === slot.time && (
-                                    <Check className="w-5 h-5 text-[#50C878]" />
+                                    <Check className="w-4 h-4 text-white shrink-0" />
                                   )}
                                 </div>
                               </button>
@@ -793,10 +1073,10 @@ export function RedesignedBooking() {
                           })}
                         </div>
                       ) : (
-                        <div className="text-center py-12 text-gray-400 dark:text-gray-400">
-                          <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                          <p>No available slots for this date</p>
-                          <p className="text-sm mt-1">Please select another date</p>
+                        <div className="text-center py-8 text-gray-500">
+                          <CalendarIcon className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                          <p className="text-sm">No slots for this date</p>
+                          <p className="text-xs mt-0.5">Pick another date</p>
                         </div>
                       )}
                     </div>
@@ -804,149 +1084,142 @@ export function RedesignedBooking() {
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Right Column - Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-black rounded-2xl shadow-lg border border-gray-800 overflow-hidden sticky top-32">
-              <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-6 py-4">
-                <h2 className="text-xl font-bold text-white">Booking Summary</h2>
-              </div>
-              <div className="p-6 space-y-6">
-                {/* Selection Details */}
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 pb-4 border-b border-gray-700 dark:border-gray-700">
-                    <Trophy className="w-5 h-5 text-[#50C878] dark:text-[#50C878] mt-0.5" />
-                    <div className="flex-1">
-                      <div className="text-xs text-gray-400 dark:text-gray-400 mb-1">Sport</div>
-                      <div className="font-semibold text-white dark:text-white">
-                        {selectedSport?.display_name || 'Not selected'}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 pb-4 border-b border-gray-700 dark:border-gray-700">
-                    <Circle className="w-5 h-5 text-[#50C878] dark:text-[#50C878] mt-0.5" />
-                    <div className="flex-1">
-                      <div className="text-xs text-gray-400 dark:text-gray-400 mb-1">Court</div>
-                      <div className="font-semibold text-white dark:text-white">
-                        {selectedCourt?.name || 'Not selected'}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 pb-4 border-b border-gray-700 dark:border-gray-700">
-                    <CalendarIcon className="w-5 h-5 text-[#50C878] dark:text-[#50C878] mt-0.5" />
-                    <div className="flex-1">
-                      <div className="text-xs text-gray-400 dark:text-gray-400 mb-1">Date</div>
-                      <div className="font-semibold text-white dark:text-white" aria-busy={isDatePending}>
-                        {isDatePending ? 'Updating...' : (selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Not selected')}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 pb-4 border-b border-gray-700 dark:border-gray-700">
-                    <Clock className="w-5 h-5 text-[#50C878] dark:text-[#50C878] mt-0.5" />
-                    <div className="flex-1">
-                      <div className="text-xs text-gray-400 dark:text-gray-400 mb-1">Time</div>
-                      <div className="font-semibold text-white dark:text-white" aria-busy={isDatePending}>
-                        {isDatePending
-                          ? 'Updating...'
-                          : (selectedTime && endTime ? (
-                            <>
-                              {format(toZonedTime(parseISO(selectedTime), FACILITY_TIMEZONE), 'h:mm a')} - {format(toZonedTime(endTime, FACILITY_TIMEZONE), 'h:mm a')}
-                              <div className="text-xs text-gray-400 dark:text-gray-400 mt-1">
-                                {durationMinutes} minutes
-                              </div>
-                            </>
-                          ) : (
-                            'Not selected'
-                          ))}
-                      </div>
-                    </div>
-                  </div>
+            {/* Step 4: Review & Book */}
+            {selectedCourt && (
+              <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+                <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">4</span>
+                    Review & Book
+                  </h2>
                 </div>
-
-                {/* Payment Info */}
-                {checkingAuth && (
-                  <div className="flex items-center gap-2 text-sm text-gray-300 dark:text-gray-300 py-4">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Checking membership status...
-                  </div>
-                )}
-
-                {!checkingAuth && requiresPayment && paymentInfo && (
-                  <div className="bg-gradient-to-br from-amber-900/30 to-orange-900/30 dark:from-amber-900/30 dark:to-orange-900/30 rounded-lg p-4 border border-amber-700/50 dark:border-amber-700/50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <CreditCard className="w-5 h-5 text-amber-400 dark:text-amber-400" />
-                      <h3 className="font-bold text-amber-300 dark:text-amber-300">Payment Required</h3>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between text-gray-300 dark:text-gray-300">
-                        <span>Drop-in Fee:</span>
-                        <span className="font-semibold">${paymentInfo.price.toFixed(2)}</span>
-                      </div>
-                      {paymentInfo.tax > 0 && (
-                        <div className="flex justify-between text-gray-300 dark:text-gray-300">
-                          <span>Tax:</span>
-                          <span className="font-semibold">${paymentInfo.tax.toFixed(2)}</span>
+                <div className="p-5 space-y-4">
+                  {/* Selection summary - compact row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                      {(() => {
+                        const SportIcon = getSportIcon(selectedSport?.display_name || '')
+                        return <SportIcon className="w-4 h-4 text-[#50C878] shrink-0" />
+                      })()}
+                      <div className="min-w-0">
+                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Sport</div>
+                        <div className="font-medium text-xs text-white truncate">
+                          {selectedSport?.display_name || '—'}
                         </div>
-                      )}
-                      <div className="flex justify-between font-bold text-lg pt-2 border-t border-amber-700/50 dark:border-amber-700/50 text-amber-300 dark:text-amber-300">
-                        <span>Total:</span>
-                        <span>${paymentInfo.total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                      <Circle className="w-4 h-4 text-[#50C878] shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Court</div>
+                        <div className="font-medium text-xs text-white truncate">
+                          {selectedCourt?.name || '—'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                      <CalendarIcon className="w-4 h-4 text-[#50C878] shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Date</div>
+                        <div className="font-medium text-xs text-white truncate" aria-busy={isDatePending}>
+                          {isDatePending ? '…' : (selectedDate ? format(selectedDate, 'EEE, MMM d') : '—')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                      <Clock className="w-4 h-4 text-[#50C878] shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Time</div>
+                        <div className="font-medium text-xs text-white truncate" aria-busy={isDatePending}>
+                          {isDatePending
+                            ? '…'
+                            : (selectedTime && endTime
+                              ? format(toZonedTime(parseISO(selectedTime), FACILITY_TIMEZONE), 'h:mm a')
+                              : '—')}
+                        </div>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {!checkingAuth && isMembershipCovered && selectedTime && (
-                  <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-4 border border-green-700/50 dark:border-green-700/50">
-                    <div className="flex items-center gap-2 text-green-300 dark:text-green-300">
-                      <Check className="w-5 h-5" />
-                      <span className="font-semibold">Covered by your membership</span>
+                  {/* Payment Info */}
+                  {checkingAuth && (
+                    <div className="flex items-center gap-2 text-xs text-gray-400 py-3">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Checking membership...
                     </div>
-                    <p className="text-xs text-green-400 dark:text-green-400 mt-1">
-                      No additional payment required
-                    </p>
-                  </div>
-                )}
-
-                {/* Action Button */}
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!isComplete || submitting || checkingAuth}
-                  className="w-full h-12 bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg font-semibold text-base shadow-md disabled:opacity-50"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Processing...
-                    </>
-                  ) : isMembershipCovered ? (
-                    <>
-                      <Check className="mr-2 h-5 w-5" />
-                      Confirm Booking
-                    </>
-                  ) : (
-                    <>
-                      Continue to Payment
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </>
                   )}
-                </Button>
 
-                {!isComplete && (
-                  <div className="flex items-start gap-2 text-xs text-gray-400 bg-gray-900 rounded-lg p-3">
-                    <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <p>Complete all steps above to proceed with your booking</p>
-                  </div>
-                )}
+                  {!checkingAuth && requiresPayment && paymentInfo && (
+                    <div className="bg-amber-900/20 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-700/40 dark:border-amber-700/40">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CreditCard className="w-4 h-4 text-amber-400" />
+                        <span className="font-semibold text-amber-300 text-sm">Payment Required</span>
+                      </div>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between text-gray-300">
+                          <span>Drop-in:</span>
+                          <span className="font-medium">${paymentInfo.price.toFixed(2)}</span>
+                        </div>
+                        {paymentInfo.tax > 0 && (
+                          <div className="flex justify-between text-gray-300">
+                            <span>Tax:</span>
+                            <span className="font-medium">${paymentInfo.tax.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between font-semibold text-sm pt-1.5 border-t border-amber-700/40 text-amber-300">
+                          <span>Total:</span>
+                          <span>${paymentInfo.total.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!checkingAuth && isMembershipCovered && selectedTime && (
+                    <div className="bg-green-900/20 dark:bg-green-900/20 rounded-lg p-3 border border-green-700/40 flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-400 shrink-0" />
+                      <span className="text-sm font-medium text-green-300">Covered by membership — no payment required</span>
+                    </div>
+                  )}
+
+                  {/* Action Button */}
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!isComplete || submitting || checkingAuth}
+                    className="w-full h-11 bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg font-semibold text-sm shadow-sm disabled:opacity-50 transition-all duration-200"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : isMembershipCovered ? (
+                      <>
+                        <Check className="mr-2 h-5 w-5" />
+                        Confirm Booking
+                      </>
+                    ) : (
+                      <>
+                        Continue to Payment
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+
+                  {!isComplete && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-900/50 rounded-lg px-3 py-2">
+                      <Info className="w-3.5 h-3.5 shrink-0" />
+                      <p>Complete all steps above to proceed</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
+            )}
+              </>
+            )}
         </div>
       </div>
+      )}
     </div>
   )
 }

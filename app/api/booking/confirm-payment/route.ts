@@ -38,19 +38,10 @@ export async function POST(req: NextRequest) {
 
     // Retrieve checkout session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId)
+    const metadata = session.metadata || {}
+    const paymentType = metadata.payment_type as string | undefined
 
-    if (!session.metadata?.booking_id) {
-      return NextResponse.json(
-        { error: 'No booking ID in session metadata' },
-        { status: 400 }
-      )
-    }
-
-    const bookingId = session.metadata.booking_id
-
-    // Get payment intent
     const paymentIntentId = session.payment_intent as string | null
-
     if (!paymentIntentId) {
       return NextResponse.json(
         { error: 'No payment intent found' },
@@ -58,7 +49,46 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Get or create payment record
+    if (paymentType === 'social_open_play') {
+      const socialOpenPlayBookingId = metadata.social_open_play_booking_id as string | undefined
+      if (!socialOpenPlayBookingId) {
+        return NextResponse.json(
+          { error: 'No Social Open Play booking ID in session metadata' },
+          { status: 400 }
+        )
+      }
+
+      const amountPaid = session.amount_total != null ? (session.amount_total / 100) : 15
+
+      const { data: sopBooking, error: updateError } = await supabase
+        .from('social_open_play_bookings')
+        .update({
+          payment_status: 'paid',
+          payment_intent_id: paymentIntentId,
+          amount_paid: amountPaid,
+        })
+        .eq('id', socialOpenPlayBookingId)
+        .eq('user_id', user.id)
+        .select()
+        .single()
+
+      if (updateError) {
+        throw new Error(`Failed to confirm Social Open Play booking: ${updateError.message}`)
+      }
+
+      return NextResponse.json({ success: true, booking: sopBooking, type: 'social_open_play' })
+    }
+
+    if (!metadata.booking_id) {
+      return NextResponse.json(
+        { error: 'No booking ID in session metadata' },
+        { status: 400 }
+      )
+    }
+
+    const bookingId = metadata.booking_id
+
+    // Get or create payment record (drop_in)
     const { data: existingPayment } = await supabase
       .from('payments')
       .select('id')
@@ -68,7 +98,6 @@ export async function POST(req: NextRequest) {
     let paymentId = existingPayment?.id
 
     if (!paymentId) {
-      // Create payment record
       const { data: payment, error: paymentError } = await supabase
         .from('payments')
         .insert({
@@ -90,7 +119,6 @@ export async function POST(req: NextRequest) {
       paymentId = payment.id
     }
 
-    // Update booking to confirmed
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .update({

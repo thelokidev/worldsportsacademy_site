@@ -110,9 +110,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { planId, bookingId, paymentType } = body;
+    const { planId, bookingId, paymentType, socialOpenPlayBookingId } = body;
 
-    if (!paymentType || !["membership", "drop_in"].includes(paymentType)) {
+    if (!paymentType || !["membership", "drop_in", "social_open_play"].includes(paymentType)) {
       return NextResponse.json(
         { error: "Invalid payment type" },
         { status: 400 },
@@ -519,6 +519,100 @@ export async function POST(req: NextRequest) {
             details:
               process.env.NODE_ENV === "development" ? errorDetails : undefined,
           },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json({ sessionId: session.id, url: session.url });
+    }
+
+    if (paymentType === "social_open_play") {
+      if (!socialOpenPlayBookingId) {
+        return NextResponse.json(
+          { error: "socialOpenPlayBookingId is required for Social Open Play checkout" },
+          { status: 400 },
+        );
+      }
+
+      const { data: sopBooking, error: sopBookingError } = await supabase
+        .from("social_open_play_bookings")
+        .select("id, social_play_id, user_id")
+        .eq("id", socialOpenPlayBookingId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (sopBookingError || !sopBooking) {
+        return NextResponse.json(
+          { error: "Social Open Play booking not found or access denied" },
+          { status: 404 },
+        );
+      }
+
+      const { data: socialPlay, error: socialPlayError } = await supabase
+        .from("social_open_play")
+        .select("sport_id, price")
+        .eq("id", sopBooking.social_play_id)
+        .single();
+
+      if (socialPlayError || !socialPlay) {
+        return NextResponse.json(
+          { error: "Social Open Play session not found" },
+          { status: 404 },
+        );
+      }
+
+      const durationMinutes = 60;
+      const { data: pricing, error: pricingError } = await supabase
+        .from("drop_in_pricing")
+        .select("stripe_price_id, price, tax_rate")
+        .eq("sport_id", socialPlay.sport_id)
+        .eq("duration_minutes", durationMinutes)
+        .single();
+
+      if (pricingError || !pricing?.stripe_price_id) {
+        return NextResponse.json(
+          { error: "Drop-in pricing not configured for this session" },
+          { status: 404 },
+        );
+      }
+
+      let appUrl = process.env.NEXT_PUBLIC_APP_URL;
+      if (!appUrl && process.env.VERCEL_URL) {
+        appUrl = `https://${process.env.VERCEL_URL}`;
+      }
+      if (!appUrl) {
+        appUrl = "http://localhost:3000";
+      }
+
+      let session;
+      try {
+        session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          mode: "payment",
+          line_items: [{ price: pricing.stripe_price_id, quantity: 1 }],
+          success_url: `${appUrl}/bookings/success?session_id={CHECKOUT_SESSION_ID}&type=social_open_play`,
+          cancel_url: `${appUrl}/drop-in?canceled=true`,
+          metadata: {
+            user_id: user.id,
+            payment_type: "social_open_play",
+            social_open_play_booking_id: socialOpenPlayBookingId,
+            includes_initiation_fee: "false",
+          },
+        });
+      } catch (sessionError) {
+        console.error("Failed to create Social Open Play checkout session:", sessionError);
+        return NextResponse.json(
+          {
+            error: "Failed to create checkout session",
+            details: process.env.NODE_ENV === "development" && sessionError instanceof Error ? sessionError.message : undefined,
+          },
+          { status: 500 },
+        );
+      }
+
+      if (!session?.url) {
+        return NextResponse.json(
+          { error: "Failed to create checkout session URL" },
           { status: 500 },
         );
       }
