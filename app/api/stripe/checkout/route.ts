@@ -344,7 +344,7 @@ export async function POST(req: NextRequest) {
           customer: customerId,
           mode: "subscription",
           line_items: lineItems,
-          currency: "cad",
+          // Currency comes from the Stripe Price object; do not override (prices are USD)
           success_url: `${appUrl}/dashboard/membership/success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/memberships?canceled=true`,
           metadata: {
@@ -473,7 +473,7 @@ export async function POST(req: NextRequest) {
           customer: customerId,
           mode: "payment",
           line_items: lineItems,
-          currency: "cad",
+          // Currency comes from the Stripe Price object; do not override (prices are USD)
           success_url: `${appUrl}/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/bookings?canceled=true`,
           metadata: {
@@ -501,6 +501,10 @@ export async function POST(req: NextRequest) {
             errorMessage = `Stripe price ID "${pricing.stripe_price_id}" not found. Please check your drop-in pricing configuration.`;
             errorDetails =
               "The Stripe price ID in the database does not exist in your Stripe account. Please verify the price ID in the drop_in_pricing table matches your Stripe products.";
+          } else if (sessionError.message.includes("currency")) {
+            errorMessage =
+              "Currency mismatch: Stripe price is in a different currency than expected. Ensure your Stripe prices match the checkout configuration.";
+            errorDetails = sessionError.message;
           } else if (sessionError.message.includes("Invalid API Key")) {
             errorMessage =
               "Invalid Stripe API key. Please check your STRIPE_SECRET_KEY in .env.local";
