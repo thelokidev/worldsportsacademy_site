@@ -387,7 +387,7 @@ export function Navbar() {
             }`}
         >
           {/* Menu Header */}
-          <div className="flex items-center justify-between p-5 pt-[calc(1.5rem+env(safe-area-inset-top))] border-b border-gray-800/50">
+          <div className="flex items-center justify-between px-4 h-16 box-content pt-[env(safe-area-inset-top)] border-b border-gray-800/50">
             <Link
               href="/"
               prefetch={true}
@@ -405,13 +405,6 @@ export function Navbar() {
               </div>
               <span className="text-lg font-bold text-white">WSA</span>
             </Link>
-            <button
-              onClick={handleLinkClick}
-              className="p-2 rounded-xl hover:bg-gray-800/50 active:bg-gray-800/70 transition-colors"
-              aria-label="Close menu"
-            >
-              <X className="w-6 h-6 text-gray-400" />
-            </button>
           </div>
 
           {/* Scrollable Menu Content */}
