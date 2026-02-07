@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, ChevronRight, Home, Dumbbell, CalendarCheck, Crown, Shield, Users, Tent } from "lucide-react"
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Calendar, CreditCard, ChevronRight, Home, Dumbbell, CalendarCheck, Crown, Shield, Users, Tent, Images } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useTransition, useMemo, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -21,6 +21,7 @@ const navigation = [
   { name: "Home", href: "/", icon: Home },
   { name: "Training", href: "/training", icon: Dumbbell },
   { name: "Drop-in", href: "/drop-in", icon: CalendarCheck },
+  { name: "Gallery", href: "/gallery", icon: Images },
   { name: "About", href: "/about", icon: Users },
   { name: "Camps", href: "/camps", icon: Tent },
 ]
