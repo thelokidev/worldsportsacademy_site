@@ -192,13 +192,13 @@ export function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50">
       {/* Main Navigation */}
       <nav
-        className={`transition-all duration-300 ${scrolled
+        className={`transition-all duration-300 pt-[env(safe-area-inset-top)] ${scrolled
           ? "bg-black/90 backdrop-blur-xl shadow-lg border-b border-white/10"
           : "bg-transparent backdrop-blur-none border-b border-transparent"
           }`}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link
               href="/"
@@ -387,7 +387,7 @@ export function Navbar() {
             }`}
         >
           {/* Menu Header */}
-          <div className="flex items-center justify-between p-5 pt-6 border-b border-gray-800/50">
+          <div className="flex items-center justify-between p-5 pt-[calc(1.5rem+env(safe-area-inset-top))] border-b border-gray-800/50">
             <Link
               href="/"
               prefetch={true}
