@@ -46,6 +46,10 @@ type Court = {
     user?: {
       full_name: string | null
     }
+    users?: Array<{
+      full_name: string | null
+    }>
+    totalParticipants?: number
   } | null
   nextBooking?: {
     id: string
@@ -201,12 +205,24 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
               {/* Booking Status */}
               <div className="mt-2 space-y-1 mb-2">
                 {court.currentBooking ? (
-                  <div className="flex flex-wrap items-center gap-2 text-sm text-green-400">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
-                    <span className="break-words">Occupied by {court.currentBooking.user?.full_name || 'Unknown'}</span>
-                    <span className="text-gray-500 text-xs">
-                      ({format(new Date(court.currentBooking.start_time), 'h:mm a')} - {format(new Date(court.currentBooking.end_time), 'h:mm a')})
-                    </span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-green-400">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
+                      <span className="font-medium">
+                        {(court.currentBooking.totalParticipants || 1) < 2 ? 'Partially Booked' : 'Occupied'}
+                        <span className="text-gray-400 font-normal ml-1">
+                          ({court.currentBooking.totalParticipants || 1}/2)
+                        </span>
+                      </span>
+                      <span className="text-gray-500 text-xs">
+                        ({format(new Date(court.currentBooking.start_time), 'h:mm a')} - {format(new Date(court.currentBooking.end_time), 'h:mm a')})
+                      </span>
+                    </div>
+                    {court.currentBooking.users && court.currentBooking.users.length > 0 && (
+                      <div className="text-xs text-gray-400 pl-4">
+                        by {court.currentBooking.users.map(u => u?.full_name || 'Unknown').join(', ')}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 text-sm text-gray-500">

@@ -106,7 +106,8 @@ export async function getAllCourts() {
       start_time,
       end_time,
       user_id,
-      status
+      status,
+      participants_count
     `)
     .eq('status', 'confirmed')
     .lte('start_time', now)
@@ -122,7 +123,8 @@ export async function getAllCourts() {
       start_time,
       end_time,
       user_id,
-      status
+      status,
+      participants_count
     `)
     .eq('status', 'confirmed')
     .gt('start_time', now)
@@ -131,12 +133,12 @@ export async function getAllCourts() {
 
   // Fetch user profiles for these bookings
   const userIds = new Set<string>()
-  activeBookings?.forEach(b => {
-    if (b.user_id) userIds.add(b.user_id)
-  })
-  upcomingBookings?.forEach(b => {
-    if (b.user_id) userIds.add(b.user_id)
-  })
+    ; (activeBookings as any)?.forEach((b: any) => {
+      if (b.user_id) userIds.add(b.user_id)
+    })
+    ; (upcomingBookings as any)?.forEach((b: any) => {
+      if (b.user_id) userIds.add(b.user_id)
+    })
 
   let profileMap = new Map()
   if (userIds.size > 0) {
@@ -150,20 +152,52 @@ export async function getAllCourts() {
 
   // Combine data
   return (courts || []).map(court => {
-    const activeBooking = activeBookings?.find(b => b.court_id === court.id)
-    // Find the first upcoming booking for this court
-    const nextBooking = upcomingBookings?.find(b => b.court_id === court.id)
+    // Find all active bookings for this court
+    const courtActiveBookings = (activeBookings as any[])?.filter((b: any) => b.court_id === court.id) || []
+
+    // Calculate total participants and available slots
+    const activeParticipants = courtActiveBookings.reduce((sum, b) => sum + (b.participants_count || 1), 0)
+
+    // Create a composite current booking object if there are any bookings
+    let currentBooking = null
+    if (courtActiveBookings.length > 0) {
+      // Use the first booking as base, but assume time is roughly current
+      const primary = courtActiveBookings[0]
+      currentBooking = {
+        ...primary,
+        // Add all users involved
+        users: courtActiveBookings.map(b => profileMap.get(b.user_id)).filter(Boolean),
+        totalParticipants: activeParticipants,
+        user: profileMap.get(primary.user_id) // Keep for backward compatibility
+      }
+    }
+
+    // Find the first upcoming booking (or set of bookings) for this court
+    // For simplicity, we just look at the very next start time
+    const nextBookingRaw = (upcomingBookings as any[])?.find((b: any) => b.court_id === court.id)
+
+    let nextBooking = null
+    if (nextBookingRaw) {
+      // Find all bookings sharing the same start time
+      const nextBookings = (upcomingBookings as any[])?.filter((b: any) =>
+        b.court_id === court.id &&
+        b.start_time === nextBookingRaw.start_time
+      ) || []
+
+      const nextParticipants = nextBookings.reduce((sum, b) => sum + (b.participants_count || 1), 0)
+
+      nextBooking = {
+        ...nextBookingRaw,
+        users: nextBookings.map(b => profileMap.get(b.user_id)).filter(Boolean),
+        totalParticipants: nextParticipants,
+        user: profileMap.get(nextBookingRaw.user_id)
+      }
+    }
 
     return {
       ...court,
-      currentBooking: activeBooking ? {
-        ...activeBooking,
-        user: profileMap.get(activeBooking.user_id)
-      } : null,
-      nextBooking: nextBooking ? {
-        ...nextBooking,
-        user: profileMap.get(nextBooking.user_id)
-      } : null
+      currentBooking,
+      nextBooking
     }
   }).filter(court => !court.sports?.display_name?.toLowerCase().includes('chess'))
 }
