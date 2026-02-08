@@ -103,7 +103,7 @@ async function calculateLocalAvailability(
   // Get all existing bookings for this court in the date range
   const { data: existingBookings, error } = await supabase
     .from('bookings')
-    .select('start_time, end_time, status')
+    .select('start_time, end_time, status, participants_count')
     .eq('court_id', courtId)
     .in('status', ['pending', 'confirmed'])
     .gte('start_time', `${startDate}T00:00:00.000Z`)
@@ -115,24 +115,28 @@ async function calculateLocalAvailability(
 
   const bookings = existingBookings || []
 
-  // Group bookings by date for easy lookup
-  const bookingsByDate = new Map<string, Array<{ start: Date; end: Date }>>()
+  // Court capacity (max 2 participants per slot)
+  const COURT_CAPACITY = 2
+
+  // Group bookings by date for easy lookup, including participants_count
+  const bookingsByDate = new Map<string, Array<{ start: Date; end: Date; participants: number }>>()
 
   bookings.forEach((booking: any) => {
     const start = parseISO(booking.start_time)
     const end = parseISO(booking.end_time)
     const dateKey = format(start, 'yyyy-MM-dd')
+    const participants = booking.participants_count || 2 // Default to 2 for legacy bookings
 
     if (!bookingsByDate.has(dateKey)) {
       bookingsByDate.set(dateKey, [])
     }
-    bookingsByDate.get(dateKey)!.push({ start, end })
+    bookingsByDate.get(dateKey)!.push({ start, end, participants })
   })
 
   // Generate availability for each day
   const availability: Array<{
     date: string
-    slots: Array<{ time: string; available: boolean }>
+    slots: Array<{ time: string; available: boolean; availableSlots: number }>
   }> = []
 
   const start = parseISO(startDate)
@@ -163,7 +167,7 @@ async function calculateLocalAvailability(
         currentSlot = addMinutes(currentSlot, durationMinutes)
       }
 
-      const slots: Array<{ time: string; available: boolean }> = []
+      const slots: Array<{ time: string; available: boolean; availableSlots: number }> = []
       const dayBookings = bookingsByDate.get(dateKey) || []
       const now = new Date()
 
@@ -172,15 +176,18 @@ async function calculateLocalAvailability(
         const slotEnd = addMinutes(slotStart, durationMinutes)
 
         if (slotStart < now || slotEnd > dayEnd) {
-          slots.push({ time: slotStart.toISOString(), available: false })
+          slots.push({ time: slotStart.toISOString(), available: false, availableSlots: 0 })
           return
         }
 
-        const isBooked = dayBookings.some((booking) => {
+        // Calculate total participants for overlapping bookings
+        const overlappingBookings = dayBookings.filter((booking) => {
           return slotStart < booking.end && slotEnd > booking.start
         })
+        const totalParticipants = overlappingBookings.reduce((sum, b) => sum + b.participants, 0)
+        const availableSlots = Math.max(0, COURT_CAPACITY - totalParticipants)
 
-        slots.push({ time: slotStart.toISOString(), available: !isBooked })
+        slots.push({ time: slotStart.toISOString(), available: availableSlots > 0, availableSlots })
       })
 
       availability.push({ date: dateKey, slots })
@@ -222,7 +229,7 @@ async function calculateLocalAvailability(
       currentSlot = addMinutes(currentSlot, durationMinutes)
     }
 
-    const slots: Array<{ time: string; available: boolean }> = []
+    const slots: Array<{ time: string; available: boolean; availableSlots: number }> = []
 
     const dayBookings = bookingsByDate.get(dateKey) || []
     const now = new Date()
@@ -236,6 +243,7 @@ async function calculateLocalAvailability(
         slots.push({
           time: slotStart.toISOString(),
           available: false,
+          availableSlots: 0,
         })
         return
       }
@@ -245,19 +253,22 @@ async function calculateLocalAvailability(
         slots.push({
           time: slotStart.toISOString(),
           available: false,
+          availableSlots: 0,
         })
         return
       }
 
-      // Check if this slot overlaps with any existing booking
-      const isBooked = dayBookings.some((booking) => {
-        // Check for overlap: slotStart < booking.end && slotEnd > booking.start
+      // Calculate total participants for overlapping bookings
+      const overlappingBookings = dayBookings.filter((booking) => {
         return slotStart < booking.end && slotEnd > booking.start
       })
+      const totalParticipants = overlappingBookings.reduce((sum, b) => sum + b.participants, 0)
+      const availableSlots = Math.max(0, COURT_CAPACITY - totalParticipants)
 
       slots.push({
         time: slotStart.toISOString(),
-        available: !isBooked,
+        available: availableSlots > 0,
+        availableSlots,
       })
     })
 
@@ -354,15 +365,31 @@ export async function createBooking(formData: FormData) {
     const startDate = new Date(startTime)
     const endDate = new Date(endTime)
 
-    const { data: conflictingBookings } = await supabase
+    // Get participantsCount from form data (default to 2 for backward compatibility)
+    const participantsCount = formData.get('participantsCount') ? parseInt(formData.get('participantsCount') as string) : 2
+    if (participantsCount < 1 || participantsCount > 2) {
+      throw new Error('Invalid number of participants (must be 1 or 2)')
+    }
+
+    // Check capacity - get all overlapping bookings and sum participants
+    const { data: overlappingBookings } = await supabase
       .from('bookings')
-      .select('id')
+      .select('id, participants_count')
       .eq('court_id', courtId)
       .in('status', ['pending', 'confirmed'])
       .or(`and(start_time.lt.${endTime},end_time.gt.${startTime})`)
 
-    if (conflictingBookings && conflictingBookings.length > 0) {
-      throw new Error('This time slot is no longer available')
+    const COURT_CAPACITY = 2
+    const currentParticipants = (overlappingBookings || []).reduce(
+      (sum, b) => sum + (b.participants_count || 2), 0
+    )
+    const availableSlots = COURT_CAPACITY - currentParticipants
+
+    if (participantsCount > availableSlots) {
+      if (availableSlots === 0) {
+        throw new Error('This time slot is no longer available')
+      }
+      throw new Error(`Only ${availableSlots} spot${availableSlots === 1 ? '' : 's'} available for this time slot`)
     }
 
     // Check if user already has a booking on any court during this time period
@@ -402,6 +429,7 @@ export async function createBooking(formData: FormData) {
         status: 'confirmed',
         booking_type: bookingType,
         payment_status: bookingType === 'member' ? 'paid' : 'pending',
+        participants_count: participantsCount,
       })
       .select()
       .single()

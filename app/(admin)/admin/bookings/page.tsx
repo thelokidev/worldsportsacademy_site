@@ -142,6 +142,16 @@ export default async function AdminBookingsPage({
                               {booking.booking_type}
                             </Badge>
                           )}
+                          {/* Participants count badge */}
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${(booking.participants_count || 2) === 1
+                                ? 'border-amber-500/50 text-amber-400 bg-amber-500/10'
+                                : 'border-green-500/50 text-green-400 bg-green-500/10'
+                              }`}
+                          >
+                            {(booking.participants_count || 2) === 1 ? '1P Open' : '2P Full'}
+                          </Badge>
                         </div>
                         <p className="text-sm text-gray-400">
                           {(booking.courts as any)?.name || 'Unknown Court'} •{' '}

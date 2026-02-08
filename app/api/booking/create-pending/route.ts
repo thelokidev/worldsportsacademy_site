@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { sportId, courtId, startTime, endTime, durationMinutes } = body
+    const { sportId, courtId, startTime, endTime, durationMinutes, participantsCount = 2 } = body
 
     if (!sportId || !courtId || !startTime || !endTime) {
       return NextResponse.json(
@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Validate participants count
+    const participants = Math.min(2, Math.max(1, Number(participantsCount) || 2))
 
     // Validate court is available AND belongs to the correct sport
     const { data: court } = await supabase
@@ -52,17 +55,29 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check for conflicts on the same court
-    const { data: conflictingBookings } = await supabase
+    // Check capacity - get all overlapping bookings and sum participants
+    const { data: overlappingBookings } = await supabase
       .from('bookings')
-      .select('id')
+      .select('id, participants_count')
       .eq('court_id', courtId)
       .in('status', ['pending', 'confirmed'])
       .or(`and(start_time.lt.${endTime},end_time.gt.${startTime})`)
 
-    if (conflictingBookings && conflictingBookings.length > 0) {
+    const COURT_CAPACITY = 2
+    const currentParticipants = (overlappingBookings || []).reduce(
+      (sum: number, b: any) => sum + (b.participants_count || 2), 0
+    )
+    const availableSlots = COURT_CAPACITY - currentParticipants
+
+    if (participants > availableSlots) {
+      if (availableSlots === 0) {
+        return NextResponse.json(
+          { error: 'This time slot is no longer available' },
+          { status: 400 }
+        )
+      }
       return NextResponse.json(
-        { error: 'This time slot is no longer available' },
+        { error: `Only ${availableSlots} spot${availableSlots === 1 ? '' : 's'} available for this time slot` },
         { status: 400 }
       )
     }
@@ -95,6 +110,7 @@ export async function POST(req: NextRequest) {
         status: 'pending',
         booking_type: 'drop_in',
         payment_status: 'pending',
+        participants_count: participants,
       })
       .select()
       .single()

@@ -83,6 +83,8 @@ export function RedesignedBooking() {
   const [selectedCourt, setSelectedCourt] = useState<any>(null)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [selectedAvailableSlots, setSelectedAvailableSlots] = useState<number>(0)
+  const [participantsCount, setParticipantsCount] = useState<number>(2) // Default to full court
   const [slots, setSlots] = useState<any[]>([])
 
   // Payment state
@@ -377,6 +379,10 @@ export function RedesignedBooking() {
 
     return (daySlot.slots || [])
       .filter((s: any) => s.available)
+      .map((s: any) => ({
+        ...s,
+        availableSlots: s.availableSlots ?? 2, // Default to 2 for backward compatibility
+      }))
       .sort((a: any, b: any) => new Date(a.time).getTime() - new Date(b.time).getTime())
   }, [selectedDate, slots])
 
@@ -419,8 +425,11 @@ export function RedesignedBooking() {
   }
 
   // Handle time selection
-  const handleTimeSelect = (time: string) => {
+  const handleTimeSelect = (time: string, availableSlots: number) => {
     setSelectedTime(time)
+    setSelectedAvailableSlots(availableSlots)
+    // Default to max available, or 2 if full capacity
+    setParticipantsCount(Math.min(2, availableSlots))
   }
 
   const cancelPendingBooking = async (bookingId: string) => {
@@ -490,6 +499,7 @@ export function RedesignedBooking() {
             startTime: start.toISOString(),
             endTime: end.toISOString(),
             durationMinutes,
+            participantsCount,
           }),
         })
 
@@ -527,6 +537,7 @@ export function RedesignedBooking() {
       formData.append('endTime', end.toISOString())
       formData.append('selectedDuration', durationMinutes.toString())
       formData.append('bookingType', 'member')
+      formData.append('participantsCount', participantsCount.toString())
 
       const result = await createBooking(formData)
 
@@ -649,15 +660,15 @@ export function RedesignedBooking() {
             <div className="flex items-center justify-between max-w-2xl mx-auto">
               {(dropInMode === 'social_open_play'
                 ? [
-                    { num: 1, label: 'Date', done: !!selectedDate },
-                    { num: 2, label: 'Review & Book', done: !!selectedDate },
-                  ]
+                  { num: 1, label: 'Date', done: !!selectedDate },
+                  { num: 2, label: 'Review & Book', done: !!selectedDate },
+                ]
                 : [
-                    { num: 1, label: 'Sport', done: !!selectedSport },
-                    { num: 2, label: 'Court', done: !!selectedCourt },
-                    { num: 3, label: 'Date & Time', done: !!selectedDate && !!selectedTime },
-                    { num: 4, label: 'Review & Book', done: isComplete },
-                  ]
+                  { num: 1, label: 'Sport', done: !!selectedSport },
+                  { num: 2, label: 'Court', done: !!selectedCourt },
+                  { num: 3, label: 'Date & Time', done: !!selectedDate && !!selectedTime },
+                  { num: 4, label: 'Review & Book', done: isComplete },
+                ]
               ).map((step, idx, arr) => {
                 const isHighlighted = step.done || currentStep === step.num
                 return (
@@ -855,370 +866,431 @@ export function RedesignedBooking() {
               </>
             ) : (
               <>
-            {/* Step 1: Select Sport */}
-            <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
-              <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">1</span>
-                  Choose Your Sport
-                </h2>
-              </div>
-              <div className="p-5">
-                {loadingSports ? (
-                  <div className="flex items-center justify-center py-10">
-                    <Loader2 className="h-7 w-7 animate-spin text-[#50C878]" />
+                {/* Step 1: Select Sport */}
+                <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+                  <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                      <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">1</span>
+                      Choose Your Sport
+                    </h2>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {sports.map((sport) => {
-                      const Icon = getSportIcon(sport.display_name)
-                      const comingSoon = isComingSoon(sport)
-                      return (
-                        <button
-                          key={sport.id}
-                          onClick={() => handleSportSelect(sport)}
-                          disabled={comingSoon}
-                          className={`relative group p-4 rounded-lg border transition-all duration-200 text-left ${comingSoon
-                            ? 'border-gray-700/80 bg-gray-800/40 opacity-60 cursor-not-allowed'
-                            : selectedSport?.id === sport.id
-                              ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
-                              : 'border-gray-800/80 hover:border-[#50C878]/40 hover:bg-gray-800/60 bg-gray-900/50'
-                            }`}
-                        >
-                          {comingSoon && (
-                            <div className="absolute top-1.5 right-1.5 z-10">
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-semibold uppercase tracking-wide">
-                                Soon
-                              </span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${comingSoon
-                                ? 'bg-gray-700 text-gray-500'
+                  <div className="p-5">
+                    {loadingSports ? (
+                      <div className="flex items-center justify-center py-10">
+                        <Loader2 className="h-7 w-7 animate-spin text-[#50C878]" />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {sports.map((sport) => {
+                          const Icon = getSportIcon(sport.display_name)
+                          const comingSoon = isComingSoon(sport)
+                          return (
+                            <button
+                              key={sport.id}
+                              onClick={() => handleSportSelect(sport)}
+                              disabled={comingSoon}
+                              className={`relative group p-4 rounded-lg border transition-all duration-200 text-left ${comingSoon
+                                ? 'border-gray-700/80 bg-gray-800/40 opacity-60 cursor-not-allowed'
                                 : selectedSport?.id === sport.id
-                                  ? 'bg-[#50C878] text-white'
-                                  : 'bg-gray-800 text-white group-hover:bg-[#50C878]/20'
+                                  ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
+                                  : 'border-gray-800/80 hover:border-[#50C878]/40 hover:bg-gray-800/60 bg-gray-900/50'
                                 }`}
                             >
-                              <Icon className="w-5 h-5" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className={`font-semibold text-sm mb-0.5 truncate ${comingSoon ? 'text-gray-500' : 'text-white dark:text-white'}`}>
-                                {sport.display_name}
-                              </h3>
-                              <p className={`text-xs ${comingSoon ? 'text-gray-600' : 'text-gray-400 dark:text-gray-400'}`}>
-                                {comingSoon ? 'Available soon' : `${sport.duration_minutes} min`}
-                              </p>
-                            </div>
-                            {selectedSport?.id === sport.id && !comingSoon && (
-                              <Check className="w-5 h-5 text-[#50C878] shrink-0" />
-                            )}
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Step 2: Select Court */}
-            {selectedSport && (
-              <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
-                <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">2</span>
-                    Choose Your Court
-                  </h2>
-                </div>
-                <div className="p-5">
-                  {loadingCourts ? (
-                    <div className="flex items-center justify-center py-10">
-                      <Loader2 className="h-7 w-7 animate-spin text-[#50C878]" />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {courts.map((court) => (
-                        <button
-                          key={court.id}
-                          onClick={() => handleCourtSelect(court)}
-                          className={`p-4 rounded-lg border transition-all duration-200 text-left flex items-center justify-between gap-3 ${selectedCourt?.id === court.id
-                            ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
-                            : 'border-gray-800/80 hover:border-[#50C878]/40 hover:bg-gray-800/60 bg-gray-900/50'
-                            }`}
-                        >
-                          <div className="min-w-0">
-                            <h3 className="font-semibold text-sm text-white dark:text-white truncate">{court.name}</h3>
-                            <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5 truncate">
-                              {court.location || 'Available for booking'}
-                            </p>
-                          </div>
-                          {selectedCourt?.id === court.id && (
-                            <Check className="w-5 h-5 text-[#50C878] shrink-0" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Select Date & Time */}
-            {selectedCourt && (
-              <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
-                <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">3</span>
-                    Pick Date & Time
-                  </h2>
-                </div>
-                <div className="p-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-                    {/* Date Picker - constrained so it doesn't stretch */}
-                    <div className="flex flex-col items-center min-w-0">
-                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 w-full text-left">
-                        Select Date
-                      </label>
-                      <div className="w-full max-w-[320px] shrink-0 max-h-[380px] overflow-hidden flex justify-center">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={handleDateSelect}
-                          disabled={(date) =>
-                            date < bookingWindowStart || date > bookingWindowEnd
-                          }
-                          className="rounded-xl border border-gray-800 bg-[#111111] p-4 w-full shadow-lg shadow-black/50"
-                          fromDate={bookingWindowStart}
-                          toDate={bookingWindowEnd}
-                          modifiers={calendarModifiers}
-                          modifiersClassNames={calendarModifierClasses}
-                          classNames={{
-                            months: 'flex flex-col w-full shrink-0',
-                            month: 'space-y-2 w-full shrink-0',
-                            month_caption: 'flex justify-between items-center w-full pt-1 pb-2 relative',
-                            caption_label: 'text-base font-bold text-white tracking-wide font-sans',
-                            nav: 'relative w-full flex items-center justify-between gap-2 min-h-[2rem]',
-                            button_previous: 'h-8 w-8 shrink-0 bg-gray-800 hover:bg-[#50C878] hover:text-white rounded-full transition-all flex items-center justify-center border border-gray-700 text-gray-400 shadow hover:scale-105 active:scale-95 duration-200 [&_svg]:w-4 [&_svg]:h-4',
-                            button_next: 'h-8 w-8 shrink-0 bg-gray-800 hover:bg-[#50C878] hover:text-white rounded-full transition-all flex items-center justify-center border border-gray-700 text-gray-400 shadow hover:scale-105 active:scale-95 duration-200 [&_svg]:w-4 [&_svg]:h-4',
-                            chevron: 'text-current',
-                            month_grid: 'w-full border-collapse',
-                            weekdays: 'grid grid-cols-7 mb-2 place-items-center',
-                            weekday: 'text-gray-500 font-semibold text-[0.75rem] uppercase tracking-wider text-center w-9',
-                            weeks: 'space-y-1',
-                            week: 'grid grid-cols-7 w-full gap-y-1 place-items-center',
-                            day: 'relative p-0 text-center h-9 w-9 flex items-center justify-center',
-                            day_button: 'h-9 w-9 p-0 text-sm font-medium rounded-full transition-all text-white hover:scale-105 hover:bg-[#50C878]/20 hover:text-[#50C878] border border-transparent focus:outline-none focus:ring-2 focus:ring-[#50C878] focus:ring-offset-2 focus:ring-offset-black touch-manipulation flex items-center justify-center',
-                            selected: '!bg-[#50C878] !text-white !font-bold shadow-[0_0_12px_rgba(80,200,120,0.5)] !scale-105 !z-10 relative !border-none',
-                            today: 'bg-white/5 text-white font-bold ring-1 ring-white/20',
-                            outside: 'text-gray-700 opacity-20',
-                            disabled: 'text-gray-700 opacity-20 cursor-not-allowed hover:!bg-transparent hover:!scale-100',
-                            hidden: 'invisible',
-                          }}
-                        />
-                      </div>
-                      <div className="mt-3 flex justify-center">
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#50C878]/10 border border-[#50C878]/20">
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#50C878] opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#50C878]"></span>
-                          </span>
-                          <span className="text-[10px] font-medium uppercase tracking-wider text-[#50C878]">Next 14 days</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Time Picker - aligned to top, scrollable list */}
-                    <div className="min-w-0 flex flex-col">
-                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                        Select Time
-                      </label>
-                      {loadingSlots ? (
-                        <div className="flex items-center justify-center py-8">
-                          <Loader2 className="h-6 w-6 animate-spin text-[#50C878]" />
-                        </div>
-                      ) : availableTimeSlots.length > 0 ? (
-                        <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1.5">
-                          {availableTimeSlots.map((slot: any) => {
-                            const slotTime = toZonedTime(parseISO(slot.time), FACILITY_TIMEZONE)
-                            const slotEndTime = addMinutes(slotTime, durationMinutes)
-                            return (
-                              <button
-                                key={slot.time}
-                                onClick={() => handleTimeSelect(slot.time)}
-                                className={`w-full p-3 rounded-lg border transition-all duration-200 text-left group relative overflow-hidden ${selectedTime === slot.time
-                                  ? 'border-[#50C878] bg-[#50C878] text-white shadow-sm'
-                                  : 'border-gray-800/80 hover:border-[#50C878]/40 hover:bg-[#50C878]/5 bg-gray-900/50'
-                                  }`}
-                              >
-                                <div className="flex items-center justify-between relative z-10 gap-2">
-                                  <div className="flex items-center gap-2.5 min-w-0">
-                                    <Clock className={`w-4 h-4 shrink-0 transition-colors ${selectedTime === slot.time ? 'text-white' : 'text-[#50C878]'}`} />
-                                    <div className="min-w-0">
-                                      <div className={`font-semibold text-sm truncate ${selectedTime === slot.time ? 'text-white' : 'text-white'}`}>
-                                        {format(slotTime, 'h:mm a')} – {format(slotEndTime, 'h:mm a')}
-                                      </div>
-                                      <div className={`text-xs ${selectedTime === slot.time ? 'text-emerald-100' : 'text-gray-400'}`}>
-                                        {durationMinutes} min
-                                      </div>
-                                    </div>
-                                  </div>
-                                  {selectedTime === slot.time && (
-                                    <Check className="w-4 h-4 text-white shrink-0" />
-                                  )}
+                              {comingSoon && (
+                                <div className="absolute top-1.5 right-1.5 z-10">
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-semibold uppercase tracking-wide">
+                                    Soon
+                                  </span>
                                 </div>
-                              </button>
-                            )
-                          })}
+                              )}
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${comingSoon
+                                    ? 'bg-gray-700 text-gray-500'
+                                    : selectedSport?.id === sport.id
+                                      ? 'bg-[#50C878] text-white'
+                                      : 'bg-gray-800 text-white group-hover:bg-[#50C878]/20'
+                                    }`}
+                                >
+                                  <Icon className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className={`font-semibold text-sm mb-0.5 truncate ${comingSoon ? 'text-gray-500' : 'text-white dark:text-white'}`}>
+                                    {sport.display_name}
+                                  </h3>
+                                  <p className={`text-xs ${comingSoon ? 'text-gray-600' : 'text-gray-400 dark:text-gray-400'}`}>
+                                    {comingSoon ? 'Available soon' : `${sport.duration_minutes} min`}
+                                  </p>
+                                </div>
+                                {selectedSport?.id === sport.id && !comingSoon && (
+                                  <Check className="w-5 h-5 text-[#50C878] shrink-0" />
+                                )}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Step 2: Select Court */}
+                {selectedSport && (
+                  <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+                    <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">2</span>
+                        Choose Your Court
+                      </h2>
+                    </div>
+                    <div className="p-5">
+                      {loadingCourts ? (
+                        <div className="flex items-center justify-center py-10">
+                          <Loader2 className="h-7 w-7 animate-spin text-[#50C878]" />
                         </div>
                       ) : (
-                        <div className="text-center py-8 text-gray-500">
-                          <CalendarIcon className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                          <p className="text-sm">No slots for this date</p>
-                          <p className="text-xs mt-0.5">Pick another date</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {courts.map((court) => (
+                            <button
+                              key={court.id}
+                              onClick={() => handleCourtSelect(court)}
+                              className={`p-4 rounded-lg border transition-all duration-200 text-left flex items-center justify-between gap-3 ${selectedCourt?.id === court.id
+                                ? 'border-[#50C878] bg-[#50C878]/10 dark:bg-[#50C878]/10 shadow-sm'
+                                : 'border-gray-800/80 hover:border-[#50C878]/40 hover:bg-gray-800/60 bg-gray-900/50'
+                                }`}
+                            >
+                              <div className="min-w-0">
+                                <h3 className="font-semibold text-sm text-white dark:text-white truncate">{court.name}</h3>
+                                <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5 truncate">
+                                  {court.location || 'Available for booking'}
+                                </p>
+                              </div>
+                              {selectedCourt?.id === court.id && (
+                                <Check className="w-5 h-5 text-[#50C878] shrink-0" />
+                              )}
+                            </button>
+                          ))}
                         </div>
                       )}
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
+                )}
 
-            {/* Step 4: Review & Book */}
-            {selectedCourt && (
-              <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
-                <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">4</span>
-                    Review & Book
-                  </h2>
-                </div>
-                <div className="p-5 space-y-4">
-                  {/* Selection summary - compact row */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
-                      {(() => {
-                        const SportIcon = getSportIcon(selectedSport?.display_name || '')
-                        return <SportIcon className="w-4 h-4 text-[#50C878] shrink-0" />
-                      })()}
-                      <div className="min-w-0">
-                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Sport</div>
-                        <div className="font-medium text-xs text-white truncate">
-                          {selectedSport?.display_name || '—'}
-                        </div>
-                      </div>
+                {/* Step 3: Select Date & Time */}
+                {selectedCourt && (
+                  <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+                    <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">3</span>
+                        Pick Date & Time
+                      </h2>
                     </div>
-                    <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
-                      <Circle className="w-4 h-4 text-[#50C878] shrink-0" />
-                      <div className="min-w-0">
-                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Court</div>
-                        <div className="font-medium text-xs text-white truncate">
-                          {selectedCourt?.name || '—'}
+                    <div className="p-5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+                        {/* Date Picker - constrained so it doesn't stretch */}
+                        <div className="flex flex-col items-center min-w-0">
+                          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 w-full text-left">
+                            Select Date
+                          </label>
+                          <div className="w-full max-w-[320px] shrink-0 max-h-[380px] overflow-hidden flex justify-center">
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={handleDateSelect}
+                              disabled={(date) =>
+                                date < bookingWindowStart || date > bookingWindowEnd
+                              }
+                              className="rounded-xl border border-gray-800 bg-[#111111] p-4 w-full shadow-lg shadow-black/50"
+                              fromDate={bookingWindowStart}
+                              toDate={bookingWindowEnd}
+                              modifiers={calendarModifiers}
+                              modifiersClassNames={calendarModifierClasses}
+                              classNames={{
+                                months: 'flex flex-col w-full shrink-0',
+                                month: 'space-y-2 w-full shrink-0',
+                                month_caption: 'flex justify-between items-center w-full pt-1 pb-2 relative',
+                                caption_label: 'text-base font-bold text-white tracking-wide font-sans',
+                                nav: 'relative w-full flex items-center justify-between gap-2 min-h-[2rem]',
+                                button_previous: 'h-8 w-8 shrink-0 bg-gray-800 hover:bg-[#50C878] hover:text-white rounded-full transition-all flex items-center justify-center border border-gray-700 text-gray-400 shadow hover:scale-105 active:scale-95 duration-200 [&_svg]:w-4 [&_svg]:h-4',
+                                button_next: 'h-8 w-8 shrink-0 bg-gray-800 hover:bg-[#50C878] hover:text-white rounded-full transition-all flex items-center justify-center border border-gray-700 text-gray-400 shadow hover:scale-105 active:scale-95 duration-200 [&_svg]:w-4 [&_svg]:h-4',
+                                chevron: 'text-current',
+                                month_grid: 'w-full border-collapse',
+                                weekdays: 'grid grid-cols-7 mb-2 place-items-center',
+                                weekday: 'text-gray-500 font-semibold text-[0.75rem] uppercase tracking-wider text-center w-9',
+                                weeks: 'space-y-1',
+                                week: 'grid grid-cols-7 w-full gap-y-1 place-items-center',
+                                day: 'relative p-0 text-center h-9 w-9 flex items-center justify-center',
+                                day_button: 'h-9 w-9 p-0 text-sm font-medium rounded-full transition-all text-white hover:scale-105 hover:bg-[#50C878]/20 hover:text-[#50C878] border border-transparent focus:outline-none focus:ring-2 focus:ring-[#50C878] focus:ring-offset-2 focus:ring-offset-black touch-manipulation flex items-center justify-center',
+                                selected: '!bg-[#50C878] !text-white !font-bold shadow-[0_0_12px_rgba(80,200,120,0.5)] !scale-105 !z-10 relative !border-none',
+                                today: 'bg-white/5 text-white font-bold ring-1 ring-white/20',
+                                outside: 'text-gray-700 opacity-20',
+                                disabled: 'text-gray-700 opacity-20 cursor-not-allowed hover:!bg-transparent hover:!scale-100',
+                                hidden: 'invisible',
+                              }}
+                            />
+                          </div>
+                          <div className="mt-3 flex justify-center">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#50C878]/10 border border-[#50C878]/20">
+                              <span className="relative flex h-1.5 w-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#50C878] opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#50C878]"></span>
+                              </span>
+                              <span className="text-[10px] font-medium uppercase tracking-wider text-[#50C878]">Next 14 days</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
-                      <CalendarIcon className="w-4 h-4 text-[#50C878] shrink-0" />
-                      <div className="min-w-0">
-                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Date</div>
-                        <div className="font-medium text-xs text-white truncate" aria-busy={isDatePending}>
-                          {isDatePending ? '…' : (selectedDate ? format(selectedDate, 'EEE, MMM d') : '—')}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
-                      <Clock className="w-4 h-4 text-[#50C878] shrink-0" />
-                      <div className="min-w-0">
-                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Time</div>
-                        <div className="font-medium text-xs text-white truncate" aria-busy={isDatePending}>
-                          {isDatePending
-                            ? '…'
-                            : (selectedTime && endTime
-                              ? format(toZonedTime(parseISO(selectedTime), FACILITY_TIMEZONE), 'h:mm a')
-                              : '—')}
+
+                        {/* Time Picker - aligned to top, scrollable list */}
+                        <div className="min-w-0 flex flex-col">
+                          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                            Select Time
+                          </label>
+                          {loadingSlots ? (
+                            <div className="flex items-center justify-center py-8">
+                              <Loader2 className="h-6 w-6 animate-spin text-[#50C878]" />
+                            </div>
+                          ) : availableTimeSlots.length > 0 ? (
+                            <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1.5">
+                              {availableTimeSlots.map((slot: any) => {
+                                const slotTime = toZonedTime(parseISO(slot.time), FACILITY_TIMEZONE)
+                                const slotEndTime = addMinutes(slotTime, durationMinutes)
+                                const spotsAvailable = slot.availableSlots ?? 2
+                                const isPartial = spotsAvailable === 1
+                                return (
+                                  <button
+                                    key={slot.time}
+                                    onClick={() => handleTimeSelect(slot.time, spotsAvailable)}
+                                    className={`w-full p-3 rounded-lg border transition-all duration-200 text-left group relative overflow-hidden ${selectedTime === slot.time
+                                      ? 'border-[#50C878] bg-[#50C878] text-white shadow-sm'
+                                      : 'border-gray-800/80 hover:border-[#50C878]/40 hover:bg-[#50C878]/5 bg-gray-900/50'
+                                      }`}
+                                  >
+                                    <div className="flex items-center justify-between relative z-10 gap-2">
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <Clock className={`w-4 h-4 shrink-0 transition-colors ${selectedTime === slot.time ? 'text-white' : 'text-[#50C878]'}`} />
+                                        <div className="min-w-0">
+                                          <div className={`font-semibold text-sm truncate ${selectedTime === slot.time ? 'text-white' : 'text-white'}`}>
+                                            {format(slotTime, 'h:mm a')} – {format(slotEndTime, 'h:mm a')}
+                                          </div>
+                                          <div className={`text-xs ${selectedTime === slot.time ? 'text-emerald-100' : 'text-gray-400'}`}>
+                                            {durationMinutes} min
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {/* Capacity badge */}
+                                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${isPartial
+                                          ? selectedTime === slot.time ? 'bg-white/20 text-white' : 'bg-amber-500/20 text-amber-400'
+                                          : selectedTime === slot.time ? 'bg-white/20 text-white' : 'bg-green-500/20 text-green-400'
+                                          }`}>
+                                          {spotsAvailable === 2 ? 'Open' : '1 spot left'}
+                                        </span>
+                                        {selectedTime === slot.time && (
+                                          <Check className="w-4 h-4 text-white shrink-0" />
+                                        )}
+                                      </div>
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-gray-500">
+                              <CalendarIcon className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                              <p className="text-sm">No slots for this date</p>
+                              <p className="text-xs mt-0.5">Pick another date</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
+                )}
 
-                  {/* Payment Info */}
-                  {checkingAuth && (
-                    <div className="flex items-center gap-2 text-xs text-gray-400 py-3">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Checking membership...
+                {/* Step 4: Review & Book */}
+                {selectedCourt && (
+                  <div className="bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-800/80 overflow-hidden">
+                    <div className="bg-gradient-to-r from-[#2D5B4A] to-[#50C878] px-5 py-3">
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">4</span>
+                        Review & Book
+                      </h2>
                     </div>
-                  )}
-
-                  {!checkingAuth && requiresPayment && paymentInfo && (
-                    <div className="bg-amber-900/20 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-700/40 dark:border-amber-700/40">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CreditCard className="w-4 h-4 text-amber-400" />
-                        <span className="font-semibold text-amber-300 text-sm">Payment Required</span>
-                      </div>
-                      <div className="space-y-1 text-xs">
-                        <div className="flex justify-between text-gray-300">
-                          <span>Drop-in:</span>
-                          <span className="font-medium">${paymentInfo.price.toFixed(2)}</span>
-                        </div>
-                        {paymentInfo.tax > 0 && (
-                          <div className="flex justify-between text-gray-300">
-                            <span>Tax:</span>
-                            <span className="font-medium">${paymentInfo.tax.toFixed(2)}</span>
+                    <div className="p-5 space-y-4">
+                      {/* Selection summary - compact row */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                          {(() => {
+                            const SportIcon = getSportIcon(selectedSport?.display_name || '')
+                            return <SportIcon className="w-4 h-4 text-[#50C878] shrink-0" />
+                          })()}
+                          <div className="min-w-0">
+                            <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Sport</div>
+                            <div className="font-medium text-xs text-white truncate">
+                              {selectedSport?.display_name || '—'}
+                            </div>
                           </div>
-                        )}
-                        <div className="flex justify-between font-semibold text-sm pt-1.5 border-t border-amber-700/40 text-amber-300">
-                          <span>Total:</span>
-                          <span>${paymentInfo.total.toFixed(2)}</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                          <Circle className="w-4 h-4 text-[#50C878] shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Court</div>
+                            <div className="font-medium text-xs text-white truncate">
+                              {selectedCourt?.name || '—'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                          <CalendarIcon className="w-4 h-4 text-[#50C878] shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Date</div>
+                            <div className="font-medium text-xs text-white truncate" aria-busy={isDatePending}>
+                              {isDatePending ? '…' : (selectedDate ? format(selectedDate, 'EEE, MMM d') : '—')}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 rounded-lg border border-gray-800/80 bg-gray-900/40">
+                          <Clock className="w-4 h-4 text-[#50C878] shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Time</div>
+                            <div className="font-medium text-xs text-white truncate" aria-busy={isDatePending}>
+                              {isDatePending
+                                ? '…'
+                                : (selectedTime && endTime
+                                  ? format(toZonedTime(parseISO(selectedTime), FACILITY_TIMEZONE), 'h:mm a')
+                                  : '—')}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
 
-                  {!checkingAuth && isMembershipCovered && selectedTime && (
-                    <div className="bg-green-900/20 dark:bg-green-900/20 rounded-lg p-3 border border-green-700/40 flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-400 shrink-0" />
-                      <span className="text-sm font-medium text-green-300">Covered by membership — no payment required</span>
-                    </div>
-                  )}
+                      {/* Player Count Selector - only show if time is selected */}
+                      {selectedTime && selectedAvailableSlots > 0 && (
+                        <div className="bg-gray-900/40 rounded-lg p-4 border border-gray-800/80">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Users className="w-4 h-4 text-[#50C878]" />
+                            <span className="font-semibold text-white text-sm">Number of Players</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setParticipantsCount(1)}
+                              disabled={selectedAvailableSlots < 1}
+                              className={`p-3 rounded-lg border transition-all duration-200 text-left ${participantsCount === 1
+                                ? 'border-[#50C878] bg-[#50C878]/10'
+                                : 'border-gray-800/80 hover:border-[#50C878]/40 bg-gray-900/50'
+                                } ${selectedAvailableSlots < 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="font-semibold text-sm text-white">1 Player</div>
+                                  <div className="text-xs text-gray-400 mt-0.5">Open Play - Someone else can join</div>
+                                </div>
+                                {participantsCount === 1 && <Check className="w-4 h-4 text-[#50C878]" />}
+                              </div>
+                            </button>
+                            <button
+                              onClick={() => setParticipantsCount(2)}
+                              disabled={selectedAvailableSlots < 2}
+                              className={`p-3 rounded-lg border transition-all duration-200 text-left ${participantsCount === 2
+                                ? 'border-[#50C878] bg-[#50C878]/10'
+                                : 'border-gray-800/80 hover:border-[#50C878]/40 bg-gray-900/50'
+                                } ${selectedAvailableSlots < 2 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="font-semibold text-sm text-white">2 Players</div>
+                                  <div className="text-xs text-gray-400 mt-0.5">Full Court - Private session</div>
+                                </div>
+                                {participantsCount === 2 && <Check className="w-4 h-4 text-[#50C878]" />}
+                              </div>
+                            </button>
+                          </div>
+                          {selectedAvailableSlots === 1 && (
+                            <p className="text-xs text-amber-400 mt-2 flex items-center gap-1.5">
+                              <Info className="w-3.5 h-3.5" />
+                              Only 1 spot available - another player has already booked this slot
+                            </p>
+                          )}
+                        </div>
+                      )}
 
-                  {/* Action Button */}
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!isComplete || submitting || checkingAuth}
-                    className="w-full h-11 bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg font-semibold text-sm shadow-sm disabled:opacity-50 transition-all duration-200"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Processing...
-                      </>
-                    ) : isMembershipCovered ? (
-                      <>
-                        <Check className="mr-2 h-5 w-5" />
-                        Confirm Booking
-                      </>
-                    ) : (
-                      <>
-                        Continue to Payment
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </>
-                    )}
-                  </Button>
+                      {/* Payment Info */}
+                      {checkingAuth && (
+                        <div className="flex items-center gap-2 text-xs text-gray-400 py-3">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Checking membership...
+                        </div>
+                      )}
 
-                  {!isComplete && (
-                    <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-900/50 rounded-lg px-3 py-2">
-                      <Info className="w-3.5 h-3.5 shrink-0" />
-                      <p>Complete all steps above to proceed</p>
+                      {!checkingAuth && requiresPayment && paymentInfo && (
+                        <div className="bg-amber-900/20 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-700/40 dark:border-amber-700/40">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CreditCard className="w-4 h-4 text-amber-400" />
+                            <span className="font-semibold text-amber-300 text-sm">Payment Required</span>
+                          </div>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between text-gray-300">
+                              <span>Drop-in:</span>
+                              <span className="font-medium">${paymentInfo.price.toFixed(2)}</span>
+                            </div>
+                            {paymentInfo.tax > 0 && (
+                              <div className="flex justify-between text-gray-300">
+                                <span>Tax:</span>
+                                <span className="font-medium">${paymentInfo.tax.toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between font-semibold text-sm pt-1.5 border-t border-amber-700/40 text-amber-300">
+                              <span>Total:</span>
+                              <span>${paymentInfo.total.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {!checkingAuth && isMembershipCovered && selectedTime && (
+                        <div className="bg-green-900/20 dark:bg-green-900/20 rounded-lg p-3 border border-green-700/40 flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-400 shrink-0" />
+                          <span className="text-sm font-medium text-green-300">Covered by membership — no payment required</span>
+                        </div>
+                      )}
+
+                      {/* Action Button */}
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={!isComplete || submitting || checkingAuth}
+                        className="w-full h-11 bg-[#50C878] hover:bg-[#50C878]/90 text-white rounded-lg font-semibold text-sm shadow-sm disabled:opacity-50 transition-all duration-200"
+                      >
+                        {submitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Processing...
+                          </>
+                        ) : isMembershipCovered ? (
+                          <>
+                            <Check className="mr-2 h-5 w-5" />
+                            Confirm Booking
+                          </>
+                        ) : (
+                          <>
+                            Continue to Payment
+                            <ArrowRight className="ml-2 h-5 w-5" />
+                          </>
+                        )}
+                      </Button>
+
+                      {!isComplete && (
+                        <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-900/50 rounded-lg px-3 py-2">
+                          <Info className="w-3.5 h-3.5 shrink-0" />
+                          <p>Complete all steps above to proceed</p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
               </>
             )}
+          </div>
         </div>
-      </div>
       )}
     </div>
   )
