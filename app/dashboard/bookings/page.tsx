@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAllBookings } from '@/server/queries/bookings'
+import { cancelStalePendingBookings } from '@/server/actions/bookings'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +22,9 @@ export default async function MyBookingsPage() {
   if (!user) {
     redirect('/auth?redirect=/dashboard/bookings')
   }
+
+  // Cancel abandoned pending bookings (e.g. user went to Stripe but didn't pay and closed the tab)
+  await cancelStalePendingBookings()
 
   const bookings = await getAllBookings(user.id)
 
@@ -165,13 +169,12 @@ export default async function MyBookingsPage() {
                                   {(booking.sports as any)?.display_name || 'Sport'}
                                 </h3>
                                 <Badge
+                                  variant="outline"
                                   className={
                                     booking.status === 'pending'
-                                      ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                                      : 'bg-[#50C878]/20 text-[#50C878] border-[#50C878]/30'
+                                      ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30 px-3 py-1 font-semibold'
+                                      : 'bg-[#50C878]/20 text-[#50C878] border-[#50C878]/30 px-3 py-1 font-semibold'
                                   }
-                                  variant="outline"
-                                  className="px-3 py-1 font-semibold"
                                 >
                                   {booking.status === 'pending' ? 'Pending' : 'Confirmed'}
                                 </Badge>

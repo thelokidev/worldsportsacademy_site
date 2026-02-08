@@ -19,15 +19,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    let body: { bookingId?: string } = {}
+    let body: { bookingId?: string; cancelAll?: boolean; staleOnly?: boolean } = {}
     try {
       body = await req.json()
     } catch {
       body = {}
     }
-    const bookingId = body.bookingId
+    const { bookingId, cancelAll, staleOnly } = body
 
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
 
     let query = supabase
       .from('bookings')
@@ -37,9 +37,11 @@ export async function POST(req: NextRequest) {
 
     if (bookingId) {
       query = query.eq('id', bookingId)
-    } else {
-      query = query.gte('created_at', thirtyMinutesAgo)
+    } else if (staleOnly) {
+      // Only cancel pending bookings older than 15 min (abandoned checkouts)
+      query = query.lt('created_at', fifteenMinutesAgo)
     }
+    // else: cancelAll or no params → cancel all pending (e.g. user returned from Stripe cancel)
 
     const { data: bookings, error: fetchError } = await query
 

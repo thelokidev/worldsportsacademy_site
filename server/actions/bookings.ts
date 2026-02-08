@@ -555,6 +555,47 @@ export async function cancelBooking(bookingId: string) {
   }
 }
 
+/**
+ * Cancel pending (unpaid) bookings older than 15 minutes for the current user.
+ * Used when loading dashboard so abandoned Stripe checkouts don't appear as "booked".
+ */
+export async function cancelStalePendingBookings() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { cancelled: 0 }
+
+    const staleThreshold = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+    const { data: stale } = await supabase
+      .from('bookings')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+      .eq('payment_status', 'pending')
+      .lt('created_at', staleThreshold)
+
+    if (!stale?.length) return { cancelled: 0 }
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({ status: 'cancelled', payment_status: 'failed' })
+      .in('id', stale.map((b) => b.id))
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+
+    if (error) {
+      console.error('cancelStalePendingBookings:', error)
+      return { cancelled: 0 }
+    }
+    revalidatePath('/dashboard/bookings')
+    revalidatePath('/bookings')
+    revalidatePath('/drop-in')
+    return { cancelled: stale.length }
+  } catch {
+    return { cancelled: 0 }
+  }
+}
+
 export async function getBookingRefundQuote(bookingId: string) {
   try {
     const supabase = await createClient()

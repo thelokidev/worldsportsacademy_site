@@ -8,7 +8,7 @@ import { Loader2, Check, Calendar as CalendarIcon, Clock, CreditCard, Dumbbell, 
 import { format, addDays, parseISO, addMinutes, startOfDay } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import { Calendar } from '@/components/ui/calendar'
 
@@ -75,6 +75,7 @@ function TableTennisIcon({ className, size = 24, ...props }: SVGProps<SVGSVGElem
 export function RedesignedBooking() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
 
   // State
   const [sports, setSports] = useState<any[]>([])
@@ -161,6 +162,7 @@ export function RedesignedBooking() {
           const response = await fetch('/api/booking/cancel-pending', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}), // Cancel all pending (user returned from Stripe without paying)
           })
 
           if (response.ok) {
@@ -185,15 +187,13 @@ export function RedesignedBooking() {
         duration: 5000,
       })
 
-      // Remove the canceled parameter from URL
+      // Remove the canceled parameter from URL (keep current path: /bookings or /drop-in)
       const params = new URLSearchParams(searchParams.toString())
       params.delete('canceled')
-      const newUrl = params.toString()
-        ? `/bookings?${params.toString()}`
-        : '/bookings'
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname || '/bookings'
       router.replace(newUrl)
     }
-  }, [searchParams, router])
+  }, [searchParams, router, pathname])
 
   // Fetch sports
   useEffect(() => {
