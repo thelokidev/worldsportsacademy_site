@@ -410,7 +410,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Get booking details
+      // Get booking details including participants_count
       const { data: booking } = await supabase
         .from("bookings")
         .select(
@@ -418,6 +418,7 @@ export async function POST(req: NextRequest) {
           id,
           sport_id,
           selected_duration,
+          participants_count,
           sports: sport_id (
             id,
             name
@@ -434,34 +435,45 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Get drop-in pricing with Stripe IDs
-      const duration = booking.selected_duration || 60;
-      const { data: pricing } = await supabase
-        .from("drop_in_pricing")
-        .select("price, tax_rate, stripe_price_id, stripe_product_id")
-        .eq("sport_id", booking.sport_id)
-        .eq("duration_minutes", duration)
-        .single();
+      // Check for 2-player special pricing
+      let priceId: string | null = null;
+      let duration = booking.selected_duration || 60;
 
-      if (!pricing) {
-        return NextResponse.json(
-          { error: "Pricing not found for this sport and duration" },
-          { status: 404 },
-        );
-      }
+      // Special handling for 2-player Table Tennis (or any sport with 2 participants)
+      // User requested specific price for 2 players: Drop-In Session-2 $30.00 CAD
+      if (booking.participants_count === 2) {
+        priceId = "price_1SyMK2C2I88MOqJ1eP5k0I43";
+      } else {
+        // Get drop-in pricing with Stripe IDs from database
+        const { data: pricing } = await supabase
+          .from("drop_in_pricing")
+          .select("price, tax_rate, stripe_price_id, stripe_product_id")
+          .eq("sport_id", booking.sport_id)
+          .eq("duration_minutes", duration)
+          .single();
 
-      if (!pricing.stripe_price_id) {
-        return NextResponse.json(
-          { error: "Stripe price ID not configured for drop-in pricing" },
-          { status: 500 },
-        );
+        if (!pricing) {
+          return NextResponse.json(
+            { error: "Pricing not found for this sport and duration" },
+            { status: 404 },
+          );
+        }
+
+        if (!pricing.stripe_price_id) {
+          return NextResponse.json(
+            { error: "Stripe price ID not configured for drop-in pricing" },
+            { status: 500 },
+          );
+        }
+
+        priceId = pricing.stripe_price_id;
       }
 
       // Drop-in sessions do NOT include initiation fee
       // Initiation fee only applies to membership purchases
       const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
         {
-          price: pricing.stripe_price_id,
+          price: priceId!,
           quantity: 1,
         },
       ];
@@ -482,6 +494,7 @@ export async function POST(req: NextRequest) {
             payment_type: "drop_in",
             sport_id: booking.sport_id,
             duration_minutes: duration.toString(),
+            participants_count: (booking.participants_count || 1).toString(),
             includes_initiation_fee: "false", // Drop-ins never include initiation fee
           },
         });
@@ -498,7 +511,7 @@ export async function POST(req: NextRequest) {
           errorDetails = sessionError.message;
 
           if (sessionError.message.includes("No such price")) {
-            errorMessage = `Stripe price ID "${pricing.stripe_price_id}" not found. Please check your drop-in pricing configuration.`;
+            errorMessage = `Stripe price ID "${priceId}" not found. Please check your drop-in pricing configuration.`;
             errorDetails =
               "The Stripe price ID in the database does not exist in your Stripe account. Please verify the price ID in the drop_in_pricing table matches your Stripe products.";
           } else if (sessionError.message.includes("currency")) {
@@ -561,7 +574,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const durationMinutes = 60;
+      const durationMinutes = 120; // Fixed 120 minutes for Social Open Play
       const { data: pricing, error: pricingError } = await supabase
         .from("drop_in_pricing")
         .select("stripe_price_id, price, tax_rate")
