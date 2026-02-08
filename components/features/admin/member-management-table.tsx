@@ -346,9 +346,17 @@ export function MemberManagementTable({
                               {format(new Date(booking.start_time), 'MMM d, yyyy h:mm a')}
                             </p>
                           </div>
-                          <div className="text-right">
-                            <Badge variant="outline">{booking.status}</Badge>
-                            <p className="text-xs text-gray-400 mt-1">{booking.booking_type}</p>
+                          <div className="text-right flex flex-col items-end gap-1">
+                            <div className="flex items-center gap-1.5">
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] border-0 ${(booking.participants_count ?? 2) === 1 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}
+                              >
+                                {(booking.participants_count ?? 2) === 1 ? 'Player 1' : 'Player 2'}
+                              </Badge>
+                              <Badge variant="outline">{booking.status}</Badge>
+                            </div>
+                            <p className="text-xs text-gray-400">{booking.booking_type}</p>
                           </div>
                         </div>
                       </div>

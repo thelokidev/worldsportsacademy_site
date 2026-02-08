@@ -23,6 +23,7 @@ export interface RecentBooking {
   user_id: string
   booking_type: string | null
   payment_status: string | null
+  participants_count?: number | null
   sports: { display_name: string } | null
   courts: { name: string } | null
   profiles: { full_name: string | null } | null

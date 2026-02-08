@@ -1164,55 +1164,74 @@ export function RedesignedBooking() {
                         </div>
                       </div>
 
-                      {/* Player Count Selector - only show if time is selected */}
-                      {selectedTime && selectedAvailableSlots > 0 && (
-                        <div className="bg-gray-900/40 rounded-lg p-4 border border-gray-800/80">
-                          <div className="flex items-center gap-2 mb-3">
-                            <Users className="w-4 h-4 text-[#50C878]" />
-                            <span className="font-semibold text-white text-sm">Number of Players</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <button
-                              onClick={() => setParticipantsCount(1)}
-                              disabled={selectedAvailableSlots < 1}
-                              className={`p-3 rounded-lg border transition-all duration-200 text-left ${participantsCount === 1
-                                ? 'border-[#50C878] bg-[#50C878]/10'
-                                : 'border-gray-800/80 hover:border-[#50C878]/40 bg-gray-900/50'
-                                } ${selectedAvailableSlots < 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <div className="font-semibold text-sm text-white">1 Player</div>
-                                  <div className="text-xs text-gray-400 mt-0.5">Open Play - Someone else can join</div>
+                      {/* Player slot selector: 2 spots per 60 min slot. When 1 spot left, show Player 1 as booked and Player 2 as the only option. */}
+                      {selectedTime && selectedAvailableSlots > 0 && (() => {
+                        const oneSpotLeft = selectedAvailableSlots === 1
+                        const player1Selected = !oneSpotLeft && participantsCount === 1
+                        const player2Selected = participantsCount === 2 || oneSpotLeft
+                        return (
+                          <div className="bg-gray-900/40 rounded-lg p-4 border border-gray-800/80">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Users className="w-4 h-4 text-[#50C878]" />
+                              <span className="font-semibold text-white text-sm">
+                                {oneSpotLeft ? '1 of 2 spots booked' : 'Player slot'}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                type="button"
+                                onClick={() => !oneSpotLeft && setParticipantsCount(1)}
+                                disabled={oneSpotLeft}
+                                aria-label={oneSpotLeft ? 'Player 1 is booked' : 'Book as Player 1'}
+                                className={`p-3 rounded-lg border transition-all duration-200 text-left ${oneSpotLeft
+                                  ? 'border-gray-700/60 bg-gray-800/40 opacity-70 cursor-not-allowed'
+                                  : player1Selected
+                                    ? 'border-[#50C878] bg-[#50C878]/10'
+                                    : 'border-gray-800/80 hover:border-[#50C878]/40 bg-gray-900/50'
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-semibold text-sm text-white">Player 1</div>
+                                    <div className={`text-xs mt-0.5 ${oneSpotLeft ? 'text-gray-500' : 'text-gray-400'}`}>
+                                      {oneSpotLeft ? 'Booked' : 'Open Play - Someone else can join'}
+                                    </div>
+                                  </div>
+                                  {oneSpotLeft && (
+                                    <span className="text-[10px] font-medium uppercase tracking-wider text-gray-500">Booked</span>
+                                  )}
                                 </div>
-                                {participantsCount === 1 && <Check className="w-4 h-4 text-[#50C878]" />}
-                              </div>
-                            </button>
-                            <button
-                              onClick={() => setParticipantsCount(2)}
-                              disabled={selectedAvailableSlots < 2}
-                              className={`p-3 rounded-lg border transition-all duration-200 text-left ${participantsCount === 2
-                                ? 'border-[#50C878] bg-[#50C878]/10'
-                                : 'border-gray-800/80 hover:border-[#50C878]/40 bg-gray-900/50'
-                                } ${selectedAvailableSlots < 2 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <div className="font-semibold text-sm text-white">2 Players</div>
-                                  <div className="text-xs text-gray-400 mt-0.5">Full Court - Private session</div>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setParticipantsCount(oneSpotLeft ? 1 : 2)}
+                                disabled={false}
+                                aria-label={oneSpotLeft ? 'Book remaining spot as Player 2' : 'Book as Player 2 (full court)'}
+                                className={`p-3 rounded-lg border transition-all duration-200 text-left ${player2Selected
+                                  ? 'border-[#50C878] bg-[#50C878]/10'
+                                  : 'border-gray-800/80 hover:border-[#50C878]/40 bg-gray-900/50'
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-semibold text-sm text-white">Player 2</div>
+                                    <div className="text-xs text-gray-400 mt-0.5">
+                                      {oneSpotLeft ? 'Open Play - Book remaining spot' : 'Open Play - Someone else can join'}
+                                    </div>
+                                  </div>
+                                  {player2Selected && <Check className="w-4 h-4 text-[#50C878]" />}
                                 </div>
-                                {participantsCount === 2 && <Check className="w-4 h-4 text-[#50C878]" />}
-                              </div>
-                            </button>
+                              </button>
+                            </div>
+                            {oneSpotLeft && (
+                              <p className="text-xs text-amber-400 mt-2 flex items-center gap-1.5" role="status">
+                                <Info className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                                Player 1 is booked for this slot. You can book as Player 2.
+                              </p>
+                            )}
                           </div>
-                          {selectedAvailableSlots === 1 && (
-                            <p className="text-xs text-amber-400 mt-2 flex items-center gap-1.5">
-                              <Info className="w-3.5 h-3.5" />
-                              Only 1 spot available - another player has already booked this slot
-                            </p>
-                          )}
-                        </div>
-                      )}
+                        )
+                      })()}
 
                       {/* Payment Info */}
                       {checkingAuth && (

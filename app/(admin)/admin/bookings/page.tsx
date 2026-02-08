@@ -142,15 +142,16 @@ export default async function AdminBookingsPage({
                               {booking.booking_type}
                             </Badge>
                           )}
-                          {/* Participants count badge */}
+                          {/* Player slot: 1 spot = Player 1, 2 spots = Player 2 (full court). Per-slot capacity is 2. */}
                           <Badge
                             variant="outline"
+                            title={(booking.participants_count || 2) === 1 ? '1 spot (Player 1 slot)' : '2 spots (Player 2 / full court)'}
                             className={`text-xs ${(booking.participants_count || 2) === 1
                                 ? 'border-amber-500/50 text-amber-400 bg-amber-500/10'
                                 : 'border-green-500/50 text-green-400 bg-green-500/10'
                               }`}
                           >
-                            {(booking.participants_count || 2) === 1 ? '1P Open' : '2P Full'}
+                            {(booking.participants_count || 2) === 1 ? 'Player 1 (1 spot)' : 'Player 2 (2 spots)'}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-400">

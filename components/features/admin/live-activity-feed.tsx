@@ -70,9 +70,18 @@ function BookingItem({ booking }: { booking: RecentBooking }) {
           {formatDistanceToNow(new Date(booking.created_at), { addSuffix: true })}
         </p>
       </div>
-      <Badge className={`text-xs border-0 ${statusColors[booking.status] || 'bg-gray-500/20 text-gray-400'}`}>
-        {booking.status}
-      </Badge>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <Badge
+          variant="outline"
+          className={`text-[10px] border-0 ${(booking.participants_count ?? 2) === 1 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}
+          title={(booking.participants_count ?? 2) === 1 ? '1 spot' : '2 spots'}
+        >
+          {(booking.participants_count ?? 2) === 1 ? 'Player 1' : 'Player 2'}
+        </Badge>
+        <Badge className={`text-xs border-0 ${statusColors[booking.status] || 'bg-gray-500/20 text-gray-400'}`}>
+          {booking.status}
+        </Badge>
+      </div>
     </div>
   )
 }

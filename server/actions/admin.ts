@@ -294,7 +294,8 @@ export async function getCourtBookingStats(courtId: string) {
       start_time,
       end_time,
       status,
-      user_id
+      user_id,
+      participants_count
     `)
     .eq('court_id', courtId)
     .gte('start_time', new Date().toISOString())
@@ -478,7 +479,7 @@ export async function getMemberDetails(userId: string) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
-  // Get bookings
+  // Get bookings (participants_count: 1 = Player 1 slot, 2 = Player 2 / full court; max 2 per slot)
   const { data: bookings } = await serviceSupabase
     .from('bookings')
     .select(`
@@ -487,6 +488,7 @@ export async function getMemberDetails(userId: string) {
       end_time,
       status,
       booking_type,
+      participants_count,
       sports:sport_id (
         display_name
       ),

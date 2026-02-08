@@ -118,6 +118,7 @@ export async function getDashboardActivity(dateRange?: DateRange) {
       user_id,
       booking_type,
       payment_status,
+      participants_count,
       sports:sport_id (
         display_name
       ),

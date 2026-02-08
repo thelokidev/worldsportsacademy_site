@@ -69,6 +69,7 @@ type CourtStats = {
     start_time: string
     end_time: string
     status: string
+    participants_count?: number | null
     profiles: {
       full_name: string | null
       email: string
@@ -364,7 +365,15 @@ export function CourtManagementTable({ courts }: { courts: Court[] }) {
                               {format(new Date(booking.end_time), 'h:mm a')}
                             </p>
                           </div>
-                          <Badge variant="outline">{booking.status}</Badge>
+                          <div className="flex items-center gap-1.5">
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] border-0 ${(booking.participants_count ?? 2) === 1 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'}`}
+                            >
+                              {(booking.participants_count ?? 2) === 1 ? 'Player 1' : 'Player 2'}
+                            </Badge>
+                            <Badge variant="outline">{booking.status}</Badge>
+                          </div>
                         </div>
                       </div>
                     ))}
