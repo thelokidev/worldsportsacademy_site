@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { LOGO_SRC } from '@/lib/site'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { UnifiedAuthForm } from '@/components/features/auth/unified-auth-form'
@@ -38,7 +39,7 @@ export default async function AuthPage({
             <div className="inline-flex items-center justify-center mb-2 group">
               <div className="relative w-20 h-20 group-hover:scale-110 transition-transform">
                 <Image
-                  src="/logo.png"
+                  src={LOGO_SRC}
                   alt="World Sports Academy Logo"
                   width={80}
                   height={80}

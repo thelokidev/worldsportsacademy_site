@@ -97,6 +97,19 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   images: {
+    localPatterns: [
+      {
+        pathname: "/logo.png",
+        // Allow query string for cache busting (?v=2, ?v=3, etc.)
+      },
+      {
+        pathname: "/hero.png",
+      },
+      {
+        pathname: "/**",
+        // Allow all other local images (icons, gallery, etc.)
+      },
+    ],
     remotePatterns: [
       {
         protocol: "https",

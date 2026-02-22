@@ -7,6 +7,7 @@ import { LocationsSection } from "@/components/locations-section"
 import { Footer } from "@/components/footer"
 import { AudienceTabs } from "@/components/audience-tabs"
 import { FAQSection } from "@/components/faq-section"
+import { LOGO_VERSION } from "@/lib/site"
 
 export default function Home() {
   return (
@@ -30,7 +31,7 @@ export default function Home() {
             "@type": "SportsActivityLocation",
             "name": "World Sports Academy",
             "description": "Premier sports academy for squash, table tennis, chess, and fitness training in Canada.",
-            "image": "https://worldsportsacademy.com/logo.png",
+            "image": `https://worldsportsacademy.com/logo.png?v=${LOGO_VERSION}`,
             "telephone": "+1234567890",
             "url": "https://worldsportsacademy.com",
             "address": {

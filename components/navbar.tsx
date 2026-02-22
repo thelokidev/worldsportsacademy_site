@@ -16,6 +16,7 @@ import {
 import { signOut } from "@/server/actions/auth"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import Image from "next/image"
+import { LOGO_SRC } from "@/lib/site"
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
@@ -206,17 +207,17 @@ export function Navbar() {
               prefetch={true}
               className="flex items-center gap-3 group relative"
             >
-              <div className="relative w-10 h-10 md:w-12 md:h-12 group-hover:scale-105 transition-all duration-300">
+              <div className="relative flex items-center justify-center w-10 h-10 md:w-12 md:h-12 group-hover:scale-105 transition-all duration-300">
                 <Image
-                  src="/logo.png"
+                  src={LOGO_SRC}
                   alt="World Sports Academy Logo"
                   width={48}
                   height={48}
-                  className="object-contain"
+                  className="w-full h-full object-contain"
                   priority
                 />
               </div>
-              <span className="font-bold text-lg md:text-xl text-white tracking-tight hidden sm:block group-hover:text-[#50C878] transition-colors">
+              <span className="font-bold text-lg md:text-xl text-white tracking-tight hidden sm:block group-hover:text-[#50C878] transition-colors leading-none mt-1">
                 World Sports Academy
               </span>
             </Link>
@@ -395,16 +396,16 @@ export function Navbar() {
               onClick={handleLinkClick}
               className="flex items-center gap-3"
             >
-              <div className="relative w-10 h-10">
+              <div className="relative flex items-center justify-center w-10 h-10">
                 <Image
-                  src="/logo.png"
+                  src={LOGO_SRC}
                   alt="World Sports Academy"
                   width={40}
                   height={40}
-                  className="object-contain"
+                  className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-lg font-bold text-white">WSA</span>
+              <span className="text-lg font-bold text-white leading-none mt-1">WSA</span>
             </Link>
           </div>
 

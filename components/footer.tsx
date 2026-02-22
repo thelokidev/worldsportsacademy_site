@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "next/image"
+import { LOGO_SRC } from "@/lib/site"
 
 export function Footer() {
   return (
@@ -18,7 +19,7 @@ export function Footer() {
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative w-10 h-10">
                     <Image
-                      src="/logo.png"
+                      src={LOGO_SRC}
                       alt="World Sports Academy Logo"
                       width={40}
                       height={40}
